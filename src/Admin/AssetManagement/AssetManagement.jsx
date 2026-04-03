@@ -200,7 +200,7 @@ export default function AssetManagement() {
                     </div>
                     <div>
                         <div className="font-semibold text-gray-800 text-[13px]">{row.name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{row.category}</div>
+                        <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mt-0.5">{row.category}</div>
                     </div>
                 </div>
             )
@@ -343,8 +343,11 @@ export default function AssetManagement() {
         e.preventDefault();
         try {
             setAssignLoading(true);
-            await updateAssetApi(selectedAsset.db_id, { assigned_to: assignData.userId });
-            toast.success(`Asset successfully assigned`);
+            await updateAssetApi(selectedAsset.db_id, {
+                assigned_to: assignData.userId,
+                status: assignData.userId ? 'Assigned' : 'Available'
+            });
+            toast.success(`Asset successfully ${assignData.userId ? 'assigned' : 'unassigned'}`);
             setIsAssignModalOpen(false);
             fetchAssetsData();
         } catch (error) {
@@ -356,15 +359,28 @@ export default function AssetManagement() {
 
     const handleEditClick = (asset) => {
         setSelectedAsset(asset);
+
+        // Helper to safely format date for input field (YYYY-MM-DD)
+        const formatDateForInput = (dateVal) => {
+            if (!dateVal) return '';
+            try {
+                const date = new Date(dateVal);
+                if (isNaN(date.getTime())) return '';
+                return date.toISOString().split('T')[0];
+            } catch (e) {
+                return '';
+            }
+        };
+
         setFormData({
-            name: asset.name,
-            category_id: asset.category_id,
-            serial: asset.serial,
-            purchaseDate: asset.purchaseDate ? asset.purchaseDate.split('T')[0] : '',
-            cost: asset.cost,
-            status: asset.status,
-            branch: asset.branch,
-            asset_ref: asset.id,
+            name: asset.name || '',
+            category_id: asset.category_id || '',
+            serial: asset.serial || '',
+            purchaseDate: formatDateForInput(asset.purchaseDate),
+            cost: asset.cost || '',
+            status: asset.status || 'Available',
+            branch: asset.branch || '',
+            asset_ref: asset.id || '',
             specification: asset.specification || '',
             rentalType: asset.rentalType || '',
             vendor: asset.vendor || '',
@@ -561,7 +577,7 @@ export default function AssetManagement() {
                             resetFormData();
                             setIsAddModalOpen(true);
                         }}
-                        className="flex items-center justify-center text-[15px] gap-1 px-4 py-2 bg-primary text-white rounded-full font-medium transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:bg-primary-hover"
+                        className="flex items-center justify-center text-[15px] gap-1 px-4 py-2 bg-primary text-white rounded-full font-medium transition-all shadow-md shadow-primary/20 hover:shadow-primary/10 hover:bg-primary-hover"
                     >
                         <Plus size={18} className="stroke-[3]" />
                         <span>Register Asset</span>
@@ -572,13 +588,13 @@ export default function AssetManagement() {
             <div className="flex items-center border border-gray-200 gap-1 bg-gray-100/50 p-1 rounded-full w-fit mb-8">
                 <button
                     onClick={() => setActiveTab('inventory')}
-                    className={`px-8 py-2.5 rounded-full font-semibold text-sm transition-all ${activeTab === 'inventory' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`px-8 py-2.5 rounded-full font-semibold text-sm transition-all ${activeTab === 'inventory' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-primary hover:bg-white'}`}
                 >
                     Inventory
                 </button>
                 <button
                     onClick={() => setActiveTab('requests')}
-                    className={`px-8 py-2.5 rounded-full font-semibold text-sm transition-all ${activeTab === 'requests' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                    className={`px-8 py-2.5 rounded-full font-semibold text-sm transition-all ${activeTab === 'requests' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-primary hover:bg-white'}`}
                 >
                     Requests
                     {requests.filter(r => r.status === 'Requested').length > 0 && (
@@ -670,13 +686,13 @@ export default function AssetManagement() {
                                 onView={handleEditClick}
                                 onEdit={handleEditClick}
                                 onDelete={(row) => handleDeleteClick(row.db_id)}
-                                extraActions={(row) => (
+                                extraActions={(row) => (row.status === 'Available' || row.status === 'Assigned') && (
                                     <button
                                         onClick={() => handleAssignClick(row)}
                                         className={`h-8 px-3 rounded-lg flex items-center justify-center gap-2 transition-all ${row.assignedTo ? 'text-blue-600 hover:bg-blue-50' : 'text-primary hover:bg-primary/10 font-bold'}`}
                                     >
                                         <UserPlus size={14} />
-                                        <span className="text-[10px] uppercase tracking-wider">{row.assignedTo ? 'Re-assign' : 'Assign'}</span>
+                                        <span className="text-[12px] font-semibold">{row.assignedTo ? 'Re-assign' : 'Assign'}</span>
                                     </button>
                                 )}
                                 pagination={{
@@ -765,22 +781,49 @@ export default function AssetManagement() {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <FormDate label="Purchase Date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} />
-                                            <FormInput label="Cost (₹)" type="number" value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} placeholder="0.00" />
+                                            <FormInput label="Cost (₹)" isNumber={true} value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} placeholder="0.00" />
                                         </div>
 
-                                        <FormSelect label="Initial Status" required value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} options={STATUSES.map(s => ({ value: s, label: s }))} />
+                                        <FormSelect
+                                            label="Initial Status"
+                                            required
+                                            value={formData.status}
+                                            onChange={(e) => {
+                                                const newStatus = e.target.value;
+                                                setFormData({
+                                                    ...formData,
+                                                    status: newStatus,
+                                                    assigned_to: newStatus === 'Assigned' ? formData.assigned_to : ''
+                                                });
+                                            }}
+                                            options={STATUSES.map(s => ({ value: s, label: s }))}
+                                        />
+
+                                        {formData.status === 'Assigned' && (
+                                            <FormSelect
+                                                label="Assign to User"
+                                                required
+                                                value={formData.assigned_to}
+                                                onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                                                options={employees.map(user => ({
+                                                    value: user.id,
+                                                    label: `${user.name || user.employee_name} (${user.emp_id})`
+                                                }))}
+                                                placeholder="Select User"
+                                            />
+                                        )}
 
                                         <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
                                                     <label className="text-[14px] font-semibold text-gray-700 ml-1">Asset Image</label>
                                                     <input type="file" className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 transition-all cursor-pointer mt-1" onChange={(e) => setFormData({ ...formData, asset_image: e.target.files[0] })} />
-                                                    {formData.existing_asset_image && <div className="text-[10px] text-primary flex items-center gap-1 font-bold bg-primary/5 p-1 px-2 rounded-md w-fit mt-1 uppercase tracking-tighter"><CheckCircle2 size={10} /> Image exists</div>}
+                                                    {formData.existing_asset_image && <div className="text-[11px] text-primary flex items-center gap-1 font-semibold bg-primary/5 p-1 px-2 rounded-md w-fit mt-1"><CheckCircle2 size={10} /> Image exists</div>}
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-[14px] font-semibold text-gray-700 ml-1">Invoice / Bill</label>
                                                     <input type="file" className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 transition-all cursor-pointer mt-1" onChange={(e) => setFormData({ ...formData, invoice: e.target.files[0] })} />
-                                                    {formData.existing_invoice && <div className="text-[10px] text-gray-500 flex items-center gap-1 font-bold bg-gray-100 p-1 px-2 rounded-md w-fit mt-1 uppercase tracking-tighter"><CheckCircle2 size={10} /> Invoice exists</div>}
+                                                    {formData.existing_invoice && <div className="text-[11px] text-gray-500 flex items-center gap-1 font-semibold bg-gray-100 p-1 px-2 rounded-md w-fit mt-1"><CheckCircle2 size={10} /> Invoice exists</div>}
                                                 </div>
                                             </div>
                                         </div>
@@ -792,7 +835,7 @@ export default function AssetManagement() {
                                             <FormInput placeholder="Warranty (Mo)" label="Warranty (Mo)" type="number" value={formData.warrantyInMonth} onChange={(e) => setFormData({ ...formData, warrantyInMonth: e.target.value })} />
                                         </div>
 
-                                        <FormInput placeholder="Remarks" label="Remarks" value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} />
+                                        <FormTextarea placeholder="Remarks" label="Remarks" value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} />
                                     </div>
                                 </div>
 

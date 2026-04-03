@@ -424,7 +424,7 @@ export default function ReimbursementClaims() {
                                 />
                                 <FormInput
                                     label="Claim Amount (₹)"
-                                    type="number"
+                                    isNumber={true}
                                     placeholder="0.00"
                                     value={formData.amount}
                                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}

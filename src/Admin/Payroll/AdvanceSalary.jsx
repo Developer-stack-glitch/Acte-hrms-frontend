@@ -484,7 +484,7 @@ const RequestForm = ({ onClose, onRefresh }) => {
                 <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-gray-700">Request Amount (₹)</label>
                     <FormInput
-                        type="number"
+                        isNumber={true}
                         placeholder="e.g. 25000"
                         value={formData.amount}
                         onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}

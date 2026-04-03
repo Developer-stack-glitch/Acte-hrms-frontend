@@ -279,8 +279,8 @@ const CreateJob = () => {
                         <FormInput label="Contact Phone" name="contact_phone" value={formData.contact_phone} onChange={handleChange} required placeholder="9876543210" />
                         <FormInput label="Work Experience (Years)" name="experience_years" type="number" value={formData.experience_years} onChange={handleChange} required placeholder="Enter years" />
 
-                        <FormInput label="Minimum Salary (LPA)" name="min_salary" type="number" value={formData.min_salary} onChange={handleChange} required placeholder="e.g., 3.0" />
-                        <FormInput label="Maximum Salary (LPA)" name="max_salary" type="number" value={formData.max_salary} onChange={handleChange} required placeholder="e.g., 5.0" />
+                        <FormInput label="Minimum Salary (LPA)" name="min_salary" isNumber={true} value={formData.min_salary} onChange={handleChange} required placeholder="e.g., 3.0" />
+                        <FormInput label="Maximum Salary (LPA)" name="max_salary" isNumber={true} value={formData.max_salary} onChange={handleChange} required placeholder="e.g., 5.0" />
                         <FormSelect
                             label="Job Status"
                             name="status"

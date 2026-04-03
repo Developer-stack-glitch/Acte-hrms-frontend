@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Clock, Info, AlertTriangle } from 'lucide-react';
+import { Bell, Check, Clock, Info, AlertTriangle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '../utils/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,6 +22,7 @@ const NotificationBell = () => {
             case 'leave':
             case 'request': return <AlertTriangle className="text-orange-500" size={16} />;
             case 'reimbursement': return <Info className="text-emerald-500" size={16} />;
+            case 'asset': return <Monitor className="text-indigo-500" size={16} />;
             case 'info': return <Info className="text-gray-500" size={16} />;
             default: return <Bell className="text-gray-500" size={16} />;
         }
@@ -95,7 +96,16 @@ const NotificationBell = () => {
                                                     setIsOpen(false);
 
                                                     // Redirection logic
-                                                    const data = notification.data || {};
+                                                    let data = {};
+                                                    try {
+                                                        data = typeof notification.data === 'string'
+                                                            ? JSON.parse(notification.data)
+                                                            : (notification.data || {});
+                                                    } catch (e) {
+                                                        console.error("Error parsing notification data:", e);
+                                                        data = {};
+                                                    }
+
                                                     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                                                     const userRole = userInfo.role;
 
@@ -104,18 +114,18 @@ const NotificationBell = () => {
                                                             navigate('/leaves/manage-leaves');
                                                         } else if (data.type === 'reimbursement_request' || notification.type === 'reimbursement') {
                                                             navigate('/reimbursements');
-                                                        } else if (data.type === 'asset_request') {
+                                                        } else if (data.type === 'asset_request' || notification.type === 'asset') {
                                                             navigate('/asset-management');
                                                         } else if (notification.type === 'attendance') {
                                                             navigate('/attendance');
                                                         }
                                                     } else {
                                                         // Employee redirection
-                                                        if (data.leave_id || notification.type === 'leave') {
+                                                        if (data.type === 'leave_status_update' || data.leave_id || notification.type === 'leave') {
                                                             navigate('/leaves/leave-list');
-                                                        } else if (data.claim_id || notification.type === 'reimbursement') {
+                                                        } else if (data.type === 'reimbursement_status_update' || data.claim_id || notification.type === 'reimbursement') {
                                                             navigate('/reimbursements');
-                                                        } else if (data.request_id) {
+                                                        } else if (data.type === 'asset_status_update' || data.request_id || notification.type === 'asset') {
                                                             navigate('/my-assets');
                                                         } else if (notification.type === 'attendance') {
                                                             navigate('/attendance');

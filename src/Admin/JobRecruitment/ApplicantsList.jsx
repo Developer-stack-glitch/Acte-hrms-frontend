@@ -195,7 +195,7 @@ const SendOfferLetterModal = ({ isOpen, onClose, onSuccess, applicant }) => {
                 <form onSubmit={handleSubmit} className="p-8 space-y-5">
                     <div className="space-y-2">
                         <label className="text-[13px] font-semibold text-gray-700">Offered CTC (per annum) <span className="text-red-500">*</span></label>
-                        <FormInput required type="number" placeholder="Enter annual package in ₹" value={formData.offered_ctc} onChange={(e) => setFormData({ ...formData, offered_ctc: e.target.value })} />
+                        <FormInput required isNumber={true} placeholder="Enter annual package in ₹" value={formData.offered_ctc} onChange={(e) => setFormData({ ...formData, offered_ctc: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                         <label className="text-[13px] font-semibold text-gray-700">Expected Joining Date <span className="text-red-500">*</span></label>

@@ -130,26 +130,26 @@ export default function MyAssets() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 key={asset.db_id}
-                                className="bg-white rounded-[24px] border border-gray-100 overflow-hidden group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500"
+                                className="bg-white rounded-[15px] border border-gray-200 overflow-hidden group transition-all duration-500"
                             >
-                                <div className="p-8">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="w-14 h-14 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 ring-8 ring-primary/5">
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="w-14 h-14 rounded-[10px] bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 ring-8 ring-primary/5">
                                             {getCategoryIcon(asset.category)}
                                         </div>
-                                        <span className="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-extrabold border border-emerald-100 uppercase tracking-widest flex items-center gap-1.5">
+                                        <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[12px] font-semibold border border-emerald-100 flex items-center gap-1.5">
                                             <ShieldCheck size={14} /> Assigned
                                         </span>
                                     </div>
 
-                                    <div className="mb-6">
+                                    <div className="mb-4">
                                         <div className="flex items-center gap-2 mb-2 text-primary font-semibold text-[10px] uppercase tracking-[0.2em] opacity-60">
                                             <Tag size={12} /> {asset.category}
                                         </div>
                                         <h3 className="text-2xl font-semibold text-gray-900 group-hover:text-primary transition-colors">{asset.name}</h3>
                                     </div>
 
-                                    <div className="space-y-4 pt-6 border-t border-gray-50">
+                                    <div className="space-y-4 pt-4 border-t border-gray-100">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2.5 text-gray-500 text-sm font-semibold">
                                                 <ScrollText size={18} className="text-gray-300" />
@@ -162,14 +162,14 @@ export default function MyAssets() {
                                                 <Calendar size={18} className="text-gray-300" />
                                                 Assigned On
                                             </div>
-                                            <span className="text-gray-900 font-bold text-sm">
+                                            <span className="text-gray-900 font-semibold text-sm">
                                                 {asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="px-8 py-5 bg-gray-50/50 border-t border-gray-50 flex items-center gap-2.5 text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] justify-center">
+                                <div className="px-8 py-4 bg-gray-50/50 border-t border-gray-50 flex items-center gap-2.5 text-[12px] text-gray-600 font-semibold justify-center">
                                     <CheckCircle2 size={16} className="text-emerald-500" />
                                     Verified in your possession
                                 </div>

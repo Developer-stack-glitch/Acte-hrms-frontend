@@ -403,6 +403,7 @@ export default function SalaryComponents() {
                                 />
                                 {formData.calculation_type === 'Fixed' && (
                                     <FormInput
+                                        isNumber={true}
                                         label="Amount"
                                         name="calculation_value"
                                         value={formData.calculation_value}
