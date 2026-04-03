@@ -124,7 +124,7 @@ export default function MyProfile() {
         return (
             <div className="group">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-3 ml-1">{label}</p>
-                <div className={`flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-300 border ${isSensitive && isValueProvided
+                <div className={`flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all border border-gray-200 duration-300 ${isSensitive && isValueProvided
                     ? 'bg-primary/5 border-primary/20 shadow-sm'
                     : 'bg-gray-50/50 border-transparent hover:border-primary/10 group-hover:bg-primary/5'
                     }`}>
@@ -197,8 +197,8 @@ export default function MyProfile() {
                             <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
                                 {profile.employee_name || profile.name}
                             </h1>
-                            <span className="inline-flex items-center px-4 py-1 rounded-full bg-green-50 text-green-600 text-[11px] font-black uppercase tracking-widest border border-green-100 shadow-sm self-center md:self-auto">
-                                <CheckCircle2 size={12} className="mr-2" /> Active
+                            <span className="inline-flex items-center px-4 py-1 rounded-full bg-green-50 text-green-600 text-[13px] font-semibold border border-green-200 self-center md:self-auto">
+                                <CheckCircle2 size={12} className="mr-1" /> Active
                             </span>
                         </div>
                         <div className="flex flex-wrap justify-center md:justify-start items-center gap-x-6 gap-y-2 text-gray-500 font-medium">
@@ -225,7 +225,7 @@ export default function MyProfile() {
                                 <div className="pb-3 self-center md:self-end">
                                     <button
                                         onClick={() => navigate('/users/database', { state: { editUserId: profile.id } })}
-                                        className="inline-flex items-center px-4 py-2 rounded-full bg-primary text-white text-[12px] font-medium uppercase tracking-wider border border-primary shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all transform active:scale-95 whitespace-nowrap"
+                                        className="inline-flex items-center px-4 py-2 rounded-full bg-primary text-white text-[14px] font-medium border border-primary shadow-md shadow-primary/20 hover:bg-primary-hover transition-all transform active:scale-95 whitespace-nowrap"
                                     >
                                         <Edit2 size={14} className="mr-2" /> Edit Employee Data
                                     </button>
