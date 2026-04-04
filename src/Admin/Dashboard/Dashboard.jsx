@@ -646,7 +646,10 @@ export default function Dashboard() {
                                             selected={fromDate ? new Date(fromDate) : null}
                                             onChange={(date) => setFromDate(date ? date.toLocaleDateString('sv-SE') : '')}
                                             dateFormat="yyyy-MM-dd"
-                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
+                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[110px]"
                                             popperPlacement="bottom-end"
                                             portalId="root"
                                         />

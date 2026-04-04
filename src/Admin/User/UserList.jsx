@@ -294,7 +294,7 @@ export default function UserList({ onAddClick }) {
                     </div>
                     <button
                         onClick={() => setIsFilterOpen(true)}
-                        className={`flex items-center gap-2 px-3 py-1 border rounded-full font-semibold text-[13px] transition-colors ${Object.keys(filters).some(key => filters[key]?.length > 0)
+                        className={`flex items-center gap-2 px-3 py-1 border border-gray-200 rounded-full font-semibold text-[13px] transition-colors ${Object.keys(filters).some(key => filters[key]?.length > 0)
                             ? 'bg-primary/5 border-primary/20 text-primary'
                             : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'
                             }`}
@@ -304,10 +304,6 @@ export default function UserList({ onAddClick }) {
                         {Object.keys(filters).some(key => filters[key]?.length > 0) && (
                             <span className="w-2 h-2 rounded-full bg-primary" />
                         )}
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-1 border border-gray-100 rounded-full text-gray-600 font-semibold text-[13px] hover:bg-gray-50 transition-colors">
-                        <Download size={16} />
-                        Export
                     </button>
                 </div>
             </div>

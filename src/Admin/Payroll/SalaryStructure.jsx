@@ -29,6 +29,7 @@ import toast from 'react-hot-toast';
 import { FormInput, FormSelect } from '../../Common/Form';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import Tooltip from '../../Common/Tooltip';
+import NoData from '../../Common/NoData';
 
 const getOrdinalSuffix = (day) => {
     if (day > 3 && day < 21) return 'th';
@@ -295,7 +296,7 @@ export default function SalaryStructure() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg text-[14px]"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-full font-medium shadow-lg text-[14px] hover:bg-primary-hover transition-all"
                 >
                     <Plus size={18} />
                     Add new structure
@@ -306,6 +307,13 @@ export default function SalaryStructure() {
             <div className="grid grid-cols-1 gap-6">
                 {loading ? (
                     <SalaryStructureSkeleton count={3} />
+                ) : filteredStructures.length === 0 ? (
+                    <NoData
+                        title="No Salary Structures Found"
+                        description="You haven't defined any salary structures yet. Create one to start managing payroll batching."
+                        onAction={() => handleOpenModal()}
+                        actionText="Create Structure"
+                    />
                 ) : filteredStructures.map(s => (
                     <motion.div
                         key={s.id}
@@ -315,7 +323,7 @@ export default function SalaryStructure() {
                     >
                         <div className="flex items-start justify-between">
                             <div className="space-y-4 flex-1">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 mb-2">
                                     <h3 className="text-lg font-semibold text-gray-900">{s.name}</h3>
                                     <span className={`w-3 h-3 rounded-full ${s.is_active ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                                     <div className="flex items-center gap-1.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
@@ -337,7 +345,7 @@ export default function SalaryStructure() {
                                         <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-2">Earnings</p>
                                         <div className="flex flex-wrap gap-2">
                                             {(s.components || []).filter(c => c.type === 'Earning').map(c => (
-                                                <span key={c.id} className="px-3 py-1 bg-blue-600 text-white text-[11px] font-semibold rounded-full uppercase tracking-wider">
+                                                <span key={c.id} className="px-3 py-0.5 bg-blue-600 text-white text-[12px] font-medium rounded-full">
                                                     {c.name}
                                                 </span>
                                             ))}
@@ -351,7 +359,7 @@ export default function SalaryStructure() {
                                         <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-2">Deductions</p>
                                         <div className="flex flex-wrap gap-2">
                                             {(s.components || []).filter(c => c.type === 'Deduction').map(c => (
-                                                <span key={c.id} className="px-3 py-1 bg-emerald-600 text-white text-[11px] font-semibold rounded-full uppercase tracking-wider">
+                                                <span key={c.id} className="px-3 py-0.5 bg-emerald-600 text-white text-[12px] font-medium rounded-full">
                                                     {c.name}
                                                 </span>
                                             ))}
@@ -397,13 +405,13 @@ export default function SalaryStructure() {
                             </div>
                             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 grid grid-cols-2 gap-6">
                                 <div>
-                                    <h3 className="text-md font-semibold text-gray-900 mb-4 text-blue-600">Available Earnings</h3>
+                                    <h3 className="text-md font-semibold text-gray-700 mb-3 text-blue-600">Available Earnings</h3>
                                     <div className="space-y-2">
                                         {allComponents.filter(c => c.type === 'Earning').map(c => (
                                             <div
                                                 key={c.id}
                                                 onClick={() => toggleComponent(c.id)}
-                                                className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${selectedComponentIds.includes(c.id) ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200'
+                                                className={`p-3 rounded-[10px] border border-gray-200 cursor-pointer transition-all hover:bg-gray-50 flex items-center justify-between ${selectedComponentIds.includes(c.id) ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200'
                                                     }`}
                                             >
                                                 <span className="text-sm font-semibold">{c.name}</span>
@@ -413,7 +421,7 @@ export default function SalaryStructure() {
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-md font-semibold text-gray-900 mb-4 text-emerald-600">Available Deductions</h3>
+                                    <h3 className="text-md font-semibold text-gray-700 mb-3 text-emerald-600">Available Deductions</h3>
                                     <div className="space-y-2">
                                         {allComponents.filter(c => c.type === 'Deduction').map(c => (
                                             <div
@@ -430,8 +438,8 @@ export default function SalaryStructure() {
                                 </div>
                             </div>
                             <div className="p-4 border-t border-gray-100 flex justify-end gap-3">
-                                <button onClick={() => setIsComponentModalOpen(false)} className="px-6 py-2 rounded-full font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
-                                <button onClick={saveComponentAssignments} disabled={submitLoading} className="px-8 py-2 bg-primary text-white rounded-full font-medium shadow-lg">
+                                <button onClick={() => setIsComponentModalOpen(false)} className="px-6 py-2 rounded-full font-medium text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-gray-900 transition-all">Cancel</button>
+                                <button onClick={saveComponentAssignments} disabled={submitLoading} className="px-8 py-2 bg-primary text-white rounded-full font-medium shadow-lg hover:bg-primary-hover transition-all">
                                     {submitLoading ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
                                 </button>
                             </div>
@@ -452,7 +460,7 @@ export default function SalaryStructure() {
                         >
                             <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-gray-900">{selectedStructure ? 'Edit Salary Structure' : 'Create New Salary Structure'}</h2>
+                                    <h2 className="text-xl font-semibold text-gray-700">{selectedStructure ? 'Edit Salary Structure' : 'Create New Salary Structure'}</h2>
                                     <p className="text-[12px] text-gray-500 font-medium">Define structure details and assign salary components</p>
                                 </div>
                                 <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"><X size={22} /></button>

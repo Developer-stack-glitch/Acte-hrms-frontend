@@ -448,6 +448,9 @@ export default function LeaveList() {
                                     <DatePicker
                                         selected={startDate ? new Date(startDate) : null}
                                         onChange={(date) => setStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
                                         dateFormat="dd/MM/yyyy"
                                         className="bg-transparent border-none text-[13px] font-medium outline-none focus:ring-0 text-gray-600 cursor-pointer w-24"
                                         placeholderText="Start Date"
@@ -463,6 +466,9 @@ export default function LeaveList() {
                                     <DatePicker
                                         selected={endDate ? new Date(endDate) : null}
                                         onChange={(date) => setEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
                                         dateFormat="dd/MM/yyyy"
                                         className="bg-transparent border-none text-[13px] font-medium outline-none focus:ring-0 text-gray-600 cursor-pointer w-24"
                                         placeholderText="End Date"

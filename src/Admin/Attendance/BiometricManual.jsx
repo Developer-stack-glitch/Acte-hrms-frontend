@@ -237,7 +237,7 @@ export default function BiometricManual() {
                 </div>
 
                 {/* Desktop Tabs */}
-                <div className="hidden md:flex bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200">
+                <div className="hidden md:flex p-1.5 rounded-full border border-gray-200 gap-2">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -253,17 +253,10 @@ export default function BiometricManual() {
                                 }
                                 setView(tab.id);
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-300 relative ${view === tab.id ? 'bg-white text-primary ring-1 ring-gray-200/50 translate-y-[-1px]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-300 relative ${view === tab.id ? 'bg-primary text-white ring-1 ring-gray-200/50 translate-y-[-1px]' : 'text-gray-500 bg-gray-100/80 hover:text-gray-700 hover:bg-gray-200'}`}
                         >
-                            <tab.icon size={18} className={view === tab.id ? 'text-primary' : 'text-gray-400'} />
+                            <tab.icon size={18} className={view === tab.id ? 'text-white' : 'text-gray-400'} />
                             {tab.label}
-                            {view === tab.id && (
-                                <motion.div
-                                    layoutId="active-tab-indicator-bio"
-                                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
                         </button>
                     ))}
                 </div>
@@ -458,31 +451,31 @@ export default function BiometricManual() {
                                                             <span className="font-bold">ID: {log.emp_id}</span>
                                                             {log.biometric_id && <span className="text-primary font-black">•</span>}
                                                             {log.biometric_id && <span>BIO: {log.biometric_id}</span>}
-                                                            {!log.user_id && <span className="px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-500 font-black text-[9px] uppercase tracking-tighter ring-1 ring-rose-100">Not Linked</span>}
+                                                            {!log.user_id && <span className="px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-500 font-semibold text-[10px] ring-1 ring-rose-100">Not Linked</span>}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-center gap-3">
                                                             <div className="text-center">
                                                                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">In</div>
-                                                                <div className="text-sm font-bold text-gray-700">{log.punch_in || '--:--'}</div>
+                                                                <div className="text-sm font-semibold text-gray-700">{log.punch_in || '--:--'}</div>
                                                             </div>
                                                             <div className="h-4 w-[1px] bg-gray-200"></div>
                                                             <div className="text-center">
                                                                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Out</div>
-                                                                <div className="text-sm font-bold text-gray-700">{log.punch_out || '--:--'}</div>
+                                                                <div className="text-sm font-semibold text-gray-700">{log.punch_out || '--:--'}</div>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
-                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${log.status === 'Absent' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                        <span className={`px-3 py-1 rounded-full text-[12px] font-semibold ${log.status === 'Absent' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
                                                             log.status === 'Incomplete' ? 'bg-orange-50 text-orange-500 border border-orange-200' :
                                                                 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                             }`}>
                                                             {log.status || 'Present'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-center text-sm font-bold text-gray-500">
+                                                    <td className="px-6 py-4 text-center text-sm font-semibold text-gray-500">
                                                         {log.weekoff_date || 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">

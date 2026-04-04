@@ -102,17 +102,19 @@ export default function ManageHolidays() {
     const [holidayToDelete, setHolidayToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const isMainDb = userInfo.is_main_db || userInfo.database === 'hrm_database' || userInfo.database === 'hrms_database';
+
     const [formData, setFormData] = useState({
         name: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         type: 'National',
         description: '',
-        company_id: userInfo.database === 'hrm_database' ? '' : userInfo.company_id
+        company_id: isMainDb ? '' : userInfo.company_id
     });
 
     useEffect(() => {
         fetchHolidays();
-        if (userInfo.database === 'hrm_database') {
+        if (isMainDb) {
             fetchCompanies();
         }
     }, [selectedYear]);
@@ -121,7 +123,7 @@ export default function ManageHolidays() {
         try {
             setLoading(true);
             const params = { year: selectedYear };
-            if (userInfo.database !== 'hrm_database') {
+            if (!isMainDb) {
                 params.company_id = userInfo.company_id;
             }
             const res = await getHolidaysApi(params);
@@ -184,7 +186,7 @@ export default function ManageHolidays() {
         try {
             setIsDeleting(true);
             const params = {};
-            if (userInfo.database !== 'hrm_database') {
+            if (!isMainDb) {
                 params.company_id = userInfo.company_id;
             }
             await deleteHolidayApi(holidayToDelete, params);
@@ -232,7 +234,7 @@ export default function ManageHolidays() {
                                 date: format(new Date(), 'yyyy-MM-dd'),
                                 type: 'National',
                                 description: '',
-                                company_id: userInfo.database === 'hrm_database' ? '' : userInfo.company_id
+                                company_id: isMainDb ? '' : userInfo.company_id
                             });
                             setShowModal(true);
                         }}
@@ -370,7 +372,7 @@ export default function ManageHolidays() {
                             </div>
 
                             <form onSubmit={handleSave} className="p-4 space-y-6">
-                                {userInfo.database === 'hrm_database' && (
+                                {isMainDb && (
                                     <FormSelect
                                         label="Assign to Company"
                                         value={formData.company_id}

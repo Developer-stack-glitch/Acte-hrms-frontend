@@ -27,6 +27,7 @@ import toast from 'react-hot-toast';
 import { FormInput, FormSelect } from '../../Common/Form';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import Tooltip from '../../Common/Tooltip';
+import NoData from '../../Common/NoData';
 // import DataTable from '../../Common/DataTable'; // Not needed if we use Reorder.Group
 
 export default function SalaryComponents() {
@@ -275,10 +276,12 @@ export default function SalaryComponents() {
                         <p className="text-gray-400 font-medium">Loading components...</p>
                     </div>
                 ) : filteredComponents.length === 0 ? (
-                    <div className="p-20 flex flex-col items-center justify-center gap-4">
-                        <Blocks size={48} className="text-gray-100" />
-                        <p className="text-gray-400 font-medium">No {activeTab.toLowerCase()} found</p>
-                    </div>
+                    <NoData
+                        title={`No ${activeTab} Found`}
+                        description={`It looks like you haven't added any ${activeTab.toLowerCase()} patterns yet.`}
+                        onAction={() => handleOpenModal()}
+                        actionText={`Add ${activeTab.slice(0, -1)}`}
+                    />
                 ) : (
                     <Reorder.Group axis="y" values={filteredComponents} onReorder={handleReorder} className="divide-y divide-gray-50">
                         {filteredComponents.map((c, index) => (

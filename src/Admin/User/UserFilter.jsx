@@ -198,14 +198,14 @@ export default function UserFilter({ isOpen, onClose, onApply, currentFilters })
                     <div className="p-6 border-t border-gray-100 bg-white flex items-center justify-between gap-8">
                         <button
                             onClick={handleReset}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-500 font-bold text-[14px] hover:text-gray-700 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-gray-500 font-medium text-[15px] hover:bg-gray-100 transition-colors"
                         >
                             <RotateCcw size={16} />
                             Reset
                         </button>
                         <button
                             onClick={handleApply}
-                            className="flex-1 bg-primary text-white py-2.5 rounded-full font-semibold text-[14px] shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all"
+                            className="flex-1 bg-primary text-white py-2.5 rounded-full font-medium text-[15px] shadow-sm shadow-primary/10 hover:bg-primary-hover transition-all"
                         >
                             Apply
                         </button>

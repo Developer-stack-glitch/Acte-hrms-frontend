@@ -265,6 +265,9 @@ export default function PayrollDashboard() {
                                     selected={fromDate ? new Date(fromDate) : null}
                                     onChange={(date) => setFromDate(date ? format(date, 'yyyy-MM-dd') : '')}
                                     dateFormat="yyyy-MM-dd"
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
                                     className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
                                     popperPlacement="bottom-end"
                                     portalId="root"
@@ -280,6 +283,9 @@ export default function PayrollDashboard() {
                                     selected={toDate ? new Date(toDate) : null}
                                     onChange={(date) => setToDate(date ? format(date, 'yyyy-MM-dd') : '')}
                                     dateFormat="yyyy-MM-dd"
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
                                     className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
                                     popperPlacement="bottom-end"
                                     portalId="root"

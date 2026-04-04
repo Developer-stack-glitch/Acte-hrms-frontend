@@ -10,12 +10,16 @@ const FormSelect = ({
     className = "",
     icon: Icon,
     placeholder = "Select an option",
+    extra,
     children,
     ...props
 }) => {
     return (
         <div className={`space-y-2 ${className}`}>
-            <FormLabel label={label} icon={Icon} required={required} />
+            <div className="flex items-center justify-between">
+                <FormLabel label={label} icon={Icon} required={required} />
+                {extra}
+            </div>
             <div className="relative">
                 <select
                     value={value}

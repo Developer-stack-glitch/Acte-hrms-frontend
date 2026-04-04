@@ -21,6 +21,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
 import UserFilter from '../User/UserFilter';
 import AttendanceSkeleton from '../../Common/CommonSkeletonLoader/AttendanceSkeleton';
+import NoData from '../../Common/NoData';
 
 const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor, showInfo, delay = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -568,6 +569,9 @@ export default function ManageAttedance() {
                                     selected={fromDate ? new Date(fromDate) : null}
                                     onChange={(date) => setFromDate(date ? date.toLocaleDateString('sv-SE') : '')}
                                     dateFormat="yyyy-MM-dd"
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
                                     className="bg-transparent border-none text-[12px] md:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[90px]"
                                     popperPlacement="bottom-end"
                                     portalId="root"
@@ -591,11 +595,6 @@ export default function ManageAttedance() {
                             </div>
                         </div>
                     </div>
-
-                    <button className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-4 h-9 bg-white text-gray-700 border border-gray-100 rounded-[20px] font-semibold text-[13px] hover:bg-gray-50 transition-all shadow-sm group">
-                        <FileSpreadsheet size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
-                        <span>Export CSV</span>
-                    </button>
                 </div>
             </div>
 
@@ -781,7 +780,7 @@ export default function ManageAttedance() {
                 <div className="overflow-x-auto relative custom-scrollbar pb-2">
                     {filteredEmployees.length === 0 ? (
                         <div className="bg-white rounded-xl border border-gray-100 p-8">
-                            <EmptyState
+                            <NoData
                                 icon={Search}
                                 title="No employee found"
                                 description="Try adjusting your search or filters to find what you're looking for."
@@ -1037,19 +1036,6 @@ export default function ManageAttedance() {
         });
         return { p: p.toFixed(1), a, h, l, e, lv, d: d.toFixed(1), wo };
     }
-}
-
-// Subcomponents for cleaner code
-function EmptyState({ icon: Icon, title, description }) {
-    return (
-        <div className="px-6 py-20 text-center flex flex-col items-center justify-center w-full">
-            <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-300 mx-auto mb-6 ring-8 ring-gray-50/50">
-                <Icon size={40} />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-500 max-w-xs mx-auto font-medium text-sm">{description}</p>
-        </div>
-    );
 }
 
 function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {

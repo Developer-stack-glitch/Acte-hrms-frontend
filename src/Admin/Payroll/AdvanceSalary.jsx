@@ -30,7 +30,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="bg-white rounded-[15px] p-4 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.05)] transition-all group overflow-hidden relative"
+        className="bg-white rounded-[15px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
     >
         <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full ${color.bg} opacity-10 group-hover:scale-125 transition-transform duration-500`} />
         <div className="flex items-center justify-between relative z-10">
@@ -232,9 +232,9 @@ export default function AdvanceSalary() {
                             New Request
                         </button>
                     )}
-                    <button onClick={() => navigate('/policies')} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-100 text-gray-700 rounded-full font-medium text-[14px] shadow-sm hover:bg-gray-50 transition-all">
+                    <button onClick={() => navigate('/policies')} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full font-medium text-[14px] hover:bg-gray-50 transition-all">
                         Policy Guide
-                        <ArrowUpRight size={16} className="text-gray-400" />
+                        <ArrowUpRight size={16} className="text-primary" />
                     </button>
                 </div>
             </div>
@@ -278,13 +278,13 @@ export default function AdvanceSalary() {
                     <div className="flex items-center gap-4">
                         <h2 className="font-semibold text-gray-900 text-lg">{isAdmin ? "All Multi-Advance Requests" : "My Salary Advance History"}</h2>
                         <div className="h-6 w-[1px] bg-gray-200 hidden md:block" />
-                        <div className="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner">
+                        <div className="flex items-center bg-gray-50 p-1 rounded-full border border-gray-200 shadow-inner">
                             {['All', 'Pending', 'Approved', 'Rejected'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setFilterTab(tab)}
-                                    className={`px-5 py-1.5 rounded-lg text-[12px] font-bold transition-all ${filterTab === tab
-                                        ? 'bg-white text-primary shadow-sm'
+                                    className={`px-5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${filterTab === tab
+                                        ? 'bg-primary text-white shadow-sm'
                                         : 'text-gray-500 hover:text-gray-700'
                                         }`}
                                 >

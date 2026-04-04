@@ -168,7 +168,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
             const { finalizePayrollRunApi } = await import('../../Action/api');
             await finalizePayrollRunApi(batchData.id);
             toast.success('Payroll finalized and email sent successfully');
-            fetchPayrollEmployees();
+            onBack();
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to finalize payroll');
         } finally {
@@ -409,6 +409,26 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             render: (val) => (
                                 <span className="font-bold text-indigo-600 text-[13px]">
                                     {Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </span>
+                            )
+                        },
+                        {
+                            header: 'CL Used',
+                            key: 'cl_used',
+                            align: 'center',
+                            render: (val) => (
+                                <span className="text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                    {Number(val || 0).toFixed(1)}d
+                                </span>
+                            )
+                        },
+                        {
+                            header: 'Perm Used',
+                            key: 'permission_used',
+                            align: 'center',
+                            render: (val) => (
+                                <span className="text-[12px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                    {Number(val || 0).toFixed(1)}d
                                 </span>
                             )
                         },

@@ -334,6 +334,9 @@ export default function AssetOverview() {
                                         selected={new Date(fromDate)}
                                         onChange={(date) => setFromDate(date ? date.toLocaleDateString('sv-SE') : '')}
                                         dateFormat="yyyy-MM-dd"
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
                                         className="bg-transparent border-none text-[12px] sm:text-[14px] font-semibold outline-none w-[90px] sm:w-[100px] text-[#2c3e50] cursor-pointer p-0"
                                         popperPlacement="bottom-end"
                                         portalId="root"

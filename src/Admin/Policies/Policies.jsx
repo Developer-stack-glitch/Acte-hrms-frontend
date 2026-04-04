@@ -17,6 +17,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { FormInput, FormSelect } from '../../Common/Form';
 import DualPanelSkeleton from '../../Common/CommonSkeletonLoader/DualPanelSkeleton';
+import NoData from '../../Common/NoData';
 
 const quillModules = {
     toolbar: [
@@ -201,9 +202,11 @@ const Policies = () => {
                             </button>
                         ))}
                         {policies.length === 0 && (
-                            <div className="p-4 text-center text-gray-400 text-sm italic">
-                                No policies added yet.
-                            </div>
+                            <NoData 
+                                variant="mini"
+                                title="No policies yet"
+                                description="Start by creating one."
+                            />
                         )}
                     </div>
                 </div>
@@ -262,16 +265,26 @@ const Policies = () => {
                                         }}
                                     />
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-20 text-gray-400 italic">
-                                        No detailed description provided for this policy.
-                                    </div>
+                                    <NoData 
+                                        title="No Content"
+                                        description="This policy doesn't have a detailed description yet."
+                                        icon={<ShieldCheck size={40} className="text-gray-200" />}
+                                    />
                                 )}
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-4">
-                            <ShieldCheck size={64} strokeWidth={1} />
-                            <p className="font-medium">Select a policy from the sidebar to view details</p>
+                        <div className="h-full flex flex-col items-center justify-center py-20 translate-y-12">
+                            <NoData 
+                                title={policies.length === 0 ? "Welcome to Policies" : "Select a Policy"}
+                                description={policies.length === 0 
+                                    ? "Create your organization's first policy to get started with compliance and guidelines."
+                                    : "Choose a document from the left sidebar to view its details and associated files."
+                                }
+                                icon={<ShieldCheck size={50} className="text-primary/20" />}
+                                onAction={policies.length === 0 && isAdmin ? () => handleOpenModal() : null}
+                                actionText="Create First Policy"
+                            />
                         </div>
                     )}
                 </div>

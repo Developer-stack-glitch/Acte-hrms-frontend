@@ -236,6 +236,9 @@ export default function ManageLeavesContent({ onViewAll }) {
                                 <DatePicker
                                     selected={startDate ? new Date(startDate) : null}
                                     onChange={(date) => setStartDate(date ? date.toLocaleDateString('sv-SE') : '')}
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
                                     dateFormat="yyyy-MM-dd"
                                     className="bg-transparent border-none text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[100px]"
                                     placeholderText="Start Date"
@@ -251,6 +254,9 @@ export default function ManageLeavesContent({ onViewAll }) {
                                 <DatePicker
                                     selected={endDate ? new Date(endDate) : null}
                                     onChange={(date) => setEndDate(date ? date.toLocaleDateString('sv-SE') : '')}
+                                    showYearDropdown
+                                    showMonthDropdown
+                                    dropdownMode="select"
                                     dateFormat="yyyy-MM-dd"
                                     className="bg-transparent border-none text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[100px]"
                                     placeholderText="End Date"

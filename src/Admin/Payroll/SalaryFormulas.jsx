@@ -90,11 +90,11 @@ const ValidationModal = ({ isOpen, onClose, formula, formulaId, companyId, onSuc
                             Formula: <span className="text-primary font-bold">{formula}</span>
                         </p>
                         <FormInput
-                            label="Enter a sample Annual CTC to test with:"
+                            label="Enter a sample Monthly CTC to test with:"
                             name="test_ctc"
                             value={testCTC}
                             onChange={(e) => setTestCTC(e.target.value)}
-                            placeholder="e.g., 600000"
+                            placeholder="e.g., 50000"
                             type="number"
                         />
                         <button
@@ -316,7 +316,7 @@ export default function SalaryFormulas() {
             header: 'Status',
             key: 'status',
             render: (val) => (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${val === 'VALIDATED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${val === 'VALIDATED' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                     {val}
                 </span>
             )
@@ -375,7 +375,7 @@ export default function SalaryFormulas() {
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 font-medium px-1 mt-1 leading-relaxed">
                             <Info size={12} className="shrink-0" />
                             Available tokens:
-                            <span className="text-primary font-bold">{` {CTC},`}</span>
+                            <span className="text-primary font-bold">{` {CTC} (Monthly), {CTC_YEAR} (Annual), {GROSS}, {Basic}`}</span>
                             {components.map((c, i) => (
                                 <span key={i} className="text-primary font-bold">
                                     {` {${c.name}}${i < components.length - 1 ? ',' : ''}`}

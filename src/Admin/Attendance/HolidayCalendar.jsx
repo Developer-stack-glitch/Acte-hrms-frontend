@@ -107,6 +107,7 @@ export default function HolidayCalendar() {
     const [loading, setLoading] = useState(true);
     const [selectedHoliday, setSelectedHoliday] = useState(null);
     const [userInfo] = useState(JSON.parse(localStorage.getItem('userInfo') || '{}'));
+    const isMainDb = userInfo.is_main_db || userInfo.database === 'hrm_database' || userInfo.database === 'hrms_database';
 
     useEffect(() => {
         fetchHolidays();
@@ -116,7 +117,7 @@ export default function HolidayCalendar() {
         try {
             setLoading(true);
             const params = { year: currentDate.getFullYear() };
-            if (userInfo.database !== 'hrm_database') {
+            if (!isMainDb) {
                 params.company_id = userInfo.company_id;
             }
             const res = await getHolidaysApi(params);

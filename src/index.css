@@ -261,3 +261,63 @@ button {
 .react-datepicker__day--outside-month {
   color: #cbd5e1 !important;
 }
+
+/* Premium Select Styling for Year/Month Dropdowns */
+.react-datepicker__header--has-navigation-options {
+  margin: 0 !important;
+  padding: 10px 0 !important;
+}
+
+.react-datepicker__month-dropdown-container,
+.react-datepicker__year-dropdown-container {
+  margin: 4px 4px !important;
+  display: inline-block !important;
+}
+
+.react-datepicker__header select {
+  padding: 6px 30px 6px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 12px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.react-datepicker__header select:hover {
+  border-color: #1d4ed8 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 2px 4px rgba(29, 78, 216, 0.05) !important;
+}
+
+.react-datepicker__header select:focus {
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15) !important;
+}
+
+/* Customizing the header layout */
+.react-datepicker__header {
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.react-datepicker__header--has-navigation-options .react-datepicker__current-month {
+  display: none !important;
+}
+
+.react-datepicker__current-month {
+  margin-bottom: 8px !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}

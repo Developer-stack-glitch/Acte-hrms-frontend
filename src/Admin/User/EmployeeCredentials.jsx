@@ -194,7 +194,7 @@ export default function EmployeeCredentials() {
                                             <ShieldCheck size={40} />
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-xl font-bold text-slate-800">No employee found</h3>
+                                            <h3 className="text-xl font-semibold text-slate-800">No employee found</h3>
                                             <p className="text-slate-500 text-[15px] font-medium max-w-xs mx-auto">
                                                 We couldn't find any employees matching your search or filters.
                                             </p>

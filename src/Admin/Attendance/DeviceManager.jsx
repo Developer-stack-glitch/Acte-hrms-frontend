@@ -5,6 +5,7 @@ import { getDevicesApi, createDeviceApi, updateDeviceApi, deleteDeviceApi } from
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import { FormInput } from '../../Common/Form';
+import DataTable from '../../Common/DataTable';
 
 export default function DeviceManager() {
     const [devices, setDevices] = useState([]);
@@ -103,6 +104,51 @@ export default function DeviceManager() {
         setEditingId(null);
         setFormData({ name: '', serial_number: '', location: '' });
     };
+
+    const columns = [
+        {
+            header: 'Device Info',
+            key: 'name',
+            render: (val, row) => (
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Tablet size={20} />
+                    </div>
+                    <div className="font-semibold text-gray-900 text-[15px]">{val}</div>
+                </div>
+            )
+        },
+        {
+            header: 'Serial Number',
+            key: 'serial_number',
+            render: (val) => (
+                <span className="text-sm font-black text-gray-500 font-mono tracking-wider">
+                    {val}
+                </span>
+            )
+        },
+        {
+            header: 'Location',
+            key: 'location',
+            render: (val) => (
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <MapPin size={14} className="text-gray-400" />
+                    {val || 'Not Specified'}
+                </div>
+            )
+        },
+        {
+            header: 'Status',
+            key: 'status',
+            align: 'center',
+            render: () => (
+                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-1.5 w-max mx-auto">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    Connected
+                </span>
+            )
+        }
+    ];
 
 
     return (
@@ -217,134 +263,16 @@ export default function DeviceManager() {
             </AnimatePresence>
 
             {/* Device List */}
-            <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden shadow-xl shadow-gray-200/40">
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-[15px] font-semibold text-gray-700">Device Info</th>
-                                <th className="px-6 py-4 text-[15px] font-semibold text-gray-700">Serial Number</th>
-                                <th className="px-6 py-4 text-[15px] font-semibold text-gray-700">Location</th>
-                                <th className="px-6 py-4 text-[15px] font-semibold text-gray-700 text-center">Status</th>
-                                {isAdmin && <th className="px-6 py-4 text-[15px] font-semibold text-gray-700 text-right">Actions</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50/80">
-                            {fetching ? (
-                                <tr>
-                                    <td colSpan="5" className="px-8 py-24 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <Loader2 size={40} className="animate-spin text-primary opacity-20" />
-                                            <span className="text-gray-400 font-semibold tracking-tight">Loading devices...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : devices.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-8 py-24 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="w-16 h-16 rounded-3xl bg-gray-50 flex items-center justify-center text-gray-300">
-                                                <Tablet size={32} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-gray-900">No devices registered</h3>
-                                                <p className="text-gray-500 text-sm">Add a biometric device to start fetching attendance.</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                devices.map((device) => (
-                                    <tr key={device.id} className="group hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                                    <Tablet size={20} />
-                                                </div>
-                                                <div className="font-semibold text-gray-900 text-[15px]">{device.name}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm font-black text-gray-500 font-mono tracking-wider">
-                                            {device.serial_number}
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-                                                <MapPin size={14} className="text-gray-400" />
-                                                {device.location || 'Not Specified'}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100 flex items-center justify-center gap-1.5 w-max mx-auto">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                Connected
-                                            </span>
-                                        </td>
-                                        {isAdmin && (
-                                            <td className="px-8 py-5 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(device)}
-                                                        className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-primary hover:border-primary/20 hover:shadow-md transition-all active:scale-90"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(device.id)}
-                                                        className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-rose-500 hover:border-rose-100 hover:shadow-md transition-all active:scale-90"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Mobile View */}
-                <div className="md:hidden divide-y divide-gray-50">
-                    {devices.map((device) => (
-                        <div key={device.id} className="p-4 space-y-4 active:bg-gray-50 transition-colors">
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
-                                        <Tablet size={20} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 text-lg">{device.name}</h4>
-                                        <span className="text-[10px] font-black text-gray-400 uppercase font-mono">{device.serial_number}</span>
-                                    </div>
-                                </div>
-                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-wider border border-emerald-100">
-                                    Active
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
-                                <MapPin size={14} />
-                                {device.location || 'N/A'}
-                            </div>
-                            {isAdmin && (
-                                <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                    <button
-                                        onClick={() => handleEdit(device)}
-                                        className="flex-1 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100 transition-all font-primary"
-                                    >
-                                        <Edit2 size={16} /> Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteClick(device.id)}
-                                        className="px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-bold flex items-center justify-center hover:bg-rose-100 transition-all"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+            <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden shadow-xl shadow-gray-200/40 min-h-[400px]">
+                <DataTable
+                    columns={columns}
+                    data={devices}
+                    isLoading={fetching}
+                    onEdit={isAdmin ? handleEdit : null}
+                    onDelete={isAdmin ? (row) => handleDeleteClick(row.id) : null}
+                    emptyMessage="No biometric devices found"
+                    rowClassName="h-16"
+                />
             </div>
 
             <ConfirmationModal

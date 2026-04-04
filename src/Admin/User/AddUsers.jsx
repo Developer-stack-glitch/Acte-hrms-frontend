@@ -14,6 +14,7 @@ import {
     Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { createUserApi, updateUserApi, getBranchesApi, getDesignationsApi, getShiftsApi, getDepartmentsApi, getBatchAllocationsApi, getAllRolePermissionsApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput, FormSelect, FormDate, FormTextarea } from '../../Common/Form';
@@ -29,10 +30,10 @@ const sections = [
             { name: 'emp_id', label: 'Employee ID *', type: 'text', required: true },
             { name: 'biometric_id', label: 'Biometric ID', type: 'text' },
             { name: 'role', label: 'User Role *', type: 'select', options: [], required: true },
-            { name: 'department', label: 'Department', type: 'select', options: [] },
-            { name: 'designation', label: 'Designation', type: 'select', options: [] },
-            { name: 'branch', label: 'Branch', type: 'select', options: [] },
-            { name: 'shift', label: 'Shift', type: 'select', options: [] },
+            { name: 'department', label: 'Department *', type: 'select', options: [], required: true },
+            { name: 'designation', label: 'Designation *', type: 'select', options: [], required: true },
+            { name: 'branch', label: 'Branch *', type: 'select', options: [], required: true },
+            { name: 'shift', label: 'Shift *', type: 'select', options: [], required: true },
             { name: 'employment_type', label: 'Employment Type', type: 'select', options: ['Permanent', 'Contract', 'Intern', 'Probation', 'Notice Period'] },
             { name: 'work_location', label: 'Mode of Work', type: 'select', options: ['On-site', 'Remote', 'Hybrid'] },
             { name: 'doj', label: 'DOJ (Date of Joining)', type: 'date' },
@@ -49,7 +50,7 @@ const sections = [
         icon: Wallet,
         fields: [
             { name: 'year_gross_salary', label: 'Year Gross Salary *', type: 'number', isNumber: true, required: true },
-            { name: 'salary_structure_id', label: 'Select Salary Structure *', type: 'select', options: [], required: true },
+            { name: 'salary_structure_id', label: 'Salary Structure *', type: 'select', options: [], required: true },
             { name: 'last_increment', label: 'Last Increment Amount', type: 'number', isNumber: true },
             { name: 'increment_type', label: 'Increment Type', type: 'select', options: ['Fixed Amount', 'Percentage'] },
             { name: 'upcoming_increment', label: 'Upcoming Increment Date', type: 'date' },
@@ -131,6 +132,7 @@ const sections = [
 export default function AddUsers({ initialData, mode = 'add', onCancel, onSuccess }) {
     const isEdit = mode === 'edit';
     const isView = mode === 'view';
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         is_experienced: false
@@ -250,6 +252,34 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
             const dDeptName = (d.department_name || '').toString().trim();
             return dDeptId === deptValue || dDeptName === deptValue;
         });
+    };
+
+    const renderAddOption = (name, label) => {
+        if (isView) return null;
+        if (!['branch', 'department', 'designation', 'shift', 'role', 'salary_structure_id'].includes(name)) return null;
+
+        const path = {
+            branch: '/organization/branch',
+            department: '/organization/department',
+            designation: '/organization/designation',
+            shift: '/organization/shift',
+            role: '/organization/roles',
+            salary_structure_id: '/payroll/salary-structure'
+        }[name];
+
+        const hasData = options[name]?.length > 0;
+        const cleanLabel = label.replace(' *', '');
+
+        return (
+            <button
+                type="button"
+                onClick={() => navigate(path)}
+                className="text-[10px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 transition-all active:scale-95 hover:bg-primary/20"
+            >
+                <Plus size={10} />
+                {hasData ? `Add New ${cleanLabel}` : `Add ${cleanLabel}`}
+            </button>
+        );
     };
 
     // Initial data mapping
@@ -518,12 +548,15 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         onChange={handleChange}
                                                         disabled={isView}
                                                         required={field.required}
+                                                        extra={renderAddOption(field.name, field.label)}
                                                         options={(field.name === 'designation'
                                                             ? getFilteredDesignations().map(d => ({ value: d.id, label: d.name }))
-                                                            : (field.options && field.options.length > 0
-                                                                ? field.options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
-                                                                : (options[field.name] || []).map(o => ({ value: o.id, label: o.name }))))}
-                                                        placeholder={`Select ${field.label}`}
+                                                            : (field.name === 'salary_structure_id'
+                                                                ? (options.salary_structure_id || []).map(s => ({ value: s.id, label: s.name }))
+                                                                : (field.options && field.options.length > 0
+                                                                    ? field.options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
+                                                                    : (options[field.name] || []).map(o => ({ value: o.id, label: o.name })))))}
+                                                        placeholder={`Select ${field.label.replace(' *', '')}`}
                                                     />
                                                 ) : field.type === 'checkbox' ? (
                                                     <div className="flex flex-col gap-1">

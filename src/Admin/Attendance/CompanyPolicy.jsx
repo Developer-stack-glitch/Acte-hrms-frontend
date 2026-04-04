@@ -14,8 +14,8 @@ import toast from 'react-hot-toast';
 
 export default function CompanyPolicy() {
     const [policy, setPolicy] = useState({
-        cl_limit: 1.0,
-        permission_limit: 0.2
+        cl_limit: 0,
+        permission_limit: 0
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -44,8 +44,8 @@ export default function CompanyPolicy() {
         try {
             const response = await getCompanyPolicyApi(cid);
             setPolicy({
-                cl_limit: response.data.cl_limit,
-                permission_limit: response.data.permission_limit
+                cl_limit: response.data.cl_limit || 0,
+                permission_limit: response.data.permission_limit || 0
             });
         } catch (error) {
             console.error('Error fetching company policy:', error);
@@ -136,7 +136,7 @@ export default function CompanyPolicy() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {/* CL Allowance */}
                                 <div className="space-y-3">
-                                    <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                                    <label className="block text-sm font-semibold text-gray-700">
                                         Max Casual Leave (CL) per Month
                                     </label>
                                     <div className="relative group">
@@ -159,7 +159,7 @@ export default function CompanyPolicy() {
 
                                 {/* Permission Allowance */}
                                 <div className="space-y-3">
-                                    <label className="block text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                                    <label className="block text-sm font-semibold text-gray-700">
                                         Max Permission Hours (in Days)
                                     </label>
                                     <div className="relative group">

@@ -45,7 +45,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="bg-white rounded-[15px] p-4 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.05)] transition-all group overflow-hidden relative"
+        className="bg-white rounded-[15px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
     >
         <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full ${color.bg} opacity-10 group-hover:scale-125 transition-transform duration-500`} />
         <div className="flex items-center justify-between relative z-10">
@@ -53,7 +53,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
                 <h3 className="text-[15px] md:text-[24px] font-semibold text-gray-900">
                     {value}
                 </h3>
-                <p className="text-[10px] sm:text-[11px] font-semibold text-[#2a2a2a]/60 uppercase tracking-widest leading-tight">
+                <p className="text-[11px] font-semibold text-[#2a2a2a]/80">
                     {title} {subValue && <span className="text-gray-400">({subValue})</span>}
                 </p>
             </div>
@@ -284,13 +284,13 @@ export default function PayrollDashboard({ onEdit }) {
                         <Play size={16} fill="currentColor" />
                         Run Payroll
                     </button>
-                    <button onClick={() => navigate('/reimbursements')} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-100 text-gray-700 rounded-full font-semibold text-[13px] shadow-sm hover:bg-gray-50 transition-all">
+                    <button onClick={() => navigate('/reimbursements')} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full font-semibold text-[13px] hover:bg-gray-50 transition-all">
                         Reimbursements
                         <ArrowUpRight size={16} className="text-gray-400" />
                     </button>
                     <button
                         onClick={() => navigate('/payroll/advance-salary')}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-100 text-gray-700 rounded-full font-semibold text-[13px] shadow-sm hover:bg-gray-50 transition-all"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full font-semibold text-[13px] hover:bg-gray-50 transition-all"
                     >
                         Advance Salary
                         <ArrowUpRight size={16} className="text-gray-400" />
@@ -350,13 +350,13 @@ export default function PayrollDashboard({ onEdit }) {
                         <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <h2 className="font-semibold text-gray-900 text-lg">Recent Payrolls</h2>
 
-                            <div className="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner">
+                            <div className="flex items-center bg-gray-50 p-1 rounded-full border border-gray-200 shadow-inner">
                                 {['All', 'Active', 'Pending', 'Completed', 'Hold List'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setFilterTab(tab)}
-                                        className={`px-5 py-1.5 rounded-lg text-[12px] font-bold transition-all ${filterTab === tab
-                                            ? 'bg-white text-primary shadow-sm'
+                                        className={`px-5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${filterTab === tab
+                                            ? 'bg-primary text-white shadow-sm'
                                             : 'text-gray-500 hover:text-gray-700'
                                             }`}
                                     >
@@ -439,13 +439,13 @@ export default function PayrollDashboard({ onEdit }) {
                                 <table className="w-full text-left whitespace-nowrap">
                                     <thead className="bg-primary/4">
                                         <tr>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest">Batch</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest">Pay Type</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest text-center">Period</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest text-center">Employees</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest text-right">Amount</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary uppercase tracking-widest text-center">Status</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-primary-600 uppercase tracking-widest text-right">Actions</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Batch</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Pay Type</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Period</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Employees</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Amount</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Status</th>
+                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
@@ -571,10 +571,10 @@ export default function PayrollDashboard({ onEdit }) {
 
                         {!loading && filterTab !== 'Hold List' && filteredData.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-                                    <Search size={32} className="opacity-20" />
+                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                                    <Search size={32} className="opacity-70" />
                                 </div>
-                                <p className="font-semibold">No payroll records found for "{filterTab}"</p>
+                                <p className="font-semibold text-gray-700">No payroll records found for "{filterTab}"</p>
                             </div>
                         )}
                     </div>
@@ -638,6 +638,9 @@ export default function PayrollDashboard({ onEdit }) {
                                             }}
                                             dateFormat="MMMM, yyyy"
                                             showMonthYearPicker
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                                             portalId="root"
                                         />
@@ -658,6 +661,9 @@ export default function PayrollDashboard({ onEdit }) {
                                                 selected={runFormData.period_start ? new Date(runFormData.period_start) : null}
                                                 onChange={(date) => setRunFormData(prev => ({ ...prev, period_start: date ? format(date, 'yyyy-MM-dd') : '' }))}
                                                 dateFormat="dd-MM-yyyy"
+                                                showYearDropdown
+                                                showMonthDropdown
+                                                dropdownMode="select"
                                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                                                 portalId="root"
                                             />
@@ -673,6 +679,9 @@ export default function PayrollDashboard({ onEdit }) {
                                                 selected={runFormData.period_end ? new Date(runFormData.period_end) : null}
                                                 onChange={(date) => setRunFormData(prev => ({ ...prev, period_end: date ? format(date, 'yyyy-MM-dd') : '' }))}
                                                 dateFormat="dd-MM-yyyy"
+                                                showYearDropdown
+                                                showMonthDropdown
+                                                dropdownMode="select"
                                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                                                 portalId="root"
                                             />
@@ -786,6 +795,9 @@ export default function PayrollDashboard({ onEdit }) {
                                                 selected={runFormData.period_start ? new Date(runFormData.period_start) : null}
                                                 onChange={(date) => setRunFormData(prev => ({ ...prev, period_start: date ? format(date, 'yyyy-MM-dd') : '' }))}
                                                 dateFormat="dd-MM-yyyy"
+                                                showYearDropdown
+                                                showMonthDropdown
+                                                dropdownMode="select"
                                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                                                 portalId="root"
                                             />
@@ -801,6 +813,9 @@ export default function PayrollDashboard({ onEdit }) {
                                                 selected={runFormData.period_end ? new Date(runFormData.period_end) : null}
                                                 onChange={(date) => setRunFormData(prev => ({ ...prev, period_end: date ? format(date, 'yyyy-MM-dd') : '' }))}
                                                 dateFormat="dd-MM-yyyy"
+                                                showYearDropdown
+                                                showMonthDropdown
+                                                dropdownMode="select"
                                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                                                 portalId="root"
                                             />

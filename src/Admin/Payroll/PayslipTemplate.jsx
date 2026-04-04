@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCompanyByIdApi, updateCompanyApi } from '../../Action/api';
 import toast from 'react-hot-toast';
+import { FormInput, FormTextarea } from '../../Common/Form';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
 
@@ -338,31 +339,28 @@ export default function PayslipTemplate() {
                                 className="space-y-4"
                             >
                                 <div>
-                                    <label className="text-[12px] font-bold text-[#2a2a2a]/40 uppercase tracking-widest block mb-2">Company Address</label>
-                                    <textarea
+                                    <label className="text-[14px] font-semibold text-[#2a2a2a] block mb-2">Company Address</label>
+                                    <FormTextarea
                                         rows="4"
                                         value={companyInfo.address}
                                         onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
-                                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-medium resize-none"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[12px] font-bold text-[#2a2a2a]/40 uppercase tracking-widest block mb-2">Phone</label>
-                                        <input
+                                        <label className="text-[14px] font-semibold text-[#2a2a2a] block mb-2">Phone</label>
+                                        <FormInput
                                             type="text"
                                             value={companyInfo.phone}
                                             onChange={(e) => setCompanyInfo({ ...companyInfo, phone: e.target.value })}
-                                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-primary/5 transition-all font-medium"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[12px] font-bold text-[#2a2a2a]/40 uppercase tracking-widest block mb-2">Pay Month</label>
-                                        <input
+                                        <label className="text-[14px] font-semibold text-[#2a2a2a] block mb-2">Pay Month</label>
+                                        <FormInput
                                             type="text"
                                             value={payslipData.monthYear}
                                             onChange={(e) => setPayslipData({ ...payslipData, monthYear: e.target.value.toUpperCase() })}
-                                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-primary/5 transition-all font-medium"
                                         />
                                     </div>
                                 </div>
@@ -378,14 +376,14 @@ export default function PayslipTemplate() {
                             >
                                 <div className="p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center group transition-all hover:bg-white hover:border-primary/30">
                                     <h3 className="text-[12px] font-bold text-gray-700 mb-4 uppercase tracking-widest">Company Logo</h3>
-                                    <div className="w-24 h-24 mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden mb-4 p-2">
+                                    <div className="w-24 h-24 mx-auto bg-white rounded-2xl border border-gray-200 flex items-center justify-center overflow-hidden mb-4 p-2">
                                         {logo ? (
                                             <img src={logo} alt="Preview" className="w-full h-full object-contain" />
                                         ) : (
                                             <ImageIcon size={32} className="text-gray-300" />
                                         )}
                                     </div>
-                                    <label className="inline-flex items-center gap-2 px-6 py-2 bg-white text-gray-700 text-[12px] font-bold rounded-full border border-gray-200 hover:shadow-md cursor-pointer transition-all active:scale-95">
+                                    <label className="inline-flex items-center gap-2 px-6 py-2 bg-white text-gray-700 text-[12px] font-bold rounded-full border border-gray-200 cursor-pointer transition-all active:scale-95">
                                         <ImageIcon size={14} className="text-primary" />
                                         Change Logo
                                         <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
@@ -398,7 +396,7 @@ export default function PayslipTemplate() {
                     <div className="pt-6 border-t border-gray-100 mt-10">
                         <button
                             onClick={handleSaveConfig}
-                            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-primary text-white rounded-full font-medium shadow-xl shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all"
+                            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-primary text-white rounded-full font-medium shadow-md shadow-primary/10 hover:bg-primary-hover active:scale-[0.98] transition-all"
                         >
                             <Save size={18} />
                             Save Config
@@ -418,14 +416,14 @@ export default function PayslipTemplate() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handlePrint}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 text-[12px] font-semibold rounded-xl border border-gray-200 hover:shadow-lg transition-all active:scale-95"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 text-[12px] font-semibold rounded-full border border-gray-200 hover:bg-gray-100 transition-all active:scale-95"
                             >
                                 <Download size={16} />
                                 Export PDF
                             </button>
                             <button
                                 onClick={handlePrint}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-[12px] font-semibold rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-95"
+                                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-[12px] font-semibold rounded-full shadow-sm shadow-primary/10 hover:bg-primary-hover active:scale-[0.98] transition-all"
                             >
                                 <Printer size={16} />
                                 Print Payslip

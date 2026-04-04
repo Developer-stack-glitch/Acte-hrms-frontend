@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import TableSkeleton from './CommonSkeletonLoader/TableSkeleton';
 import { Edit2, Trash2, Eye } from 'lucide-react'
 import Tooltip from './Tooltip';
+import NoData from './NoData';
 /**
  * A reusable Data Table component with premium styling.
  * 
@@ -58,16 +59,12 @@ export default function DataTable({
                             />
                         ) : data.length === 0 ? (
                             <tr>
-                                <td colSpan={columns.length + 1} className="px-6 py-24 text-center">
-                                    <div className="flex flex-col items-center justify-center gap-4">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                                            <Eye size={32} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h3 className="text-lg font-semibold text-gray-800">{emptyMessage}</h3>
-                                            <p className="text-gray-500 text-[14px] max-w-xs mx-auto font-medium">Try adjusting your search or filters to find what you're looking for.</p>
-                                        </div>
-                                    </div>
+                                <td colSpan={columns.length + 1} className="px-6 py-10">
+                                    <NoData
+                                        title={emptyMessage}
+                                        description="Try adjusting your search or filters to find what you're looking for."
+                                        icon={<Eye size={40} />}
+                                    />
                                 </td>
                             </tr>
                         ) : (

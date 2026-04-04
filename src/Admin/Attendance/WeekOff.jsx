@@ -294,6 +294,9 @@ export default function WeekOff() {
                                                 <DatePicker
                                                     selected={formData.weekoffdate ? new Date(formData.weekoffdate) : null}
                                                     onChange={(date) => setFormData(prev => ({ ...prev, weekoffdate: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                                                    showYearDropdown
+                                                    showMonthDropdown
+                                                    dropdownMode="select"
                                                     dateFormat="dd-MM-yyyy"
                                                     className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-semibold text-gray-700 md:text-sm text-xs cursor-pointer"
                                                     portalId="root"
@@ -312,6 +315,9 @@ export default function WeekOff() {
                                                 <DatePicker
                                                     selected={formData.alternative_date ? new Date(formData.alternative_date) : null}
                                                     onChange={(date) => setFormData(prev => ({ ...prev, alternative_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                                                    showYearDropdown
+                                                    showMonthDropdown
+                                                    dropdownMode="select"
                                                     dateFormat="dd-MM-yyyy"
                                                     className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all font-semibold text-gray-700 md:text-sm text-xs cursor-pointer"
                                                     portalId="root"

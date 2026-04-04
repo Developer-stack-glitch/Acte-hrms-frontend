@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
-import { Menu, X, Bell, Settings, Moon, ChevronDown, User, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, Settings, ChevronDown, User, LogOut, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import NotificationBell from './NotificationBell';
@@ -37,8 +37,8 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
                 </button>
 
                 <div className="relative group min-w-0">
-                    <h1 className="text-lg lg:text-xl font-semibold text-[#1e293b] tracking-tight group-hover:text-primary transition-colors cursor-default truncate">
-                        Welcome!
+                    <h1 className="text-lg lg:text-xl font-semibold text-[#1e293b] tracking-tight group-hover:text-primary transition-colors cursor-default">
+                        Welcome! {user?.name}
                     </h1>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />

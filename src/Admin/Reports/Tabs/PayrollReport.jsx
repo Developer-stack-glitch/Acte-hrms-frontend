@@ -154,6 +154,9 @@ const PayrollReport = () => {
                                 selected={fromDate}
                                 onChange={(date) => setFromDate(date)}
                                 showMonthYearPicker
+                                showYearDropdown
+                                showMonthDropdown
+                                dropdownMode="select"
                                 dateFormat="MMMM yyyy"
                                 className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-700 focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all"
                             />

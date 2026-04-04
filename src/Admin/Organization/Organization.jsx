@@ -31,7 +31,7 @@ export default function Organization() {
     const { tabId } = useParams();
     const navigate = useNavigate();
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const isMainDb = userInfo.database === 'hrm_database';
+    const isMainDb = userInfo.is_main_db || userInfo.database === 'hrm_database' || userInfo.database === 'hrms_database';
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
 

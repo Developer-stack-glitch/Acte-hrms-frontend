@@ -47,6 +47,9 @@ const FormDate = ({
                     className="w-full h-11 px-3 bg-white border border-gray-200 rounded-lg outline-none focus:border-primary/30 focus:bg-white transition-all font-medium text-gray-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     autoComplete="off"
                     portalId="root"
+                    showYearDropdown
+                    showMonthDropdown
+                    dropdownMode="select"
                     {...props}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
