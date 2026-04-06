@@ -220,14 +220,14 @@ export default function UserList({ onAddClick }) {
         },
         {
             header: 'Mode of Work',
-            key: 'work_location',
+            key: 'work_location_name',
             render: (val) => (
                 <span className="text-[13px] text-gray-600 font-medium">{val || 'N/A'}</span>
             )
         },
         {
-            header: 'Employment type',
-            key: 'employment_type',
+            header: 'Employment Type',
+            key: 'employment_type_name',
             render: (val) => (
                 <span className="text-[13px] text-gray-600 font-medium">{val || 'N/A'}</span>
             )

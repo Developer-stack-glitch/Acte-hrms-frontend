@@ -15,10 +15,22 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { createUserApi, updateUserApi, getBranchesApi, getDesignationsApi, getShiftsApi, getDepartmentsApi, getBatchAllocationsApi, getAllRolePermissionsApi } from '../../Action/api';
+import { 
+    createUserApi, 
+    updateUserApi, 
+    getBranchesApi, 
+    getDesignationsApi, 
+    getShiftsApi, 
+    getDepartmentsApi, 
+    getBatchAllocationsApi, 
+    getAllRolePermissionsApi,
+    getEmploymentTypesApi,
+    getWorkLocationsApi 
+} from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput, FormSelect, FormDate, FormTextarea } from '../../Common/Form';
 import FormSkeleton from '../../Common/CommonSkeletonLoader/FormSkeleton';
+import BulkUploadModal from './BulkUploadModal';
 
 const sections = [
     {
@@ -34,8 +46,8 @@ const sections = [
             { name: 'designation', label: 'Designation *', type: 'select', options: [], required: true },
             { name: 'branch', label: 'Branch *', type: 'select', options: [], required: true },
             { name: 'shift', label: 'Shift *', type: 'select', options: [], required: true },
-            { name: 'employment_type', label: 'Employment Type', type: 'select', options: ['Permanent', 'Contract', 'Intern', 'Probation', 'Notice Period'] },
-            { name: 'work_location', label: 'Mode of Work', type: 'select', options: ['On-site', 'Remote', 'Hybrid'] },
+            { name: 'employment_type', label: 'Employment Type', type: 'select', options: [], required: true },
+            { name: 'work_location', label: 'Work Location', type: 'select', options: [], required: true },
             { name: 'doj', label: 'DOJ (Date of Joining)', type: 'date' },
             { name: 'dor', label: 'DOR (Date of Relieving)', type: 'date' },
             { name: 'duration', label: 'Duration', type: 'text' },
@@ -139,6 +151,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
     });
     const [activeSection, setActiveSection] = useState('professional');
     const [loading, setLoading] = useState(false);
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [loadingOptions, setLoadingOptions] = useState(true);
     const [options, setOptions] = useState({
         department: [],
@@ -146,7 +159,9 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         branch: [],
         shift: [],
         salary_structure_id: [],
-        role: []
+        role: [],
+        employment_type: [],
+        work_location: []
     });
 
     const calculateDuration = (doj) => {
@@ -214,13 +229,15 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const [departments, designations, branches, shifts, structures, roles] = await Promise.all([
+                const [departments, designations, branches, shifts, structures, roles, empTypes, workModes] = await Promise.all([
                     getDepartmentsApi(),
                     getDesignationsApi(),
                     getBranchesApi(),
                     getShiftsApi(),
                     getBatchAllocationsApi(),
-                    getAllRolePermissionsApi()
+                    getAllRolePermissionsApi(),
+                    getEmploymentTypesApi(),
+                    getWorkLocationsApi()
                 ]);
 
                 setOptions({
@@ -229,7 +246,9 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                     branch: branches.data,
                     shift: shifts.data.map(item => ({ id: item.id, name: `${item.name} (${item.start_time} - ${item.end_time})` })),
                     salary_structure_id: (structures.data || []).map(s => ({ id: s.id, name: s.name })),
-                    role: (roles.data || []).map(r => ({ id: r.role, name: r.role.charAt(0).toUpperCase() + r.role.slice(1) }))
+                    role: (roles.data || []).map(r => ({ id: r.role, name: r.role.charAt(0).toUpperCase() + r.role.slice(1) })),
+                    employment_type: (empTypes.data || []).map(t => ({ id: t.id, name: t.name })),
+                    work_location: (workModes.data || []).map(w => ({ id: w.id, name: w.name }))
                 });
             } catch (error) {
                 console.error('Error fetching options:', error);
@@ -472,9 +491,16 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 {!isView && (
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={() => setIsBulkModalOpen(true)}
+                            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-6 py-2 rounded-full font-medium text-[14px] hover:bg-gray-50 transition-all"
+                        >
+                            <Upload size={18} className="text-primary" />
+                            Bulk Import
+                        </button>
+                        <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-full font-medium text-[14px] shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-70"
+                            className="flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-full font-medium text-[14px] shadow-xs shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-70"
                         >
                             {loading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -560,7 +586,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                     />
                                                 ) : field.type === 'checkbox' ? (
                                                     <div className="flex flex-col gap-1">
-                                                        <label className={`flex mt-4 items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-lg transition-colors group ${isView ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100'}`}>
+                                                        <label className={`flex mt-6 items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg transition-colors group ${isView ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100'}`}>
                                                             <input
                                                                 type="checkbox"
                                                                 name={field.name}
@@ -735,6 +761,14 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                     </form>
                 </div>
             </div>
+
+            <BulkUploadModal
+                isOpen={isBulkModalOpen}
+                onClose={() => setIsBulkModalOpen(false)}
+                onSuccess={() => {
+                    // Update any parent lists if necessary
+                }}
+            />
         </div>
     );
 }

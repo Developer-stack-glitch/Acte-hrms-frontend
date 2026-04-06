@@ -794,7 +794,7 @@ export default function ManageAttedance() {
                                         <span className="md:text-[13px] text-[11px] font-black text-gray-600 uppercase md:tracking-[0.2em] tracking-wider">Employee Information</span>
                                     </th>
                                     {daysInRange.map((day) => (
-                                        <th key={day.toString()} className={`md:px-4 px-2 md:py-5 py-3 border-r border-gray-50 min-w-[64px] text-center transition-colors ${isToday(day) ? 'bg-primary/5' : ''}`}>
+                                        <th key={day.toString()} className={`md:px-4 px-2 md:py-5 py-3 border-r border-gray-100 min-w-[64px] text-center transition-colors ${isToday(day) ? 'bg-primary/5' : ''}`}>
                                             <div className="flex flex-col items-center md:gap-1 gap-0">
                                                 <span className={`md:text-[15px] text-[13px] font-semibold tabular-nums ${isToday(day) ? 'text-primary' : 'text-gray-900'}`}>{format(day, 'dd')}</span>
                                                 <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-tighter leading-none">{format(day, 'eee')}</span>
@@ -887,7 +887,7 @@ export default function ManageAttedance() {
                                                         cellStyles = 'bg-rose-50 text-rose-600 border-rose-100';
                                                     }
                                                     return (
-                                                        <td key={day.toString()} className={`px-2 py-4 border-r border-gray-100/30 text-center transition-colors ${isToday(day) ? 'bg-primary/[0.02]' : ''}`}>
+                                                        <td key={day.toString()} className={`px-2 py-4 border-r border-gray-100/90 text-center transition-colors ${isToday(day) ? 'bg-primary/[0.02]' : ''}`}>
                                                             <div
                                                                 className={`mx-auto md:w-10 w-8 md:h-10 h-8 rounded-full flex items-center justify-center md:text-[12px] text-[10px] font-bold border transition-all duration-300 hover:scale-110 relative cursor-pointer ${cellStyles}`}
                                                                 title={isHalfDay ? `Half Day Leave (${record.half_day_period})` : (isIncomplete ? 'Missing Punch Out' : `${record?.status || ''}${isLate ? ` | Late: ${record.late_punch_in}` : ''}${isEarly ? ` | Early Out: ${record.early_punch_out}` : ''}`)}
@@ -1297,7 +1297,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
                         {/* Status Badge for all cases */}
                         <div className={`flex items-center mb-3 justify-between p-3 rounded-[10px] border ${statusColors.border} ${statusColors.bg}`}>
                             <span className="text-[13px] font-semibold text-gray-600">Status</span>
-                            <span className={`text-[13px] font-bold uppercase tracking-wider ${statusColors.text}`}>
+                            <span className={`text-[13px] font-semibold uppercase tracking-wider ${statusColors.text}`}>
                                 {record?.status === 'Incomplete' ? 'Missing Punch Out' : (record?.status || '---')}
                             </span>
                         </div>
@@ -1320,7 +1320,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
                                 {record.working_day_value !== undefined && parseFloat(record.working_day_value) < 1 && (
                                     <div className="flex items-center mb-3 justify-between p-3 rounded-[10px] border border-orange-200 bg-orange-50">
                                         <span className="text-[13px] font-semibold text-gray-600">Working Day Value</span>
-                                        <span className="text-[13px] font-black text-orange-700 tabular-nums">{record.working_day_value}</span>
+                                        <span className="text-[13px] font-semibold text-orange-700 tabular-nums">{record.working_day_value}</span>
                                     </div>
                                 )}
                             </>

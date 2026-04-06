@@ -261,7 +261,7 @@ export default function MyProfile() {
                     <InfoItem label="Branch" value={profile.branch_name} icon={MapPin} />
                     <InfoItem label="Work Location" value={profile.work_location} icon={Globe} />
                     <InfoItem label="Shift" value={profile.shift_name} icon={Clock} />
-                    <InfoItem label="Engagement Type" value={profile.employment_type} icon={Briefcase} />
+                    <InfoItem label="Engagement Type" value={profile.employment_type_name} icon={Briefcase} />
                     <InfoItem label="Joined On" value={profile.doj ? new Date(profile.doj).toLocaleDateString() : 'N/A'} icon={Calendar} />
                 </ProfileSection>
 

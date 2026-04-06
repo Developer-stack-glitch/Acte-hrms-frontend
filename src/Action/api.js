@@ -58,6 +58,9 @@ export const updateUserApi = (id, data) => {
     return api.put(`/users/${id}`, data);
 };
 export const deleteUserApi = (id) => api.delete(`/users/${id}`);
+export const bulkUploadUsersApi = (data) => api.post('/users/bulk-upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const downloadUserBulkTemplateApi = (id) => api.get(`/users/bulk-template?salary_structure_id=${id}`, { responseType: 'blob' });
+export const downloadUserReferenceIdsApi = () => api.get('/users/reference-ids', { responseType: 'blob' });
 
 // Organization APIs
 export const createCompanyApi = (data) => {
@@ -93,6 +96,8 @@ export const getShiftsApi = () => api.get('/organization/shifts');
 
 export const createDepartmentApi = (data) => api.post('/organization/departments', data);
 export const getDepartmentsApi = () => api.get('/organization/departments');
+export const getEmploymentTypesApi = () => api.get('/organization/employment-types');
+export const getWorkLocationsApi = () => api.get('/organization/work-locations');
 export const getOrgMetadataApi = () => api.get('/organization/metadata');
 
 // Attendance APIs

@@ -90,6 +90,7 @@ button {
     0% {
       background-position: -1000px 0;
     }
+
     100% {
       background-position: 1000px 0;
     }
@@ -214,11 +215,10 @@ button {
 .react-datepicker__day.react-datepicker__day--selecting-range-end,
 .react-datepicker__day.react-datepicker__day--selected:hover,
 .react-datepicker__day.react-datepicker__day--in-range:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
+  background: #1d4ed8 !important;
   color: #ffffff !important;
-  border-radius: 10px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
 }
 
 /* Catch-all for white text on any selected or range date */
@@ -236,7 +236,7 @@ button {
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
-  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%) !important;
+  background: #1d4ed8 !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
@@ -318,6 +318,6 @@ button {
 .react-datepicker__current-month {
   margin-bottom: 8px !important;
   color: #1e293b !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   letter-spacing: -0.01em !important;
 }
