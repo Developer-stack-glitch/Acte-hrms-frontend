@@ -102,7 +102,7 @@ export default function CompanyManagement() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-800">Company Management</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">View and manage all registered companies</p>
+                    <p className="text-gray-500 text-[15px] mt-1">View and manage all registered companies</p>
                 </div>
                 <button
                     onClick={handleAdd}

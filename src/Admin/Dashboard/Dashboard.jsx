@@ -34,6 +34,7 @@ import {
     startOfDay,
     isSameDay,
 } from 'date-fns';
+import NoData from '../../Common/NoData';
 import { getUsersApi, getAttendanceApi, getHolidaysApi, getMilestonesApi, getLeavesApi, getReimbursementsApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import UserFilter from '../User/UserFilter';
@@ -67,7 +68,7 @@ const DashboardStatCard = ({ title, value, subValue, icon: Icon, color, delay, p
             <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${color.bg} opacity-10 group-hover:scale-125 transition-transform duration-500`} />
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-2">
-                    <p className="text-[12px] font-semibold text-[#2a2a2a] uppercase tracking-widest">
+                    <p className="text-[15px] font-semibold text-[#2a2a2a]">
                         {title}
                     </p>
                     <div className="flex items-center gap-1.5 sm:gap-2">
@@ -605,7 +606,7 @@ export default function Dashboard() {
         <div className="space-y-6 lg:space-y-8">
             {/* Main Tabs Control */}
             {userRole !== 'employee' && (
-                <div className="flex gap-2 bg-white p-1 rounded-full border border-gray-100 shadow-sm overflow-x-auto no-scrollbar max-w-full">
+                <div className="flex gap-2 bg-white p-1 rounded-full border border-gray-200 overflow-x-auto no-scrollbar max-w-full">
                     {DASHBOARD_TABS.map((tab) => (
                         <button
                             key={tab.id}
@@ -631,7 +632,7 @@ export default function Dashboard() {
                                 {userRole === 'employee' ? "My Insights" : "Workforce Insights"}
                                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             </h1>
-                            <p className="text-[12px] font-semibold text-gray-500 uppercase tracking-widest">
+                            <p className="text-[14px] font-semibold text-gray-500">
                                 {fromDate === toDate ? format(parseISO(fromDate), 'EEEE, MMMM do yyyy') : `${format(parseISO(fromDate), 'MMM dd')} - ${format(parseISO(toDate), 'MMM dd, yyyy')}`}
                             </p>
                         </div>
@@ -801,7 +802,7 @@ export default function Dashboard() {
                             className="bg-white p-4 sm:p-6 rounded-[15px] border border-gray-200 flex items-center justify-between group transition-all hover:bg-amber-50/30 cursor-pointer active:scale-95"
                         >
                             <div className="space-y-1">
-                                <span className="text-[10px] sm:text-[11px] font-black text-[#2a2a2a] uppercase tracking-widest">Late Arrivals</span>
+                                <span className="text-[10px] sm:text-[13px] font-semibold text-[#2a2a2a]">Late Arrivals</span>
                                 <div className="flex items-baseline gap-2">
                                     <h4 className="text-xl sm:text-2xl font-black text-amber-600">{stats?.late.count || 0}</h4>
                                     <span className="text-[11px] sm:text-[12px] font-semibold text-amber-600/60">{stats?.late.percent}</span>
@@ -816,7 +817,7 @@ export default function Dashboard() {
                             className="bg-white p-4 sm:p-6 rounded-[15px] border border-gray-200 flex items-center justify-between group transition-all hover:bg-fuchsia-50/30 cursor-pointer active:scale-95"
                         >
                             <div className="space-y-1">
-                                <span className="text-[10px] sm:text-[11px] font-black text-[#2a2a2a] uppercase tracking-widest">Early Logout</span>
+                                <span className="text-[10px] sm:text-[13px] font-semibold text-[#2a2a2a]">Early Logout</span>
                                 <div className="flex items-baseline gap-2">
                                     <h4 className="text-xl sm:text-2xl font-black text-fuchsia-600">{stats?.early.count || 0}</h4>
                                     <span className="text-[11px] sm:text-[12px] font-semibold text-fuchsia-600/60">{stats?.early.percent}</span>
@@ -826,9 +827,9 @@ export default function Dashboard() {
                                 <LogOut size={20} className="sm:w-6 sm:h-6" />
                             </div>
                         </div>
-                        <div className="bg-white p-4 sm:p-6 rounded-[15px] border border-gray-200 flex items-center justify-between group transition-all hover:bg-violet-50/30">
+                        <div onClick={() => navigate('/leaves/leave-list')} className="bg-white p-4 sm:p-6 rounded-[15px] border border-gray-200 flex items-center justify-between group transition-all hover:bg-violet-50/30 cursor-pointer active:scale-95">
                             <div className="space-y-1">
-                                <span className="text-[10px] sm:text-[11px] font-black text-[#2a2a2a] uppercase tracking-widest">On Leave</span>
+                                <span className="text-[10px] sm:text-[13px] font-semibold text-[#2a2a2a]">On Leave</span>
                                 <div className="flex items_baseline gap-2">
                                     <h4 className="text-xl sm:text-2xl font-black text-violet-600">{stats?.onLeave.count || 0}</h4>
                                     <span className="text-[11px] sm:text-[12px] font-semibold text-violet-600/60">{stats?.onLeave.percent}</span>
@@ -855,7 +856,7 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                         <h3 className="text-lg sm:text-xl font-semibold text-gray-900 leading-none mb-1">Attendance Dynamics</h3>
-                                        <p className="text-[10px] sm:text-[11px] font-semibold text-gray-600 uppercase tracking-widest">Active Staff Monitoring</p>
+                                        <p className="text-[13px] font-semibold text-gray-500">Active Staff Monitoring</p>
                                     </div>
                                 </div>
                             </div>
@@ -916,14 +917,13 @@ export default function Dashboard() {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                            <TrendingUp size={32} className="opacity-20" />
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-semibold text-gray-500 text-sm">No Attendance Trends</p>
-                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">Data will appear once records are synced</p>
-                                        </div>
+                                    <div className="h-full flex flex-col items-center justify-center p-6">
+                                        <NoData
+                                            title="No Attendance Trends"
+                                            description="Data will appear once records are synced for this period."
+                                            variant="mini"
+                                            icon={TrendingUp}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -942,7 +942,7 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 leading-none mb-1">Status Distribution</h3>
-                                    <p className="text-[10px] sm:text-[11px] font-semibold text-gray-600 uppercase tracking-widest">Real-time breakdown</p>
+                                    <p className="text-[13px] font-semibold text-gray-500">Real-time breakdown</p>
                                 </div>
                             </div>
                             <div className="h-[280px] sm:h-[350px] flex items-center">
@@ -989,14 +989,13 @@ export default function Dashboard() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                            <AlertCircle size={32} className="opacity-20" />
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-semibold text-gray-500 text-sm">No Distribution Data</p>
-                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">No attendance records found for today</p>
-                                        </div>
+                                    <div className="flex-1 flex flex-col items-center justify-center p-6">
+                                        <NoData
+                                            title="No Distribution Data"
+                                            description="No attendance records found for today."
+                                            variant="mini"
+                                            icon={AlertCircle}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -1065,7 +1064,14 @@ export default function Dashboard() {
                                                 </tr>
                                             )) : (
                                                 <tr>
-                                                    <td colSpan="4" className="px-4 py-12 text-center text-gray-400 font-medium text-sm">No present users found today</td>
+                                                    <td colSpan={stats?.isSingleDay ? 4 : 5} className="px-4 py-8">
+                                                        <NoData
+                                                            title="No Present Users Found"
+                                                            description="It seems no employees have been recorded as present for this specific period."
+                                                            type="empty"
+                                                            variant="mini"
+                                                        />
+                                                    </td>
                                                 </tr>
                                             )}
                                         </tbody>
@@ -1111,7 +1117,14 @@ export default function Dashboard() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="h-full flex items-center justify-center text-gray-400 text-sm font-medium">Clear morning! No late logins.</div>
+                                            <div className="h-full flex items-center justify-center p-6">
+                                                <NoData
+                                                    title="Clear Morning!"
+                                                    description="No late logins found for this period."
+                                                    icon={CheckCircle2}
+                                                    variant="mini"
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 </motion.div>
@@ -1150,7 +1163,14 @@ export default function Dashboard() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="h-full flex items-center justify-center text-gray-400 text-sm font-medium">No one is on leave today!</div>
+                                            <div className="h-full flex items-center justify-center p-6">
+                                                <NoData
+                                                    title="No Leaves Today"
+                                                    description="Everyone seems to be working hard today!"
+                                                    icon={Users}
+                                                    variant="mini"
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 </motion.div>
@@ -1207,7 +1227,14 @@ export default function Dashboard() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="h-full flex items-center justify-center text-gray-400 text-sm font-medium">Full attendance! No unapproved absences.</div>
+                                            <div className="h-full flex items-center justify-center p-6">
+                                                <NoData
+                                                    title="Full Attendance!"
+                                                    description="No unapproved absences recorded."
+                                                    icon={UserCheck}
+                                                    variant="mini"
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 </motion.div>
@@ -1270,7 +1297,13 @@ export default function Dashboard() {
                                                     </tr>
                                                 )) : (
                                                     <tr>
-                                                        <td colSpan="3" className="px-6 py-12 text-center text-gray-400 font-medium text-sm">No branch data found</td>
+                                                        <td colSpan="3" className="px-6 py-8">
+                                                            <NoData
+                                                                title="No Branch Data"
+                                                                description="No attendance records found across branches for this period."
+                                                                variant="mini"
+                                                            />
+                                                        </td>
                                                     </tr>
                                                 )}
                                             </tbody>
@@ -1290,7 +1323,7 @@ export default function Dashboard() {
                                     className="bg-white p-5 rounded-[15px] border border-gray-200"
                                 >
                                     <div className="flex items-center gap-3 mb-6">
-                                        <h3 className="text-xl font-semibold text-gray-900 leading-none">
+                                        <h3 className="text-lg font-semibold text-gray-900 leading-none">
                                             Shift-wise attendance report <span className="text-gray-600 text-sm font-medium lowercase">({stats?.isSingleDay ? 'day' : 'range'})</span>
                                         </h3>
                                     </div>
@@ -1333,14 +1366,13 @@ export default function Dashboard() {
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         ) : (
-                                            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
-                                                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                                    <Clock size={32} className="opacity-20" />
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="font-bold text-gray-500 text-sm">No Shift Data</p>
-                                                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">Attendance records required for shift breakdown</p>
-                                                </div>
+                                            <div className="h-full flex flex-col items-center justify-center p-4">
+                                                <NoData
+                                                    title="No Shift Data"
+                                                    description="Attendance records are required to generate shift breakdowns."
+                                                    variant="mini"
+                                                    icon={Clock}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -1355,7 +1387,7 @@ export default function Dashboard() {
                                     className="bg-white p-5 rounded-[15px] border border-gray-200"
                                 >
                                     <div className="flex items-center gap-3 mb-6">
-                                        <h3 className="text-xl font-semibold text-gray-900 leading-none">
+                                        <h3 className="text-lg font-semibold text-gray-900 leading-none">
                                             Leave balance summary <span className="text-gray-600 text-sm font-medium lowercase">({stats?.isSingleDay ? 'day' : 'range'})</span>
                                         </h3>
                                     </div>
@@ -1398,14 +1430,13 @@ export default function Dashboard() {
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         ) : (
-                                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-                                                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                                    <CalendarDays size={32} className="opacity-20" />
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="font-semibold text-gray-500 text-sm">No Leave Data</p>
-                                                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">No approved leaves in this period</p>
-                                                </div>
+                                            <div className="flex-1 flex flex-col items-center justify-center p-4">
+                                                <NoData
+                                                    title="No Leave Data"
+                                                    description="No approved leaves found in the selected period."
+                                                    variant="mini"
+                                                    icon={CalendarDays}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -1492,7 +1523,7 @@ export default function Dashboard() {
                                     </div>
                                     <h3 className="font-semibold text-gray-900">Upcoming Birthdays</h3>
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Next 30 Days</span>
+                                <span className="text-[12px] font-semibold text-gray-400">Next 30 Days</span>
                             </div>
                             <div className="flex-1 overflow-auto custom-scrollbar">
                                 {upcomingEvents.birthdays.length > 0 ? (
@@ -1519,9 +1550,13 @@ export default function Dashboard() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
-                                        <Gift size={32} className="opacity-20" />
-                                        <p className="text-sm font-medium">No birthdays in the next 30 days</p>
+                                    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                                        <NoData
+                                            title="No Birthdays"
+                                            description="No birthdays in the next 30 days."
+                                            variant="mini"
+                                            icon={Gift}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -1541,7 +1576,7 @@ export default function Dashboard() {
                                     </div>
                                     <h3 className="font-semibold text-gray-900">Work Anniversaries</h3>
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Next 30 Days</span>
+                                <span className="text-[12px] font-semibold text-gray-400">Next 30 Days</span>
                             </div>
                             <div className="flex-1 overflow-auto custom-scrollbar">
                                 {upcomingEvents.anniversaries.length > 0 ? (
@@ -1571,9 +1606,13 @@ export default function Dashboard() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
-                                        <Award size={32} className="opacity-20" />
-                                        <p className="text-sm font-medium">No anniversaries in the next 30 days</p>
+                                    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                                        <NoData
+                                            title="No Anniversaries"
+                                            description="No work anniversaries in the next 30 days."
+                                            variant="mini"
+                                            icon={Award}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -1599,7 +1638,7 @@ export default function Dashboard() {
                                         <h3 className="md:text-xl text-lg font-semibold text-gray-900 leading-none mb-1">
                                             Departmental Breakdown <span className="text-gray-600 text-sm font-medium lowercase">({stats?.isSingleDay ? 'day' : 'range'})</span>
                                         </h3>
-                                        <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-widest">
+                                        <p className="text-[13px] font-semibold text-gray-600">
                                             Staff presence by division
                                         </p>
                                     </div>
@@ -1632,14 +1671,13 @@ export default function Dashboard() {
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
-                                            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                                <Users size={32} className="opacity-20" />
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="font-bold text-gray-500 text-sm">No Departmental Data</p>
-                                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">Assign employees to departments to see breakdown</p>
-                                            </div>
+                                        <div className="h-full flex flex-col items-center justify-center p-6">
+                                            <NoData
+                                                title="No Departmental Data"
+                                                description="Assign employees to departments to see this breakdown."
+                                                variant="mini"
+                                                icon={Users}
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -1660,7 +1698,7 @@ export default function Dashboard() {
                                         <h3 className="md:text-xl text-lg font-semibold text-gray-900 leading-none mb-1">
                                             Absenteeism by department <span className="text-gray-600 text-sm font-medium lowercase">({stats?.isSingleDay ? 'day' : 'range'})</span>
                                         </h3>
-                                        <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-widest leading-relaxed">
+                                        <p className="text-[13px] font-semibold text-gray-600 leading-relaxed">
                                             Total absent instances = Total potential - Present
                                         </p>
                                     </div>
@@ -1703,14 +1741,13 @@ export default function Dashboard() {
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
-                                            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                                                <AlertCircle size={32} className="opacity-20" />
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="font-bold text-gray-500 text-sm">No Absenteeism Data</p>
-                                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-1">Data will appear once records are synced</p>
-                                            </div>
+                                        <div className="h-full flex flex-col items-center justify-center p-6">
+                                            <NoData
+                                                title="No Absenteeism Data"
+                                                description="Data will appear once records are synced for this period."
+                                                variant="mini"
+                                                icon={AlertCircle}
+                                            />
                                         </div>
                                     )}
                                 </div>

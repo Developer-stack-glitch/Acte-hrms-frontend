@@ -213,7 +213,7 @@ export default function UserList({ onAddClick }) {
         },
         {
             header: 'Shift',
-            key: 'shift',
+            key: 'shift_name',
             render: (val) => (
                 <span className="text-[13px] text-gray-600 font-medium">{val || 'N/A'}</span>
             )

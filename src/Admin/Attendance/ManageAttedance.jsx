@@ -1242,7 +1242,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
                             <div className="grid grid-cols-2 gap-4 mb-8 mt-8">
                                 {/* Clocked In Card */}
                                 <div className="relative rounded-xl border-2 border-emerald-400 bg-white p-4 overflow-hidden">
-                                    <div className="flex items-center gap-1.5 mb-3">
+                                    <div className="flex items-center gap-1.5 mb-2">
                                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                         <span className="text-[12px] font-semibold text-emerald-600 uppercase tracking-wider">Clocked In</span>
                                     </div>
@@ -1268,7 +1268,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
 
                                 {/* Clocked Out Card */}
                                 <div className="relative rounded-xl border-2 border-rose-400 bg-white p-4 overflow-hidden">
-                                    <div className="flex items-center gap-1.5 mb-3">
+                                    <div className="flex items-center gap-1.5 mb-2">
                                         <div className="w-2 h-2 rounded-full bg-rose-500" />
                                         <span className="text-[12px] font-semibold text-rose-600 uppercase tracking-wider">Clocked Out</span>
                                     </div>

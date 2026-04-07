@@ -64,7 +64,7 @@ export default function AddDepartment({ onSuccess }) {
             <div className="p-6 mx-auto bg-white rounded-[8px] shadow-sm">
                 <div className="mb-5">
                     <h2 className="text-2xl font-semibold text-gray-800">Add New Department</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">Create a new functional department within a company.</p>
+                    <p className="text-gray-500 text-[15px] mt-1">Create a new functional department within a company.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

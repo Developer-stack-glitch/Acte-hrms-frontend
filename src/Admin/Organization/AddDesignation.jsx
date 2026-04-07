@@ -85,8 +85,8 @@ export default function AddDesignation({ onSuccess }) {
 
     const columns = [
         { header: 'Designation Name', key: 'name' },
-        { 
-            header: 'Department', 
+        {
+            header: 'Department',
             key: 'department_name',
             render: (val, row) => <span>{row.department_name || departments.find(d => d.id === row.department_id)?.name || 'N/A'}</span>
         },
@@ -102,7 +102,7 @@ export default function AddDesignation({ onSuccess }) {
             <div className="p-6 mx-auto bg-white rounded-[8px] shadow-sm">
                 <div className="mb-4">
                     <h2 className="text-2xl font-semibold text-gray-800">Add New Designation</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">Define new job roles and titles for your organization.</p>
+                    <p className="text-gray-500 text-[15px] mt-1">Define new job roles and titles for your organization.</p>
                 </div>
 
                 <div className="mb-6 p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-4">
@@ -195,4 +195,4 @@ export default function AddDesignation({ onSuccess }) {
             </div>
         </div>
     );
-}
+}

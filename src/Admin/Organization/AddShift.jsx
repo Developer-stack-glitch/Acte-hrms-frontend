@@ -73,8 +73,8 @@ export default function AddShift({ onSuccess }) {
         { header: 'Shift Name', key: 'name' },
         { header: 'Start Time', key: 'start_time' },
         { header: 'End Time', key: 'end_time' },
-        { 
-            header: 'Duration', 
+        {
+            header: 'Duration',
             key: 'duration',
             render: (val, row) => <span>{calculateDuration(row.start_time, row.end_time)}</span>
         },
@@ -85,7 +85,7 @@ export default function AddShift({ onSuccess }) {
             <div className="p-6 mx-auto bg-white rounded-[8px] shadow-sm">
                 <div className="mb-8">
                     <h2 className="text-2xl font-semibold text-gray-800">Add New Shift</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">Configure work timings and shift schedules.</p>
+                    <p className="text-gray-500 text-[15px] mt-1">Configure work timings and shift schedules.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -165,4 +165,4 @@ export default function AddShift({ onSuccess }) {
             </div>
         </div>
     );
-}
+}

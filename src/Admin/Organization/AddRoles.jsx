@@ -163,7 +163,7 @@ export default function AddRoles() {
             <div className="p-6 mx-auto bg-white rounded-[8px] shadow-sm">
                 <div className="mb-4">
                     <h2 className="text-2xl font-semibold text-gray-800">Manage Roles</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">Define system-wide roles for access control.</p>
+                    <p className="text-gray-500 text-[15px] mt-1">Define system-wide roles for access control.</p>
                 </div>
 
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">

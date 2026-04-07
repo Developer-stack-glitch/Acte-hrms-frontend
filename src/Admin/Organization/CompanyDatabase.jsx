@@ -44,7 +44,7 @@ export default function CompanyDatabase() {
             <div className="mb-8 flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-800">Company Databases</h2>
-                    <p className="text-gray-500 text-[16px] mt-1">Manage and initialize separate databases for each company.</p>
+                    <p className="text-gray-500 text-[15px] mt-1">Manage and initialize separate databases for each company.</p>
                 </div>
                 <button
                     onClick={fetchCompanies}

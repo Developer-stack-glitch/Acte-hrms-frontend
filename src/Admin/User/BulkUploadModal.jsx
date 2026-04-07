@@ -114,9 +114,6 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
             const res = await bulkUploadUsersApi(formData);
             setUploadSummary(res.data.summary);
             toast.success(res.data.message);
-            if (res.data.summary.success > 0 && onSuccess) {
-                onSuccess();
-            }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Upload failed');
         } finally {
@@ -301,7 +298,10 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
                             )}
 
                             <button
-                                onClick={onClose}
+                                onClick={() => {
+                                    if (uploadSummary.success > 0 && onSuccess) onSuccess();
+                                    onClose();
+                                }}
                                 className="w-full bg-gray-900 text-white py-4 rounded-full font-medium shadow-md hover:bg-black transition-all"
                             >
                                 Finish & Close

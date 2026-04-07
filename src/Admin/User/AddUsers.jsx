@@ -246,7 +246,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                     branch: branches.data,
                     shift: shifts.data.map(item => ({ id: item.id, name: `${item.name} (${item.start_time} - ${item.end_time})` })),
                     salary_structure_id: (structures.data || []).map(s => ({ id: s.id, name: s.name })),
-                    role: (roles.data || []).map(r => ({ id: r.role, name: r.role.charAt(0).toUpperCase() + r.role.slice(1) })),
+                    role: (roles.data || []).map(r => ({ id: r.id, name: r.role.charAt(0).toUpperCase() + r.role.slice(1) })),
                     employment_type: (empTypes.data || []).map(t => ({ id: t.id, name: t.name })),
                     work_location: (workModes.data || []).map(w => ({ id: w.id, name: w.name }))
                 });
@@ -335,9 +335,15 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 mappedData.web_clock_in_allowed = !!mappedData.web_clock_in_allowed;
             }
 
+            // Sync role name to ID if needed (for dropdown match)
+            if (mappedData.role && isNaN(mappedData.role) && options.role?.length > 0) {
+                const matched = options.role.find(r => r.name.toLowerCase() === mappedData.role.toLowerCase());
+                if (matched) mappedData.role = matched.id;
+            }
+
             setFormData(mappedData);
         }
-    }, [initialData]);
+    }, [initialData, options.role]);
 
     const handleChange = (e) => {
         if (isView) return;
@@ -765,9 +771,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
             <BulkUploadModal
                 isOpen={isBulkModalOpen}
                 onClose={() => setIsBulkModalOpen(false)}
-                onSuccess={() => {
-                    // Update any parent lists if necessary
-                }}
+                onSuccess={onSuccess}
             />
         </div>
     );
