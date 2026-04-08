@@ -38,7 +38,7 @@ export const getUserAttendanceApi = (params) => api.get('/users/user-attendance'
 export const createUserApi = (data) => {
     if (data instanceof FormData) {
         return api.post('/users', data, {
-            headers: { 'Content-Type': null }
+            headers: { 'Content-Type': undefined }
         });
     }
     return api.post('/users', data);
@@ -52,7 +52,7 @@ export const getUserByIdApi = (id) => api.get(`/users/${id}`);
 export const updateUserApi = (id, data) => {
     if (data instanceof FormData) {
         return api.put(`/users/${id}`, data, {
-            headers: { 'Content-Type': null }
+            headers: { 'Content-Type': undefined }
         });
     }
     return api.put(`/users/${id}`, data);
@@ -66,7 +66,7 @@ export const downloadUserReferenceIdsApi = () => api.get('/users/reference-ids',
 export const createCompanyApi = (data) => {
     if (data instanceof FormData) {
         return api.post('/organization/companies', data, {
-            headers: { 'Content-Type': null }
+            headers: { 'Content-Type': undefined }
         });
     }
     return api.post('/organization/companies', data);
@@ -75,7 +75,7 @@ export const createCompanyApi = (data) => {
 export const updateCompanyApi = (id, data) => {
     if (data instanceof FormData) {
         return api.put(`/organization/companies/${id}`, data, {
-            headers: { 'Content-Type': null }
+            headers: { 'Content-Type': undefined }
         });
     }
     return api.put(`/organization/companies/${id}`, data);
@@ -244,7 +244,7 @@ export const getApplicantsByJobApi = (jobId) => api.get(`/applicants/job/${jobId
 export const createApplicantApi = (data) => {
     if (data instanceof FormData) {
         return api.post('/applicants', data, {
-            headers: { 'Content-Type': null }
+            headers: { 'Content-Type': undefined }
         });
     }
     return api.post('/applicants', data);
