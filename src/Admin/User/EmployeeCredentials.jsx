@@ -273,7 +273,7 @@ export default function EmployeeCredentials() {
                                     <button
                                         onClick={handleLoadMore}
                                         disabled={loading}
-                                        className="flex items-center gap-2 px-8 py-3 bg-white border border-slate-200 text-slate-600 font-semibold rounded-full hover:bg-slate-50 hover:border-primary/20 hover:text-primary transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                        className="flex items-center gap-2 px-8 py-3 border border-gray-200 bg-white border border-slate-200 text-slate-600 font-semibold rounded-full hover:bg-slate-50 hover:border-primary/20 hover:text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
                                     >
                                         {loading ? (
                                             <>

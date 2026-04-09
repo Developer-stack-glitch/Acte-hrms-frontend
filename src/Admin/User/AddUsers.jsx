@@ -341,6 +341,13 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 if (matched) mappedData.role = matched.id;
             }
 
+            // Sync gender case to match dropdown options
+            if (mappedData.gender) {
+                const genderOptions = ['Male', 'Female', 'Other'];
+                const matchedGender = genderOptions.find(g => g.toLowerCase() === mappedData.gender.toLowerCase());
+                if (matchedGender) mappedData.gender = matchedGender;
+            }
+
             setFormData(mappedData);
         }
     }, [initialData, options.role]);

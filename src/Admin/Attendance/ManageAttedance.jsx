@@ -105,7 +105,11 @@ const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor,
 
 export default function ManageAttedance() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalEmployees, setTotalEmployees] = useState(0);
     const [employees, setEmployees] = useState([]);
     const [attendanceMap, setAttendanceMap] = useState({});
     const [holidays, setHolidays] = useState([]);
@@ -177,36 +181,62 @@ export default function ManageAttedance() {
         }
     }, [prevRange]);
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset to page 1 when search/filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch, filters]);
+
     useEffect(() => {
         fetchData();
-    }, [fromDate, toDate, filters]);
+    }, [fromDate, toDate, filters, currentPage, pageSize, debouncedSearch]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const fetchStart = prevRange ? prevRange.start : fromDate;
-            const [usersRes, attendanceRes, holidaysRes, leavesRes, weekoffsRes, companyWoRes] = await Promise.all([
-                getUserAttendanceApi({ ...filters }),
-                getAttendanceApi({ startDate: fetchStart, endDate: toDate }),
+            
+            // 1. Fetch paginated users first
+            const usersRes = await getUserAttendanceApi({ page: currentPage, limit: pageSize, search: debouncedSearch, ...filters });
+            
+            let emps = usersRes.data?.users || [];
+            const total = usersRes.data?.total || 0;
+            
+            if (userRole === 'employee') {
+                emps = emps.filter(e => String(e.id) === String(userId));
+            }
+            
+            // 2. Extract paginated user IDs to filter subsequent queries
+            const userIds = emps.map(emp => emp.id).join(',');
+
+            // 3. Fetch attendance and leaves ONLY for these paginated users
+            const [attendanceRes, holidaysRes, leavesRes, weekoffsRes, companyWoRes] = await Promise.all([
+                getAttendanceApi({ startDate: fetchStart, endDate: toDate, ...(userIds && userRole !== 'employee' ? { userIds } : {}) }),
                 getHolidaysApi(),
-                getLeavesApi({ startDate: fetchStart, endDate: toDate, status: 'Approved' }),
+                getLeavesApi({ startDate: fetchStart, endDate: toDate, status: 'Approved', ...(userIds && userRole !== 'employee' ? { userIds } : {}) }),
                 getWeekOffsApi(),
                 getCompanyWeekOffsApi()
             ]);
 
-            let emps = usersRes.data || [];
             let lvs = leavesRes.data.leaves || [];
             let atts = attendanceRes.data || [];
             let wos = weekoffsRes.data || [];
             let cwo = companyWoRes.data || [];
 
             if (userRole === 'employee') {
-                emps = emps.filter(e => String(e.id) === String(userId));
                 lvs = lvs.filter(l => String(l.employee_id) === String(userId));
                 atts = atts.filter(a => String(a.user_id) === String(userId));
             }
 
             setEmployees(emps);
+            setTotalEmployees(total);
             setLeaves(lvs);
             setWeekOffs(wos);
             setCompanyWeekOffs(cwo);
@@ -348,12 +378,7 @@ export default function ManageAttedance() {
         }
     };
 
-    const filteredEmployees = useMemo(() => employees.filter(emp => {
-        if (!emp) return false;
-        const nameMatch = (emp.employee_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-        const idMatch = (emp.emp_id?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-        return nameMatch || idMatch;
-    }), [employees, searchTerm]);
+    const totalPages = Math.ceil(totalEmployees / pageSize);
 
     const stats = useMemo(() => {
         const initial = {
@@ -489,7 +514,7 @@ export default function ManageAttedance() {
     // Ledger Totals for Mobile Summary
     const ledgerTotals = useMemo(() => {
         const totals = { p: 0, a: 0, l: 0, h: 0, wo: 0, li: 0, eo: 0, d: 0 };
-        filteredEmployees.forEach(emp => {
+        employees.forEach(emp => {
             const rowStats = calculateUserStats(emp.id);
             totals.p += parseFloat(rowStats.p);
             totals.a += rowStats.a;
@@ -502,7 +527,7 @@ export default function ManageAttedance() {
         });
 
         // If many employees, show totals. If just one (employee view), show their stats.
-        const isSingle = filteredEmployees.length === 1;
+        const isSingle = employees.length === 1;
         return {
             p: isSingle ? totals.p : totals.p.toFixed(1),
             a: totals.a,
@@ -513,7 +538,7 @@ export default function ManageAttedance() {
             eo: totals.eo,
             d: totals.d.toFixed(1)
         };
-    }, [filteredEmployees, daysInRange, attendanceMap]);
+    }, [employees, daysInRange, attendanceMap]);
 
     if (loading && employees.length === 0) {
         return <AttendanceSkeleton />;
@@ -642,8 +667,8 @@ export default function ManageAttedance() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 <StatCard
                     title={userRole === 'employee' ? "My Attendance" : "Total Employees"}
-                    value={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status || '---') : employees.length}
-                    todayCount={userRole === 'employee' ? (attendanceMap[`${userId}_${format(new Date(), 'yyyy-MM-dd')}`] ? 1 : 0) : employees.length}
+                    value={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status || '---') : totalEmployees}
+                    todayCount={userRole === 'employee' ? (attendanceMap[`${userId}_${format(new Date(), 'yyyy-MM-dd')}`] ? 1 : 0) : totalEmployees}
                     textColor={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status === 'Absent' ? 'text-rose-500' : 'text-emerald-500') : 'text-gray-800'}
                     delay={0.05}
                 />
@@ -747,7 +772,7 @@ export default function ManageAttedance() {
                                 </div>
                             ))}
                             <div className="w-8 h-8 rounded-full border-2 border-white bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
-                                +{employees.length}
+                                +{totalEmployees}
                             </div>
                         </div>
                         <div className="w-[1px] h-6 bg-gray-100 mx-1" />
@@ -778,7 +803,7 @@ export default function ManageAttedance() {
 
                 {/* The Dynamic Table */}
                 <div className="overflow-x-auto relative custom-scrollbar pb-2">
-                    {filteredEmployees.length === 0 ? (
+                    {employees.length === 0 ? (
                         <div className="bg-white rounded-xl border border-gray-100 p-8">
                             <NoData
                                 icon={Search}
@@ -827,7 +852,7 @@ export default function ManageAttedance() {
                             </thead>
                             <tbody>
                                 <AnimatePresence mode="popLayout">
-                                    {filteredEmployees.map((emp, idx) => {
+                                    {employees.map((emp, idx) => {
                                         const userStats = calculateUserStats(emp.id);
                                         return (
                                             <motion.tr
@@ -840,7 +865,7 @@ export default function ManageAttedance() {
                                                 <td className="sticky left-0 z-10 bg-white px-2 md:px-6 py-2 md:py-4 border-r border-gray-100 shadow-[4px_0_15px_-4px_rgba(0,0,0,0.05)]">
                                                     <div className="flex items-center gap-2 md:gap-4 min-w-[120px] md:min-w-[220px]">
                                                         <div className="w-8 h-8 md:w-9 md:h-9 flex-shrink-0 rounded-full bg-gray-50 flex items-center justify-center text-[10px] md:text-[12px] font-bold text-gray-400 group-hover:bg-primary group-hover:text-white transition-all">
-                                                            {idx + 1}
+                                                            {(currentPage - 1) * pageSize + idx + 1}
                                                         </div>
                                                         <div className="flex flex-col overflow-hidden">
                                                             <span className="text-[14px] md:text-[16px] font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">{emp.employee_name || 'Unnamed Staff'}</span>
@@ -951,8 +976,85 @@ export default function ManageAttedance() {
                     )}
                 </div>
 
-                {/* Footer Legend */}
-                <div className="md:px-6 md:py-6 px-3 py-3 bg-gray-50/30 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-2">
+                {/* Footer Legend + Pagination */}
+                <div className="md:px-6 md:py-5 px-3 py-3 bg-gray-50/30 border-t border-gray-100 flex flex-col gap-4">
+                    {/* Pagination Controls */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <span className="text-[13px] text-gray-400 font-medium">
+                            Showing {employees.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, totalEmployees)} of {totalEmployees} employees
+                        </span>
+
+                        <div className="flex items-center gap-4">
+                            {/* Page Number Buttons */}
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(p => p - 1)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 disabled:opacity-30 hover:bg-gray-100 hover:text-primary transition-colors"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+
+                                {(() => {
+                                    let pages = [];
+                                    if (totalPages <= 7) {
+                                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                    } else if (currentPage <= 4) {
+                                        pages = [1, 2, 3, 4, 5, '...', totalPages];
+                                    } else if (currentPage >= totalPages - 3) {
+                                        pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                                    } else {
+                                        pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                                    }
+                                    return pages.map((p, i) => (
+                                        p === '...' ? (
+                                            <span key={`sep-${i}`} className="text-gray-400 font-semibold px-1 text-[13px]">...</span>
+                                        ) : (
+                                            <button
+                                                key={p}
+                                                onClick={() => setCurrentPage(p)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-all ${
+                                                    currentPage === p
+                                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                        : 'text-gray-500 hover:bg-gray-100 border border-gray-100'
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        )
+                                    ));
+                                })()}
+
+                                <button
+                                    disabled={currentPage >= totalPages}
+                                    onClick={() => setCurrentPage(p => p + 1)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 disabled:opacity-30 hover:bg-gray-100 hover:text-primary transition-colors"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+
+                            {/* Page Size Selector */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-[13px] text-gray-400 font-medium whitespace-nowrap">Show Rows</span>
+                                <select
+                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-medium text-gray-600 outline-none focus:border-primary/30 transition-colors cursor-pointer"
+                                    value={pageSize}
+                                    onChange={(e) => {
+                                        setPageSize(parseInt(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value={10}>10 / page</option>
+                                    <option value={20}>20 / page</option>
+                                    <option value={50}>50 / page</option>
+                                    <option value={100}>100 / page</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap items-center md:gap-7 gap-x-1 gap-y-4 w-full md:w-auto">
                         {[
                             { code: 'P', label: 'Present', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },

@@ -30,7 +30,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="bg-white rounded-[15px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
+        className="bg-white rounded-[12px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
     >
         <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full ${color.bg} opacity-10 group-hover:scale-125 transition-transform duration-500`} />
         <div className="flex items-center justify-between relative z-10">

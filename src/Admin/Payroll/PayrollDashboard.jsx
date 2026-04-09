@@ -16,7 +16,6 @@ import {
     CheckCircle2,
     Clock,
     X,
-    ChevronDown,
     Loader2,
     RefreshCcw,
     AlertTriangle,
@@ -33,7 +32,6 @@ import {
     getPayrollHoldListApi
 } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormSelect } from '../../Common/Form';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import { useNavigate } from 'react-router-dom';
 import PageWithStatsSkeleton from '../../Common/CommonSkeletonLoader/PageWithStatsSkeleton';
@@ -45,7 +43,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.5 }}
-        className="bg-white rounded-[15px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
+        className="bg-white rounded-[12px] p-4 border border-gray-200 transition-all group overflow-hidden relative"
     >
         <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full ${color.bg} opacity-10 group-hover:scale-125 transition-transform duration-500`} />
         <div className="flex items-center justify-between relative z-10">
@@ -85,7 +83,7 @@ export default function PayrollDashboard({ onEdit }) {
     const companyId = userInfo.company;
 
     const [runFormData, setRunFormData] = useState({
-        batch_allocation_id: '',
+        batch_allocation_ids: [],
         pay_type: 'MONTHLY',
         payroll_month: '',
         period_start: '',
@@ -161,7 +159,7 @@ export default function PayrollDashboard({ onEdit }) {
         const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
         setRunFormData({
-            batch_allocation_id: '',
+            batch_allocation_ids: [],
             pay_type: 'MONTHLY',
             payroll_month: currentMonth,
             period_start: periodStart,
@@ -173,8 +171,8 @@ export default function PayrollDashboard({ onEdit }) {
 
     const handleRunSubmit = async (e) => {
         e.preventDefault();
-        if (!runFormData.batch_allocation_id) {
-            toast.error('Please select a batch');
+        if (runFormData.batch_allocation_ids.length === 0) {
+            toast.error('Please select at least one batch');
             return;
         }
         if (!runFormData.payroll_month) {
@@ -187,8 +185,6 @@ export default function PayrollDashboard({ onEdit }) {
         }
 
         const [year, month] = runFormData.payroll_month.split('-').map(Number);
-
-        // Check if month hasn't ended yet
         const now = new Date();
         const monthEnd = new Date(year, month, 0);
         if (now < monthEnd && !runFormData.forceGenerate) {
@@ -198,25 +194,32 @@ export default function PayrollDashboard({ onEdit }) {
 
         setRunLoading(true);
         try {
-            const selected = structures.find(s => s.id === parseInt(runFormData.batch_allocation_id));
             const monthLabel = new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            const data = {
-                batch_allocation_id: runFormData.batch_allocation_id,
-                pay_type: runFormData.pay_type,
-                company_id: companyId,
-                batch_name: selected ? `${selected.name} - ${selected.batch}` : 'Standard Batch',
-                period_start: runFormData.period_start,
-                period_end: runFormData.period_end,
-                total_employees: totalEmployeesCount,
-                total_amount: 0,
-                status: 'Active'
-            };
-            await createPayrollRunApi(data);
-            toast.success(`Payroll for ${monthLabel} initialized successfully`);
+
+            // Run for each selected batch
+            const runPromises = runFormData.batch_allocation_ids.map(async (batchId) => {
+                const selected = structures.find(s => s.id === parseInt(batchId));
+                const data = {
+                    batch_allocation_id: batchId,
+                    pay_type: runFormData.pay_type,
+                    company_id: companyId,
+                    batch_name: selected ? `${selected.name} - ${selected.batch}` : 'Standard Batch',
+                    period_start: runFormData.period_start,
+                    period_end: runFormData.period_end,
+                    total_employees: totalEmployeesCount, // Controller will re-calculate correct count from batch
+                    total_amount: 0,
+                    status: 'Active'
+                };
+                return createPayrollRunApi(data);
+            });
+
+            await Promise.all(runPromises);
+
+            toast.success(`Payroll initialized successfully for ${runFormData.batch_allocation_ids.length} batches`);
             setIsRunModalOpen(false);
             fetchData(1);
         } catch (error) {
-            toast.error('Failed to initialize payroll run');
+            toast.error('Failed to initialize some payroll runs');
         } finally {
             setRunLoading(false);
         }
@@ -602,20 +605,44 @@ export default function PayrollDashboard({ onEdit }) {
                             </div>
 
                             <form onSubmit={handleRunSubmit} className="p-5 space-y-5">
-                                {/* Batch Selection */}
-                                <FormSelect
-                                    label="Select Batch"
-                                    name="batch_allocation_id"
-                                    value={runFormData.batch_allocation_id}
-                                    onChange={(e) => setRunFormData(prev => ({ ...prev, batch_allocation_id: e.target.value }))}
-                                    options={structures.map(s => ({
-                                        value: s.id,
-                                        label: `${s.name} ${s.batch ? `(${s.batch})` : ''}`
-                                    }))}
-                                    required
-                                    placeholder="Choose a batch..."
-                                    icon={ChevronDown}
-                                />
+                                {/* Batch Selection - Multi Select */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                                        Select Batches <span className="text-primary text-[10px] uppercase font-black tracking-widest">{runFormData.batch_allocation_ids.length} selected</span>
+                                    </label>
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 max-h-[150px] overflow-y-auto custom-scrollbar space-y-2">
+                                        {structures.map(s => (
+                                            <div
+                                                key={s.id}
+                                                onClick={() => {
+                                                    const current = runFormData.batch_allocation_ids;
+                                                    const updated = current.includes(s.id)
+                                                        ? current.filter(id => id !== s.id)
+                                                        : [...current, s.id];
+                                                    setRunFormData(prev => ({ ...prev, batch_allocation_ids: updated }));
+                                                }}
+                                                className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all ${runFormData.batch_allocation_ids.includes(s.id)
+                                                    ? 'bg-primary/5 border-primary shadow-sm'
+                                                    : 'bg-white border-transparent hover:border-gray-200'
+                                                    }`}
+                                            >
+                                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${runFormData.batch_allocation_ids.includes(s.id)
+                                                    ? 'bg-primary border-primary'
+                                                    : 'border-gray-200'
+                                                    }`}>
+                                                    {runFormData.batch_allocation_ids.includes(s.id) && <CheckCircle2 size={12} className="text-white" strokeWidth={3} />}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className={`text-[12.5px] font-semibold ${runFormData.batch_allocation_ids.includes(s.id) ? 'text-primary' : 'text-gray-700'}`}>{s.name}</span>
+                                                    {s.batch && <span className="text-[10px] font-semibold text-gray-500 -mt-0.5">{s.batch}</span>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {structures.length === 0 && (
+                                            <div className="text-center py-4 text-gray-400 text-[11px] italic font-medium">No active batches found</div>
+                                        )}
+                                    </div>
+                                </div>
 
                                 {/* Payroll Month */}
                                 <div>
@@ -716,13 +743,6 @@ export default function PayrollDashboard({ onEdit }) {
                                             Uncheck only if you want to wait for the grace period (1 day after month end)
                                         </p>
                                     </div>
-                                </div>
-
-                                {/* Info callout */}
-                                <div className="bg-teal-50 p-4 rounded-xl border border-teal-200">
-                                    <p className="text-[12px] text-teal-800 leading-relaxed">
-                                        <span className="font-semibold">This will trigger the same auto-generate logic we use in cron,</span> but it runs immediately for the month you select.
-                                    </p>
                                 </div>
 
                                 {/* Actions */}

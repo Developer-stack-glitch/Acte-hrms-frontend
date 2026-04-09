@@ -10,6 +10,7 @@ import {
     UserPlus,
     Check,
     Settings,
+    Copy,
 } from 'lucide-react';
 import SalaryStructureSkeleton from '../../Common/CommonSkeletonLoader/SalaryStructureSkeleton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -123,6 +124,17 @@ export default function SalaryStructure() {
             setFormData({ name: '', allocation_day: '', batch: '' });
             setSelectedComponentIds([]);
         }
+        setIsModalOpen(true);
+    };
+
+    const handleCloneStructure = (structure) => {
+        setFormData({
+            name: `${structure.name} (Copy)`,
+            allocation_day: structure.allocation_day || '',
+            batch: structure.batch ? `${structure.batch}_COPY` : ''
+        });
+        setSelectedComponentIds((structure.components || []).map(c => c.id));
+        setSelectedStructure(null);
         setIsModalOpen(true);
     };
 
@@ -327,6 +339,11 @@ export default function SalaryStructure() {
                                     <h3 className="text-lg font-semibold text-gray-900">{s.name}</h3>
                                     <span className={`w-3 h-3 rounded-full ${s.is_active ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                                     <div className="flex items-center gap-1.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Tooltip text="Clone Structure">
+                                            <button onClick={() => handleCloneStructure(s)} className="p-2 hover:bg-violet-50 rounded-lg text-violet-600">
+                                                <Copy size={16} />
+                                            </button>
+                                        </Tooltip>
                                         <Tooltip text="Edit Structure">
                                             <button onClick={() => handleOpenModal(s)} className="p-2 hover:bg-gray-50 rounded-lg text-blue-600">
                                                 <Edit2 size={16} />

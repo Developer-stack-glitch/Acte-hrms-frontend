@@ -1547,10 +1547,10 @@ export default function Dashboard() {
                                 </p>
                             </div>
                         </div>
-                        <div className="h-[350px]">
+                        <div className="h-[450px]">
                             {stats?.hasAttendance ? (
                                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                                    <BarChart data={deptData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                                    <BarChart data={deptData} layout="vertical" margin={{ left: 0, right: 40, top: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                         <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
                                         <YAxis
@@ -1558,8 +1558,9 @@ export default function Dashboard() {
                                             type="category"
                                             axisLine={false}
                                             tickLine={false}
-                                            tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
-                                            width={70}
+                                            tick={{ fill: '#475569', fontSize: 10, fontWeight: 600 }}
+                                            width={110}
+                                            tickFormatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
                                         />
                                         <Tooltip
                                             cursor={{ fill: '#f8fafc' }}
@@ -1570,8 +1571,8 @@ export default function Dashboard() {
                                                 color: '#fff'
                                             }}
                                         />
-                                        <Bar dataKey="Present" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                                        <Bar dataKey="Total" fill="#e2e8f0" radius={[0, 4, 4, 0]} barSize={20} />
+                                        <Bar dataKey="Present" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={8} />
+                                        <Bar dataKey="Total" fill="#e2e8f0" radius={[0, 4, 4, 0]} barSize={8} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -1608,10 +1609,10 @@ export default function Dashboard() {
                                 </p>
                             </div>
                         </div>
-                        <div className="h-[350px]">
+                        <div className="h-[450px]">
                             {stats?.hasAttendance ? (
                                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                                    <BarChart data={absenteeismData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                                    <BarChart data={absenteeismData} layout="vertical" margin={{ left: 0, right: 40, top: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                         <XAxis
                                             type="number"
@@ -1624,8 +1625,9 @@ export default function Dashboard() {
                                             type="category"
                                             axisLine={false}
                                             tickLine={false}
-                                            tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
-                                            width={70}
+                                            tick={{ fill: '#475569', fontSize: 10, fontWeight: 600 }}
+                                            width={110}
+                                            tickFormatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
                                         />
                                         <Tooltip
                                             cursor={{ fill: '#f8fafc' }}
@@ -1641,7 +1643,7 @@ export default function Dashboard() {
                                             dataKey="absenteeism"
                                             fill="#f87171"
                                             radius={[0, 4, 4, 0]}
-                                            barSize={20}
+                                            barSize={12}
                                         />
                                     </BarChart>
                                 </ResponsiveContainer>
