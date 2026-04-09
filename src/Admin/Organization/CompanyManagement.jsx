@@ -142,7 +142,7 @@ export default function CompanyManagement() {
                             <div className="flex items-start justify-between mb-4">
                                 <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
                                     {company.logo ? (
-                                        <img src={`${API_URL}/${company.logo.replace(/\\/g, '/').replace(/^\/+/, '')}`} alt={company.name} className="w-full h-full object-contain" />
+                                        <img src={`${API_URL}/api/${company.logo.replace(/\\/g, '/').replace(/^\/+/, '')}`} alt={company.name} className="w-full h-full object-contain" />
                                     ) : (
                                         <Building2 className="text-gray-300" size={32} />
                                     )}

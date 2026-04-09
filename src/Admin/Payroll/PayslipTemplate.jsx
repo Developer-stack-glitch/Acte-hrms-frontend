@@ -228,7 +228,7 @@ export default function PayslipTemplate() {
                             website: companyData.website || ''
                         });
                         if (companyData.logo) {
-                            setLogo(`${API_URL}/${companyData.logo.replace(/\\/g, '/')}`);
+                            setLogo(`${API_URL}/api/${companyData.logo.replace(/\\/g, '/')}`);
                         }
                     }
                 } catch (error) {
@@ -283,7 +283,7 @@ export default function PayslipTemplate() {
 
             const response = await getCompanyByIdApi(companyId);
             if (response.data.logo) {
-                setLogo(`${API_URL}/${response.data.logo.replace(/\\/g, '/')}`);
+                setLogo(`${API_URL}/api/${response.data.logo.replace(/\\/g, '/')}`);
                 setLogoFile(null);
             }
         } catch (error) {

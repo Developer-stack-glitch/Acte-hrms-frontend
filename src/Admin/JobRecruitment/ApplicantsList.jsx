@@ -850,7 +850,7 @@ const ApplicantsList = () => {
                                                                     if (selectedApplicant.resume_url) {
                                                                         const fullUrl = selectedApplicant.resume_url.startsWith('http')
                                                                             ? selectedApplicant.resume_url
-                                                                            : `${API_URL}/${selectedApplicant.resume_url.replace(/\\/g, '/')}`;
+                                                                            : `${API_URL}/api/${selectedApplicant.resume_url.replace(/\\/g, '/')}`;
                                                                         window.open(fullUrl, '_blank');
                                                                     } else {
                                                                         toast.error('No resume available');
@@ -984,7 +984,7 @@ const ApplicantsList = () => {
                                                                     if (selectedApplicant.resume_url) {
                                                                         const fullUrl = selectedApplicant.resume_url.startsWith('http')
                                                                             ? selectedApplicant.resume_url
-                                                                            : `${API_URL}/${selectedApplicant.resume_url.replace(/\\/g, '/')}`;
+                                                                            : `${API_URL}/api/${selectedApplicant.resume_url.replace(/\\/g, '/')}`;
                                                                         window.open(fullUrl, '_blank');
                                                                     }
                                                                 }}
@@ -1186,7 +1186,7 @@ const ApplicantsList = () => {
                             if (row.resume_url) {
                                 const fullUrl = row.resume_url.startsWith('http')
                                     ? row.resume_url
-                                    : `${API_URL}/${row.resume_url.replace(/\\/g, '/')}`;
+                                    : `${API_URL}/api/${row.resume_url.replace(/\\/g, '/')}`;
                                 window.open(fullUrl, '_blank');
                             } else {
                                 toast.error('No resume available');

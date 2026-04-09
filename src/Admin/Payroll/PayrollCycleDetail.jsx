@@ -56,7 +56,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                     const res = await getCompanyByIdApi(companyId);
                     setCompanyInfo(res.data);
                     if (res.data.logo) {
-                        setLogo(`${API_URL}/${res.data.logo.replace(/\\/g, '/')}`);
+                        setLogo(`${API_URL}/api/${res.data.logo.replace(/\\/g, '/')}`);
                     }
                 } catch (err) {
                     console.error('Failed to fetch company info');

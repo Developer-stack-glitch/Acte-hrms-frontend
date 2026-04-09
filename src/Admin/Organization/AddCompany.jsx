@@ -31,7 +31,7 @@ export default function AddCompany({ onSuccess, company }) {
                 logo: null // Don't try to send existing file back as File object
             });
             if (company.logo) {
-                setLogoPreview(`${API_URL}/${company.logo.replace(/\\/g, '/')}`);
+                setLogoPreview(`${API_URL}/api/${company.logo.replace(/\\/g, '/')}`);
             }
         }
     }, [company, API_URL]);
