@@ -5,6 +5,7 @@ import { Menu, X, Settings, ChevronDown, User, LogOut, ShieldCheck } from 'lucid
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import NotificationBell from './NotificationBell';
+import ConfirmationModal from './ConfirmationModal';
 
 
 const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
@@ -152,6 +153,25 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
 const MainLayout = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [showExpiryModal, setShowExpiryModal] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleSessionExpired = () => {
+            setShowExpiryModal(true);
+        };
+
+        window.addEventListener('session-expired', handleSessionExpired);
+        return () => {
+            window.removeEventListener('session-expired', handleSessionExpired);
+        };
+    }, []);
+
+    const handleSessionExpiryConfirm = () => {
+        localStorage.removeItem('userInfo');
+        setShowExpiryModal(false);
+        navigate('/login', { replace: true });
+    };
 
     return (
         <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans">
@@ -178,6 +198,17 @@ const MainLayout = () => {
                     </div>
                 </main>
             </div>
+
+            <ConfirmationModal
+                isOpen={showExpiryModal}
+                onClose={() => { }} // Force user to click the button
+                onConfirm={handleSessionExpiryConfirm}
+                title="Session Expired"
+                message="Your session has expired or is no longer valid. Please log in again to continue."
+                confirmText="Go to Login"
+                cancelText="" // Hide cancel button
+                type="warning"
+            />
         </div>
     );
 };

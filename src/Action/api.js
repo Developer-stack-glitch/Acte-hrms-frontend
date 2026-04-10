@@ -26,6 +26,21 @@ api.interceptors.request.use(
     }
 );
 
+// Add response interceptor to handle common errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Dispatch a custom event for session expiry
+            window.dispatchEvent(new CustomEvent('session-expired'));
+            
+            // Optional: Clear userInfo from localStorage immediately
+            // localStorage.removeItem('userInfo');
+        }
+        return Promise.reject(error);
+    }
+);
+
 // Auth APIs
 export const loginApi = (data) => api.post('/auth/login', data);
 export const forgotPasswordApi = (data) => api.post('/auth/forgot-password', data);

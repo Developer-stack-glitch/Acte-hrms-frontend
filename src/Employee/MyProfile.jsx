@@ -153,10 +153,10 @@ export default function MyProfile() {
             className="max-w-7xl mx-auto space-y-8 pb-12"
         >
             {/* Header Hero Section */}
-            <div className="relative overflow-hidden bg-white rounded-[20px] shadow-xl shadow-primary/5 border border-primary/5">
+            <div className="relative overflow-hidden bg-white rounded-[20px] border border-gray-200">
                 {/* Decorative Background */}
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
                 <div className="relative px-6 pt-12 pb-6 flex flex-col md:flex-row items-end gap-8">
                     {/* Avatar Container */}

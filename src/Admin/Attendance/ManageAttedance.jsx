@@ -6,12 +6,13 @@ import {
     Info,
     Calendar as CalendarIcon,
     RefreshCcw,
-    FileSpreadsheet,
     CalendarX,
     X,
     FileText,
     Filter,
+    Edit2,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, isToday, isBefore, startOfDay } from 'date-fns';
 import { getUserAttendanceApi, getAttendanceApi, getHolidaysApi, getLeavesApi, getWeekOffsApi, getCompanyWeekOffsApi } from '../../Action/api';
@@ -22,6 +23,7 @@ import toast from 'react-hot-toast';
 import UserFilter from '../User/UserFilter';
 import AttendanceSkeleton from '../../Common/CommonSkeletonLoader/AttendanceSkeleton';
 import NoData from '../../Common/NoData';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor, showInfo, delay = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -202,17 +204,17 @@ export default function ManageAttedance() {
         try {
             setLoading(true);
             const fetchStart = prevRange ? prevRange.start : fromDate;
-            
+
             // 1. Fetch paginated users first
             const usersRes = await getUserAttendanceApi({ page: currentPage, limit: pageSize, search: debouncedSearch, ...filters });
-            
+
             let emps = usersRes.data?.users || [];
             const total = usersRes.data?.total || 0;
-            
+
             if (userRole === 'employee') {
                 emps = emps.filter(e => String(e.id) === String(userId));
             }
-            
+
             // 2. Extract paginated user IDs to filter subsequent queries
             const userIds = emps.map(emp => emp.id).join(',');
 
@@ -546,6 +548,7 @@ export default function ManageAttedance() {
 
     return (
         <div className="flex flex-col md:gap-8 gap-4 p-3 bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] min-h-screen">
+            <FullPageLoader isLoading={loading && employees.length > 0} message="Syncing Attendance..." />
             {/* Action Bar */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div className="w-full lg:flex-1 flex items-center gap-2">
@@ -863,7 +866,7 @@ export default function ManageAttedance() {
                                                 className="group hover:bg-primary/[0.01] transition-colors border-b border-gray-50 last:border-0"
                                             >
                                                 <td className="sticky left-0 z-10 bg-white px-2 md:px-6 py-2 md:py-4 border-r border-gray-100 shadow-[4px_0_15px_-4px_rgba(0,0,0,0.05)]">
-                                                    <div className="flex items-center gap-2 md:gap-4 min-w-[120px] md:min-w-[220px]">
+                                                    <div className="flex items-center gap-2 md:gap-4 min-w-[120px] md:min-w-[200px]">
                                                         <div className="w-8 h-8 md:w-9 md:h-9 flex-shrink-0 rounded-full bg-gray-50 flex items-center justify-center text-[10px] md:text-[12px] font-bold text-gray-400 group-hover:bg-primary group-hover:text-white transition-all">
                                                             {(currentPage - 1) * pageSize + idx + 1}
                                                         </div>
@@ -1013,11 +1016,10 @@ export default function ManageAttedance() {
                                             <button
                                                 key={p}
                                                 onClick={() => setCurrentPage(p)}
-                                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-all ${
-                                                    currentPage === p
-                                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                                        : 'text-gray-500 hover:bg-gray-100 border border-gray-100'
-                                                }`}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-all ${currentPage === p
+                                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                                    : 'text-gray-500 hover:bg-gray-100 border border-gray-100'
+                                                    }`}
                                             >
                                                 {p}
                                             </button>
@@ -1085,6 +1087,7 @@ export default function ManageAttedance() {
                         detail={selectedDetail}
                         onClose={() => setSelectedDetail(null)}
                         getStatusForDay={getStatusForDay}
+                        userRole={userRole}
                     />
                 )}
             </AnimatePresence>
@@ -1140,7 +1143,8 @@ export default function ManageAttedance() {
     }
 }
 
-function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
+function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
+    const navigate = useNavigate();
     const [currentDay, setCurrentDay] = useState(null);
     const [currentRecord, setCurrentRecord] = useState(null);
 
@@ -1291,12 +1295,14 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 -mr-1 -mt-1"
-                        >
-                            <X size={20} className="text-gray-400" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 -mr-1 -mt-1"
+                            >
+                                <X size={20} className="text-gray-400" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1494,6 +1500,41 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay }) {
                         )}
                     </div>
                 </div>
+
+                {/* Footer - Administrative Actions */}
+                {userRole !== 'employee' && (
+                    <div className="px-6 py-5 bg-gray-50 border-t border-gray-100 mt-auto">
+                        <button
+                            onClick={() => {
+                                const dateParam = currentDay ? format(currentDay, 'yyyy-MM-dd') : '';
+                                navigate('/attendance/manual/form', {
+                                    state: {
+                                        editRecord: {
+                                            user_id: employee?.id,
+                                            date: dateParam,
+                                            employee_name: employee?.employee_name,
+                                            emp_id: employee?.emp_id,
+                                            punch_in: record?.punch_in,
+                                            punch_out: record?.punch_out
+                                        }
+                                    }
+                                });
+                            }}
+                            className="w-full flex items-center gap-4 p-4 bg-white border border-primary/20 rounded-[15px] hover:border-primary hover:shadow-xs transition-all group text-left"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                <Edit2 size={22} />
+                            </div>
+                            <div>
+                                <h4 className="text-[15px] font-semibold text-gray-900 leading-tight">Modify Attendance</h4>
+                                <p className="text-[12px] text-gray-500 font-medium">Adjust punch times or status for this day</p>
+                            </div>
+                            <div className="ml-auto">
+                                <ChevronRight size={20} className="text-gray-300 group-hover:text-primary transition-all" />
+                            </div>
+                        </button>
+                    </div>
+                )}
             </motion.div>
         </>
     );

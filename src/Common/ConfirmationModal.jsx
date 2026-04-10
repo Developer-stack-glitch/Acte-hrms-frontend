@@ -61,12 +61,14 @@ const ConfirmationModal = ({
                     className={`relative w-full max-w-md bg-white rounded-[15px] shadow-2xl overflow-hidden border ${theme.border}`}
                 >
                     {/* Close Button */}
-                    <button
-                        onClick={onClose}
-                        className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-                    >
-                        <X size={20} />
-                    </button>
+                    {cancelText && (
+                        <button
+                            onClick={onClose}
+                            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
 
                     <div className="p-4">
                         <div className="flex flex-col items-center text-center">
@@ -82,24 +84,28 @@ const ConfirmationModal = ({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-4 mt-6">
-                            <button
-                                onClick={onClose}
-                                disabled={loading}
-                                className={`flex-1 px-4 py-3 font-semibold rounded-full transition-all disabled:opacity-50 text-[14px] ${theme.cancelBg}`}
-                            >
-                                {cancelText}
-                            </button>
-                            <button
-                                onClick={onConfirm}
-                                disabled={loading}
-                                className={`flex-1 px-4 py-3 text-white font-medium rounded-full transition-all shadow-xs flex items-center justify-center gap-2 text-[14px] ${theme.confirmBg} disabled:opacity-50`}
-                            >
-                                {loading && (
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                )}
-                                {confirmText}
-                            </button>
+                        <div className="flex items-center gap-4 mt-6 w-full">
+                            {cancelText && (
+                                <button
+                                    onClick={onClose}
+                                    disabled={loading}
+                                    className={`flex-1 px-4 py-3 font-semibold rounded-full transition-all disabled:opacity-50 text-[14px] ${theme.cancelBg}`}
+                                >
+                                    {cancelText}
+                                </button>
+                            )}
+                            {confirmText && (
+                                <button
+                                    onClick={onConfirm}
+                                    disabled={loading}
+                                    className={`flex-1 px-4 py-3 text-white font-medium rounded-full transition-all shadow-xs flex items-center justify-center gap-2 text-[14px] ${theme.confirmBg} disabled:opacity-50`}
+                                >
+                                    {loading && (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    )}
+                                    {confirmText}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </motion.div>

@@ -43,6 +43,7 @@ import WebCalendar from './WebCalendar';
 import PayrollOverview from './PayrollOverview';
 import AssetOverview from './AssetOverview';
 import DashboardSkeleton from '../../Common/CommonSkeletonLoader/DashboardSkeleton';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 const DASHBOARD_TABS = [
     { id: 'attendance', label: 'Attendance' },
@@ -604,6 +605,7 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-6 lg:space-y-8">
+            <FullPageLoader isLoading={loading && employees.length > 0} message="Syntizing Dashboard Data..." />
             {/* Main Tabs Control */}
             {userRole !== 'employee' && (
                 <div className="flex gap-2 bg-white p-1 rounded-full border border-gray-200 overflow-x-auto no-scrollbar max-w-full">

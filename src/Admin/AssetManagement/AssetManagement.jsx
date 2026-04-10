@@ -25,6 +25,7 @@ import {
     updateAssetRequestStatusApi,
     API_URL
 } from '../../Action/api';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 const STATUSES = ['Available', 'Assigned', 'Maintenance', 'Broken'];
 
@@ -552,6 +553,7 @@ export default function AssetManagement() {
 
     return (
         <div className="min-h-screen bg-transparent md:p-4 p-3 pb-6 font-sans">
+            <FullPageLoader isLoading={fetchingState && (assets.length > 0 || requests.length > 0)} message="Syncing Asset Registry..." />
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between md:gap-4 gap-3 md:mb-8 mb-5">
                 <div className="flex items-start gap-4">

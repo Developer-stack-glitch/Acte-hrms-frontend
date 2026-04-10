@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, User, Trash2, Plus, Loader2, RefreshCcw, Building2, Check, X, Search, Info, ArrowLeft } from 'lucide-react';
+import { Calendar, User, Trash2, Plus, Loader2, RefreshCcw, Building2, Check, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getWeekOffsApi, createWeekOffApi, deleteWeekOffApi, getUsersApi, getCompanyWeekOffsApi, saveCompanyWeekOffsApi } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormSelect } from '../../Common/Form';
+import { SearchableSelect } from '../../Common/Form';
 import PageWithStatsSkeleton from '../../Common/CommonSkeletonLoader/PageWithStatsSkeleton';
 import TableSkeleton from '../../Common/CommonSkeletonLoader/TableSkeleton';
 import ListSkeleton from '../../Common/CommonSkeletonLoader/ListSkeleton';
@@ -14,7 +14,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 
 export default function WeekOff() {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [savingCompany, setSavingCompany] = useState(false);
@@ -142,7 +141,7 @@ export default function WeekOff() {
             setDeletingId(null);
         }
     };
-    
+
     const isDatePast = (dateStr) => {
         if (!dateStr) return false;
         const today = new Date();
@@ -276,7 +275,7 @@ export default function WeekOff() {
                                     </div>
 
                                     <form onSubmit={handleSubmit} className="space-y-6">
-                                        <FormSelect
+                                        <SearchableSelect
                                             label="Select Employee"
                                             name="userid"
                                             value={formData.userid}
@@ -429,10 +428,10 @@ export default function WeekOff() {
                                                                 <button
                                                                     onClick={() => !isDatePast(item.weekoffdate) && handleDeleteClick(item.id)}
                                                                     disabled={isDatePast(item.weekoffdate)}
-                                                                    className={`p-2.5 rounded-xl transition-all ${isDatePast(item.weekoffdate) 
-                                                                        ? 'text-gray-300 bg-gray-50 cursor-not-allowed opacity-60' 
+                                                                    className={`p-2.5 rounded-xl transition-all ${isDatePast(item.weekoffdate)
+                                                                        ? 'text-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
                                                                         : 'text-gray-400 hover:text-rose-500 hover:bg-rose-50 active:scale-90'
-                                                                    }`}
+                                                                        }`}
                                                                     title={isDatePast(item.weekoffdate) ? "Past exceptions cannot be deleted" : "Delete Exception"}
                                                                 >
                                                                     <Trash2 size={18} />
@@ -473,7 +472,7 @@ export default function WeekOff() {
                                                             className={`p-2.5 rounded-xl transition-all ${isDatePast(item.weekoffdate)
                                                                 ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                                                 : 'bg-rose-50 text-rose-500 active:scale-90'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <Trash2 size={18} />
                                                         </button>

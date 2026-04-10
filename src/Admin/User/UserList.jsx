@@ -14,6 +14,7 @@ import AddUsers from './AddUsers';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import UserFilter from './UserFilter';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 
 export default function UserList({ onAddClick }) {
@@ -256,6 +257,7 @@ export default function UserList({ onAddClick }) {
 
     return (
         <div className="flex flex-col h-full">
+            <FullPageLoader isLoading={loading && users.length > 0} message="Syncing User Database..." />
             {/* Header Section */}
             <div className="p-6 border-b border-gray-100 bg-white sticky top-0 z-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

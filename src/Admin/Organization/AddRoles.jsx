@@ -6,6 +6,7 @@ import { FormInput } from '../../Common/Form';
 import FormSkeleton from '../../Common/CommonSkeletonLoader/FormSkeleton';
 import DataTable from '../../Common/DataTable';
 import { Link } from 'react-router-dom';
+import ConfirmationModal from '../../Common/ConfirmationModal';
 
 export default function AddRoles() {
     const [loading, setLoading] = useState(false);
@@ -13,6 +14,13 @@ export default function AddRoles() {
     const [listLoading, setListLoading] = useState(true);
     const [roles, setRoles] = useState([]);
     const [roleName, setRoleName] = useState('');
+
+    // Modal state
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        role: null,
+        loading: false
+    });
 
     useEffect(() => {
         fetchRoles();
@@ -79,16 +87,26 @@ export default function AddRoles() {
             }
         }
 
-        if (!window.confirm(`Are you sure you want to delete the role "${role}"?`)) {
-            return;
-        }
+        setDeleteModal({
+            isOpen: true,
+            role: role,
+            loading: false
+        });
+    };
 
+    const confirmDelete = async () => {
+        const role = deleteModal.role;
+        if (!role) return;
+
+        setDeleteModal(prev => ({ ...prev, loading: true }));
         try {
             await deleteRoleApi(role);
             toast.success('Role deleted successfully');
+            setDeleteModal({ isOpen: false, role: null, loading: false });
             fetchRoles();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to delete role');
+            setDeleteModal(prev => ({ ...prev, loading: false }));
         }
     };
 
@@ -108,6 +126,15 @@ export default function AddRoles() {
             )
         },
         {
+            header: 'Assigned Users',
+            key: 'userCount',
+            render: (val) => (
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${val > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {val} {val === 1 ? 'User' : 'Users'}
+                </span>
+            )
+        },
+        {
             header: 'Type',
             key: 'role',
             render: (val) => (
@@ -118,17 +145,27 @@ export default function AddRoles() {
         },
         {
             header: 'Actions',
-            key: 'role',
-            render: (val) => {
+            key: 'all', // Using entire object to access role and userCount
+            render: (_, row) => {
+                const val = row.role;
+                const userCount = row.userCount;
                 const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                 const currentUserRole = userInfo.role;
                 const isSystemRole = ['superadmin', 'admin', 'employee'].includes(val.toLowerCase());
                 const isSelfSuperAdmin = val.toLowerCase() === 'superadmin';
 
-                // Display delete button if: 
+                // Display delete button icon if: 
                 // 1. It's not a system role OR 
                 // 2. The current user is a superadmin AND it's not the superadmin role itself
                 const canDelete = !isSystemRole || (currentUserRole === 'superadmin' && !isSelfSuperAdmin);
+
+                const handleActionClick = () => {
+                    if (userCount > 0) {
+                        toast.error(`Cannot delete role "${val}" because it is currently assigned to ${userCount} ${userCount === 1 ? 'user' : 'users'}. Please reassign or remove the users first.`);
+                        return;
+                    }
+                    handleDelete(val);
+                };
 
                 return (
                     <div className="flex items-center gap-2">
@@ -141,9 +178,9 @@ export default function AddRoles() {
                         </Link>
                         {canDelete && (
                             <button
-                                onClick={() => handleDelete(val)}
-                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete Role"
+                                onClick={handleActionClick}
+                                className={`p-1.5 rounded-lg transition-colors ${userCount > 0 ? 'text-gray-400 cursor-not-allowed hover:bg-gray-100' : 'text-red-500 hover:bg-red-50'}`}
+                                title={userCount > 0 ? `Role assigned to ${userCount} users` : "Delete Role"}
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -228,6 +265,17 @@ export default function AddRoles() {
                     />
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, role: null, loading: false })}
+                onConfirm={confirmDelete}
+                title="Delete Role"
+                message={`Are you sure you want to delete the role "${deleteModal.role}"? This action cannot be undone.`}
+                confirmText="Delete Role"
+                type="danger"
+                loading={deleteModal.loading}
+            />
         </div>
     );
 }

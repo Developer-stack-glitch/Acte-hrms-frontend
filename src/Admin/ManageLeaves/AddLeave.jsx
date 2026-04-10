@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { createLeaveApi, getUsersApi } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormInput, FormSelect, FormDate, FormTextarea, FormTime } from '../../Common/Form';
+import { FormInput, FormSelect, FormDate, FormTextarea, FormTime, SearchableSelect } from '../../Common/Form';
 import { AddLeaveSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkeleton';
 
 const leaveTypes = [
@@ -236,7 +236,7 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                     <input type="hidden" name="employee_id" value={userId} />
                                 </div>
                             ) : (
-                                <FormSelect
+                                <SearchableSelect
                                     label="Select Employee"
                                     name="employee_id"
                                     value={formData.employee_id}
@@ -244,6 +244,7 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                     options={employees}
                                     placeholder="Choose an employee..."
                                     required
+                                    icon={User}
                                 />
                             )}
                             <div className="space-y-1">

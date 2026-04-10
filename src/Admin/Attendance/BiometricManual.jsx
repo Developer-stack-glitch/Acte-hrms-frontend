@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { getUsersApi, saveAttendanceApi, getAttendanceApi, getBiometricLogsApi, syncBiometricApi, updateAttendanceApi, deleteAttendanceApi } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormSelect, FormDate, FormTime } from '../../Common/Form';
+import { FormSelect, FormDate, FormTime, SearchableSelect } from '../../Common/Form';
 import ConfirmationModal from '../../Common/ConfirmationModal';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TableSkeleton from '../../Common/CommonSkeletonLoader/TableSkeleton';
 import ListSkeleton from '../../Common/CommonSkeletonLoader/ListSkeleton';
 
@@ -45,10 +45,27 @@ export default function BiometricManual() {
         punch_out: ''
     });
 
+    const location = useLocation();
+    
     useEffect(() => {
         fetchEmployees();
         fetchAttendance();
-    }, []);
+
+        // Check for pre-fill state from navigation
+        if (location.state?.editRecord) {
+            const { editRecord } = location.state;
+            setFormData({
+                user_id: editRecord.user_id,
+                date: editRecord.date,
+                punch_in: editRecord.punch_in || '',
+                punch_out: editRecord.punch_out || ''
+            });
+
+            // If we have an ID, we might want to set it as editing
+            // But usually, manual edit is for creating OR updating.
+            // Let's check if a record already exists in attendanceList
+        }
+    }, [location.state]);
 
     const fetchEmployees = async () => {
         try {
@@ -273,7 +290,7 @@ export default function BiometricManual() {
                         exit="exit"
                         className="max-w-7xl"
                     >
-                        <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden shadow-xl shadow-gray-200/50">
+                        <div className="bg-white border border-gray-200 rounded-[15px] relative shadow-xl shadow-gray-200/50">
                             <div className="md:p-6 p-3 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -295,7 +312,7 @@ export default function BiometricManual() {
                             </div>
                             <form onSubmit={handleSubmit} className="md:p-8 p-4 space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                    <FormSelect
+                                    <SearchableSelect
                                         label="Select Employee"
                                         name="user_id"
                                         required
@@ -305,7 +322,7 @@ export default function BiometricManual() {
                                             value: emp.id,
                                             label: `${emp.employee_name} (${emp.emp_id})`
                                         }))}
-                                        placeholder="Select an employee..."
+                                        placeholder="Type to search employee..."
                                         icon={User}
                                     />
 

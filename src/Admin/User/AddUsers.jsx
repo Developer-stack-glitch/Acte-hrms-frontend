@@ -28,7 +28,7 @@ import {
     getWorkLocationsApi 
 } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormInput, FormSelect, FormDate, FormTextarea } from '../../Common/Form';
+import { FormInput, FormSelect, FormDate, FormTextarea, SearchableSelect } from '../../Common/Form';
 import FormSkeleton from '../../Common/CommonSkeletonLoader/FormSkeleton';
 import BulkUploadModal from './BulkUploadModal';
 
@@ -494,10 +494,30 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                             ) : (
                                 <Plus className="text-primary" size={24} />
                             )}
-                            {isView ? 'View Employee Details' : isEdit ? 'Edit Employee' : 'Add New Employee'}
+                            {isView ? (
+                                <div className="flex items-center gap-2">
+                                    <span>View Employee Details</span>
+                                    {(formData.employee_name || formData.name) && (
+                                        <>
+                                            <span className="text-gray-300 font-light">|</span>
+                                            <span className="text-primary tracking-tight">{formData.employee_name || formData.name}</span>
+                                        </>
+                                    )}
+                                </div>
+                            ) : isEdit ? (
+                                <div className="flex items-center gap-2">
+                                    <span>Edit Employee</span>
+                                    {(formData.employee_name || formData.name) && (
+                                        <>
+                                            <span className="text-gray-300 font-light">|</span>
+                                            <span className="text-primary tracking-tight">{formData.employee_name || formData.name}</span>
+                                        </>
+                                    )}
+                                </div>
+                            ) : 'Add New Employee'}
                         </h1>
                         <p className="text-[13px] text-gray-500 font-medium mt-1">
-                            {isView ? 'Full profile details of the team member' : 'Fill in the details to onboard a new team member'}
+                            {isView ? `Viewing full profile details of ${formData.employee_name || 'the team member'}` : isEdit ? `Update profile information for ${formData.employee_name || 'this member'}` : 'Fill in the details to onboard a new team member'}
                         </p>
                     </div>
                 </div>
@@ -580,7 +600,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         required={field.required}
                                                     />
                                                 ) : field.type === 'select' ? (
-                                                    <FormSelect
+                                                    <SearchableSelect
                                                         label={field.label}
                                                         name={field.name}
                                                         value={formData[field.name] || ''}

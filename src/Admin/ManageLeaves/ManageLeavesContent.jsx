@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { X } from 'lucide-react';
 import { ManageLeavesSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkeleton';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
@@ -215,6 +216,7 @@ export default function ManageLeavesContent({ onViewAll }) {
 
     return (
         <div className="flex flex-col gap-6 p-4 bg-gray-50/50 min-h-full">
+            <FullPageLoader isLoading={loading && leaves.length > 0} message="Syncing Leave Analytics..." />
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

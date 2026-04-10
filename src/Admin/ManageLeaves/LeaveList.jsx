@@ -16,6 +16,7 @@ import { LeaveListSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkelet
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
+import FullPageLoader from '../../Common/FullPageLoader';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
@@ -426,6 +427,7 @@ export default function LeaveList() {
 
     return (
         <div className="flex flex-col h-full bg-white">
+            <FullPageLoader isLoading={loading && leaves.length > 0} message="Syncing Leave Records..." />
             <div className="p-4 border-b border-gray-100 bg-white">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>

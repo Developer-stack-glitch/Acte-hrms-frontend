@@ -5,3 +5,4 @@ export { default as FormTime } from './FormTime';
 export { default as FormTextarea } from './FormTextarea';
 export { default as FormLabel } from './FormLabel';
 export { default as FormToggle } from './FormToggle';
+export { default as SearchableSelect } from './SearchableSelect';
