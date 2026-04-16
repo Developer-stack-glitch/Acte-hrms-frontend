@@ -13,6 +13,7 @@ const SearchableSelect = ({
     className = "",
     icon: Icon,
     placeholder = "Select an option",
+    direction = "down",
     extra,
     name,
     ...props
@@ -74,10 +75,10 @@ const SearchableSelect = ({
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0, y: 5 }}
+                            initial={{ opacity: 0, y: direction === 'up' ? -5 : 5 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 5 }}
-                            className="absolute z-[100] top-full left-0 w-full mt-1.5 bg-white border border-gray-100 rounded-xl shadow-2xl shadow-gray-200/80 overflow-hidden min-w-[250px]"
+                            exit={{ opacity: 0, y: direction === 'up' ? -5 : 5 }}
+                            className={`absolute z-[100] ${direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} left-0 w-full bg-white border border-gray-100 rounded-xl shadow-2xl shadow-gray-200/80 overflow-hidden min-w-[250px]`}
                         >
                             <div className="p-2.5 border-b border-gray-50 bg-gray-50/30">
                                 <div className="relative">

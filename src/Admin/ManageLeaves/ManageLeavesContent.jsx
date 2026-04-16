@@ -119,8 +119,11 @@ export default function ManageLeavesContent({ onViewAll }) {
                 startDate,
                 endDate,
                 ...((userRole === 'admin' || userRole === 'superadmin') ? {} :
-                    userInfo.team_lead === 'yes' ? { team_lead_id: userId } :
-                        { employee_id: userId })
+                    { 
+                        reporting_manager: userId, 
+                        personal_user_id: userId,
+                        team_lead_id: userInfo.team_lead === 'yes' ? userId : null 
+                    })
             };
             const response = await getLeavesApi(params); // Get more for dashboard stats
             setLeaves(response.data.leaves || []);
@@ -141,6 +144,11 @@ export default function ManageLeavesContent({ onViewAll }) {
             setLoading(false);
         }
     };
+
+    const isManagerRole = useMemo(() => {
+        return userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' || 
+               leaves.some(l => String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId));
+    }, [userRole, userInfo.team_lead, leaves, userId]);
 
     useEffect(() => {
         fetchLeaves();
@@ -200,17 +208,23 @@ export default function ManageLeavesContent({ onViewAll }) {
 
     const displayLeaves = useMemo(() => {
         return leaves.filter(l => {
-            const canAction = userRole === 'superadmin' || userRole === 'admin' || l.team_lead_id == userId;
-            const matchesStatus = (userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes')
-                ? (l.status === 'Pending' && canAction)
-                : true;
+            const isMyRequest = String(l.employee_id) === String(userId);
+            const isManagedRequest = String(l.reporting_manager) === String(userId) || String(l.team_lead_id) === String(userId);
+            const canAction = userRole === 'superadmin' || userRole === 'admin' || isManagedRequest;
+            
+            // On dashboard, if manager, show pending requests from reportees. 
+            // If normal employee, show all my requests.
+            const matchesStatus = isManagerRole 
+                ? (l.status === 'Pending' && canAction && !isMyRequest) 
+                : isMyRequest;
+                
             const matchesSearch = !searchTerm ||
                 l.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 l.emp_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 l.leave_type?.toLowerCase().includes(searchTerm.toLowerCase());
             return matchesStatus && matchesSearch;
         }).slice(0, 5);
-    }, [leaves, searchTerm, userRole, userId]);
+    }, [leaves, searchTerm, userRole, userId, isManagerRole]);
 
     if (loading) return <ManageLeavesSkeleton />;
 
@@ -221,11 +235,11 @@ export default function ManageLeavesContent({ onViewAll }) {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
-                        {(userRole === 'admin' || userRole === 'superadmin') ? 'Leave Workspace' : userInfo.team_lead === 'yes' ? 'Team Approval Workspace' : 'My Leave Workspace'}
+                        {(userRole === 'admin' || userRole === 'superadmin') ? 'Leave Workspace' : isManagerRole ? 'Team Leave Workspace' : 'My Leave Workspace'}
                     </h2>
                     <p className="text-[13px] text-gray-500 font-medium">
                         {(userRole === 'admin' || userRole === 'superadmin') ? 'Approval dashboard and leave distribution analytics' :
-                            userInfo.team_lead === 'yes' ? 'Review and manage leave requests for your department' :
+                            isManagerRole ? 'Comprehensive overview of team leaves and pending approvals' :
                                 'Overview of your leave applications and personal analytics'}
                     </p>
                 </div>
@@ -295,30 +309,30 @@ export default function ManageLeavesContent({ onViewAll }) {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Pending Approvals' : 'My Pending'}
+                    title={isManagerRole ? 'Pending Approvals' : 'My Pending'}
                     value={stats.pending}
                     icon={Clock}
                     color={{ bg: 'bg-orange-50', text: 'text-orange-600' }}
                     delay={0.1}
                 />
                 <StatCard
-                    title={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Approved Today' : 'Approved Recently'}
+                    title={isManagerRole ? 'Approved Recently' : 'Approved Recently'}
                     value={stats.approvedToday}
                     icon={CheckCircle2}
                     color={{ bg: 'bg-emerald-50', text: 'text-emerald-600' }}
                     delay={0.2}
                 />
                 <StatCard
-                    title={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Requests This Month' : 'Month\'s Applications'}
+                    title={isManagerRole ? 'Team Requests (Mo)' : 'Month\'s Applications'}
                     value={stats.totalThisMonth}
                     icon={Calendar}
                     color={{ bg: 'bg-indigo-50', text: 'text-indigo-600' }}
                     delay={0.3}
                 />
                 <StatCard
-                    title={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Total Employees' : 'Total Approved'}
-                    value={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? employeeCount : stats.totalApproved}
-                    icon={(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? Users : CheckCircle2}
+                    title={isManagerRole ? 'Total Approvals' : 'Total Approved'}
+                    value={isManagerRole ? stats.totalApproved : stats.totalApproved}
+                    icon={CheckCircle2}
                     color={{ bg: 'bg-blue-50', text: 'text-blue-600' }}
                     delay={0.4}
                 />
@@ -333,11 +347,11 @@ export default function ManageLeavesContent({ onViewAll }) {
                                 {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? <Clock size={20} /> : <Calendar size={20} />}
                             </div>
                             <h3 className="font-semibold text-gray-900">
-                                {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Action Required' : 'Recent Applications'}
+                                {isManagerRole ? 'Team Approvals' : 'Recent Applications'}
                             </h3>
                         </div>
-                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[11px] font-semibold text-gray-400 uppercase tracking-widest">
-                            {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Top 5 Requests' : 'Latest 5'}
+                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[11px] font-semibold text-gray-400">
+                            {isManagerRole ? 'Pending Tasks' : 'Latest 5'}
                         </span>
                     </div>
 
@@ -358,7 +372,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                     {leave.employee_name.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{leave.employee_name}</h4>
+                                                    <h4 className="font-semibold text-sm text-gray-900 group-hover:text-primary transition-colors">{leave.employee_name}</h4>
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-[12px] text-gray-500 font-medium">{leave.leave_type} • {leave.emp_id}</p>
                                                         {leave.is_half_day ? (
@@ -370,7 +384,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                {(userRole === 'superadmin' || userRole === 'admin' || leave.team_lead_id == userId) ? (
+                                                {(userRole === 'superadmin' || userRole === 'admin' || String(leave.team_lead_id) === String(userId) || String(leave.reporting_manager) === String(userId)) && String(leave.employee_id) !== String(userId) ? (
                                                     <>
                                                         <button
                                                             onClick={() => handleAction(leave, 'Approved')}
@@ -386,7 +400,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <span className={`px-4 py-1.5 rounded-xl font-bold text-[11px] uppercase tracking-wider ${leave.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
+                                                    <span className={`px-4 py-1.5 rounded-xl font-semibold text-[12px] ${leave.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
                                                         leave.status === 'Rejected' ? 'bg-rose-50 text-red-600' :
                                                             'bg-amber-50 text-amber-600'
                                                         }`}>
@@ -431,7 +445,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                 <PieChartIcon size={20} />
                             </div>
                             <h3 className="font-semibold text-gray-900">
-                                {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'Leave Distribution' : 'My Leave Distribution'}
+                                {isManagerRole ? 'Leave Analytics' : 'My Leave Distribution'}
                             </h3>
                         </div>
 

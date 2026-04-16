@@ -1,34 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-    UserCheck,
-    FileText,
-    ClipboardCheck,
-    Calendar,
-    Tablet
+    ClipboardList,
+    PlusCircle,
+    LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ManageAttedance from './ManageAttedance.jsx';
-import BiometricManual from './BiometricManual.jsx';
-import WeekOff from './WeekOff.jsx';
-import HolidayCalendar from './HolidayCalendar.jsx';
-import CompanyPolicy from './CompanyPolicy.jsx';
-import DeviceManager from './DeviceManager.jsx';
-import Regularisations from './Regularisations.jsx';
+import { useNavigate, useParams } from 'react-router-dom';
+import Regularisations from './Regularisations';
+import ApplyRegularisation from './ApplyRegularisation';
+import ManageRegularisationsOverview from './ManageRegularisationsOverview';
 
 const tabs = [
-    { id: 'manage', label: 'Attendance & Shift', icon: UserCheck, component: ManageAttedance, permissionId: 'attendance_shift' },
-    { id: 'manual', label: 'Biometric Attendance', icon: FileText, component: () => <BiometricManual />, permissionId: 'attendance_biometric' },
-    { id: 'weekoff', label: 'Week Off', icon: ClipboardCheck, component: () => <WeekOff />, permissionId: 'attendance_weekoff' },
-    { id: 'calendar', label: 'Calendar', icon: Calendar, component: () => <HolidayCalendar />, permissionId: 'attendance_calendar' },
-    { id: 'regularisations', label: 'Regularisation', icon: ClipboardCheck, component: Regularisations },
-    // { id: 'leave-rules', label: 'Attendance Rules', icon: FileText, component: LeaveRules, permissionId: 'attendance_rules' },
-    { id: 'company-policy', label: 'Company Policy', icon: FileText, component: CompanyPolicy, permissionId: 'attendance_policy' },
-    { id: 'devices', label: 'Biometric Devices', icon: Tablet, component: DeviceManager, permissionId: 'attendance_devices' },
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard, component: ManageRegularisationsOverview, permissionId: 'regularisation_view' },
+    { id: 'list', label: 'History', icon: ClipboardList, component: Regularisations, permissionId: 'regularisation_list' },
+    { id: 'apply', label: 'Apply Correction', icon: PlusCircle, component: ApplyRegularisation, permissionId: 'regularisation_apply' },
 ];
 
-import { useNavigate, useParams } from 'react-router-dom';
-
-export default function Attendance() {
+export default function RegularisationPage() {
     const { tabId } = useParams();
     const navigate = useNavigate();
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
@@ -37,40 +25,30 @@ export default function Attendance() {
 
     const filteredTabs = useMemo(() => {
         if (userRole === 'superadmin') return tabs;
-
-        // Filter by permissions
-        const baseTabs = tabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
-
-        // Specifically hide certain tabs for employees
-        if (userRole === 'employee') {
-            const hiddenForEmployee = ['manual', 'leave-rules', 'company-policy', 'devices'];
-            return baseTabs.filter(tab => !hiddenForEmployee.includes(tab.id));
-        }
-
-        return baseTabs;
+        // Filter by permissions if you want to be strict, but for now we'll allow all for testing
+        // return tabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
+        return tabs;
     }, [userRole, userPermissions]);
 
     const activeTab = tabId || (filteredTabs.length > 0 ? filteredTabs[0].id : null);
 
     const setActiveTab = (id) => {
-        navigate(`/attendance/${id}`);
+        navigate(`/regularisations/${id}`);
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!tabId || !filteredTabs.some(t => t.id === tabId)) {
             if (filteredTabs.length > 0) {
-                navigate(`/attendance/${filteredTabs[0].id}`, { replace: true });
+                navigate(`/regularisations/${filteredTabs[0].id}`, { replace: true });
             }
         }
     }, [tabId, filteredTabs, navigate]);
-
-    const ActiveComponent = filteredTabs.find(t => t.id === activeTab)?.component || filteredTabs[0]?.component;
 
     return (
         <div className="flex flex-col h-full bg-[#f8fafc]">
             {/* Horizontal Tabs Navigation */}
             <div className="bg-white rounded-lg border-b border-gray-100 md:px-3 px-3 pt-3 pb-0 sticky top-0 z-20">
-                <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar scroll-smooth">
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
                     {filteredTabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -93,7 +71,7 @@ export default function Attendance() {
 
                             {activeTab === tab.id && (
                                 <motion.div
-                                    layoutId="active-nav-indicator-attn"
+                                    layoutId="active-nav-indicator-regular"
                                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
                                     initial={false}
                                 />
@@ -104,7 +82,7 @@ export default function Attendance() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 md:px-1 px-0 py-4">
+            <div className="flex-1 px-0 py-4">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
@@ -114,8 +92,19 @@ export default function Attendance() {
                         transition={{ duration: 0.25, ease: "easeOut" }}
                         className="max-w-[1600px] mx-auto h-full"
                     >
-                        <div className="bg-white rounded-[8px] overflow-hidden min-h-[600px]">
-                            <ActiveComponent />
+                        <div className="overflow-hidden min-h-[600px]">
+                            {activeTab === 'overview' ? (
+                                <ManageRegularisationsOverview
+                                    onApplyQuickly={() => setActiveTab('apply')}
+                                    onViewAll={() => setActiveTab('list')}
+                                />
+                            ) : activeTab === 'list' ? (
+                                <Regularisations />
+                            ) : (
+                                <ApplyRegularisation
+                                    onSuccess={() => setActiveTab('list')}
+                                />
+                            )}
                         </div>
                     </motion.div>
                 </AnimatePresence>

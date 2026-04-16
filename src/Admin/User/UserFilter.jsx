@@ -122,7 +122,7 @@ export default function UserFilter({ isOpen, onClose, onApply, currentFilters })
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`px-4 py-4 text-left text-[14px] font-semibold transition-all relative ${activeCategory === cat.id
+                                        className={`px-4 py-4 text-left text-[14px] font-semibold transition-all relative border-b border-gray-100 ${activeCategory === cat.id
                                             ? 'bg-white text-primary'
                                             : 'text-gray-600 hover:bg-gray-100'
                                             }`}
@@ -168,9 +168,9 @@ export default function UserFilter({ isOpen, onClose, onApply, currentFilters })
                                             <button
                                                 key={optionId}
                                                 onClick={() => toggleFilter(activeCategory, optionId)}
-                                                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${isChecked
-                                                    ? 'bg-[#f0f7ff] text-primary shadow-sm'
-                                                    : 'bg-white text-gray-400 hover:bg-gray-50'
+                                                className={`w-full flex items-center justify-between p-3 rounded-[10px] transition-all ${isChecked
+                                                    ? 'bg-[#f0f7ff] text-primary border border-primary'
+                                                    : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-200'
                                                     }`}
                                             >
                                                 <span className={`text-[14px] font-medium ${isChecked ? 'text-primary' : 'text-gray-500'}`}>

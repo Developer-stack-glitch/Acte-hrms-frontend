@@ -139,6 +139,12 @@ export const deleteAttendancePolicyRuleApi = (id) => api.delete(`/attendance/pol
 export const getCompanyPolicyApi = (companyId) => api.get(`/attendance/company-policy/${companyId}`);
 export const saveCompanyPolicyApi = (data) => api.post('/attendance/company-policy', data);
 
+// Regularisation APIs
+export const getRegularisationCountsApi = () => api.get('/regularisations/counts');
+export const getRegularisationsApi = (params) => api.get('/regularisations', { params });
+export const createRegularisationApi = (data) => api.post('/regularisations', data);
+export const updateRegularisationStatusApi = (id, data) => api.put(`/regularisations/${id}/status`, data);
+
 // Holiday APIs
 export const getHolidaysApi = (params) => api.get('/holidays', { params });
 export const createHolidayApi = (data) => api.post('/holidays', data);

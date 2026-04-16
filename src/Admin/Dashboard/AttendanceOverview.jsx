@@ -972,7 +972,7 @@ export default function Dashboard() {
                                         placeholder="Search..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full sm:w-80 text-[14px] shadow-xs"
+                                        className="pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full sm:w-80 text-[14px]"
                                     />
                                 </div>
                             )}

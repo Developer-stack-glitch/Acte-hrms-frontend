@@ -23,6 +23,7 @@ import MyAssets from './Employee/MyAssets';
 import OpenJobs from './Employee/OpenJobs';
 import Policies from './Admin/Policies/Policies';
 import Reports from './Admin/Reports/Reports';
+import RegularisationPage from './Admin/Attendance/RegularisationPage';
 
 import { NotificationProvider } from './utils/NotificationContext';
 
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="users/:tabId?/:subId?" element={<UserTabs />} />
           <Route path="organization/:tabId?/:subId?" element={<Organization />} />
           <Route path="attendance/:tabId?/:subId?" element={<Attendance />} />
+          <Route path="regularisations/:tabId?" element={<RegularisationPage />} />
           <Route path="biometric-manual/:tabId?" element={<BiometricManual />} />
           <Route path="leaves/:tabId?/:subId?" element={<Leaves />} />
           <Route path="payroll/:tabId?" element={<Payroll />} />

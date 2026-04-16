@@ -335,8 +335,8 @@ export default function OpenJobs() {
                     <div className="w-24 h-24 bg-white rounded-[40px] shadow-2xl flex items-center justify-center mb-8 text-gray-200">
                         <Search size={48} />
                     </div>
-                    <h3 className="text-3xl font-bold text-gray-900 mb-3">No openings found</h3>
-                    <p className="text-gray-400 max-w-sm font-semibold text-lg">We couldn't find any jobs matching your search criteria. Try a different keyword?</p>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-3">No openings found</h3>
+                    <p className="text-gray-400 max-w-sm font-semibold text-md">We couldn't find any jobs matching your search criteria. Try a different keyword?</p>
                 </div>
             )}
 

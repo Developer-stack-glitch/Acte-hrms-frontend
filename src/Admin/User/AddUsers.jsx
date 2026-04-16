@@ -15,17 +15,18 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-    createUserApi, 
-    updateUserApi, 
-    getBranchesApi, 
-    getDesignationsApi, 
-    getShiftsApi, 
-    getDepartmentsApi, 
-    getBatchAllocationsApi, 
+import {
+    createUserApi,
+    updateUserApi,
+    getUsersApi,
+    getBranchesApi,
+    getDesignationsApi,
+    getShiftsApi,
+    getDepartmentsApi,
+    getBatchAllocationsApi,
     getAllRolePermissionsApi,
     getEmploymentTypesApi,
-    getWorkLocationsApi 
+    getWorkLocationsApi
 } from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput, FormSelect, FormDate, FormTextarea, SearchableSelect } from '../../Common/Form';
@@ -51,9 +52,10 @@ const sections = [
             { name: 'doj', label: 'DOJ (Date of Joining)', type: 'date' },
             { name: 'dor', label: 'DOR (Date of Relieving)', type: 'date' },
             { name: 'duration', label: 'Duration', type: 'text' },
+            { name: 'reporting_manager', label: 'Reporting Manager', type: 'select', options: [] },
             { name: 'is_experienced', label: 'Has Work Experience?', type: 'checkbox' },
-            { name: 'web_clock_in_allowed', label: 'Allow Web Clock-In', type: 'checkbox' },
             { name: 'team_lead', label: 'Team Lead', type: 'checkbox' },
+            { name: 'web_clock_in_allowed', label: 'Allow Web Clock-In', type: 'checkbox' },
         ]
     },
     {
@@ -147,7 +149,9 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        is_experienced: false
+        is_experienced: false,
+        web_clock_in_allowed: true,
+        reporting_manager: ''
     });
     const [activeSection, setActiveSection] = useState('professional');
     const [loading, setLoading] = useState(false);
@@ -161,7 +165,8 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         salary_structure_id: [],
         role: [],
         employment_type: [],
-        work_location: []
+        work_location: [],
+        reporting_manager: []
     });
 
     const calculateDuration = (doj) => {
@@ -248,7 +253,8 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                     salary_structure_id: (structures.data || []).map(s => ({ id: s.id, name: s.name })),
                     role: (roles.data || []).map(r => ({ id: r.id, name: r.role.charAt(0).toUpperCase() + r.role.slice(1) })),
                     employment_type: (empTypes.data || []).map(t => ({ id: t.id, name: t.name })),
-                    work_location: (workModes.data || []).map(w => ({ id: w.id, name: w.name }))
+                    work_location: (workModes.data || []).map(w => ({ id: w.id, name: w.name })),
+                    reporting_manager: (await getUsersApi({ limit: 1000 })).data.users.map(u => ({ id: u.id, name: u.name }))
                 });
             } catch (error) {
                 console.error('Error fetching options:', error);
@@ -333,6 +339,9 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
             }
             if (mappedData.web_clock_in_allowed !== undefined) {
                 mappedData.web_clock_in_allowed = !!mappedData.web_clock_in_allowed;
+            }
+            if (mappedData.reporting_manager !== undefined) {
+                mappedData.reporting_manager = mappedData.reporting_manager;
             }
 
             // Sync role name to ID if needed (for dropdown match)
@@ -600,26 +609,35 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         required={field.required}
                                                     />
                                                 ) : field.type === 'select' ? (
-                                                    <SearchableSelect
-                                                        label={field.label}
-                                                        name={field.name}
-                                                        value={formData[field.name] || ''}
-                                                        onChange={handleChange}
-                                                        disabled={isView}
-                                                        required={field.required}
-                                                        extra={renderAddOption(field.name, field.label)}
-                                                        options={(field.name === 'designation'
-                                                            ? getFilteredDesignations().map(d => ({ value: d.id, label: d.name }))
-                                                            : (field.name === 'salary_structure_id'
-                                                                ? (options.salary_structure_id || []).map(s => ({ value: s.id, label: s.name }))
-                                                                : (field.options && field.options.length > 0
-                                                                    ? field.options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
-                                                                    : (options[field.name] || []).map(o => ({ value: o.id, label: o.name })))))}
-                                                        placeholder={`Select ${field.label.replace(' *', '')}`}
-                                                    />
+                                                    <div className="flex flex-col">
+                                                        <SearchableSelect
+                                                            label={field.label}
+                                                            name={field.name}
+                                                            value={formData[field.name] || ''}
+                                                            onChange={handleChange}
+                                                            disabled={isView}
+                                                            required={field.required}
+                                                            extra={renderAddOption(field.name, field.label)}
+                                                            options={(field.name === 'designation'
+                                                                ? getFilteredDesignations().map(d => ({ value: d.id, label: d.name }))
+                                                                : (field.name === 'salary_structure_id'
+                                                                    ? (options.salary_structure_id || []).map(s => ({ value: s.id, label: s.name }))
+                                                                    : (field.options && field.options.length > 0
+                                                                        ? field.options.map(o => typeof o === 'string' ? { value: o, label: o } : o)
+                                                                        : (options[field.name] || []).map(o => ({ value: o.id, label: o.name })))))}
+                                                            placeholder={`Select ${field.label.replace(' *', '')}`}
+                                                            direction={field.name === 'reporting_manager' ? 'up' : 'down'}
+                                                        />
+                                                        {field.name === 'reporting_manager' && (
+                                                            <p className="text-[11px] text-primary/70 font-medium px-1 mt-1.5 flex items-center gap-1.5 animate-in slide-in-from-top-1 duration-200">
+                                                                <span className="w-1 h-1 rounded-full bg-primary/50" />
+                                                                Attendance and Leave requests will be sent to this manager for approval.
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 ) : field.type === 'checkbox' ? (
                                                     <div className="flex flex-col gap-1">
-                                                        <label className={`flex mt-6 items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg transition-colors group ${isView ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100'}`}>
+                                                        <label className={`flex mt-2 items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg transition-colors group ${isView ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100'}`}>
                                                             <input
                                                                 type="checkbox"
                                                                 name={field.name}

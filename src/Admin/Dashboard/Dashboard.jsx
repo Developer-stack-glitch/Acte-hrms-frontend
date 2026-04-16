@@ -44,6 +44,7 @@ import PayrollOverview from './PayrollOverview';
 import AssetOverview from './AssetOverview';
 import DashboardSkeleton from '../../Common/CommonSkeletonLoader/DashboardSkeleton';
 import FullPageLoader from '../../Common/FullPageLoader';
+import { getRegularisationCountsApi } from '../../Action/api';
 
 const DASHBOARD_TABS = [
     { id: 'attendance', label: 'Attendance' },
@@ -140,6 +141,7 @@ export default function Dashboard() {
     const [empLeaves, setEmpLeaves] = useState([]);
     const [allLeaves, setAllLeaves] = useState([]);
     const [empReimbursements, setEmpReimbursements] = useState([]);
+    const [regCounts, setRegCounts] = useState({ Requested: 0, Pending: 0, Approved: 0, Rejected: 0 });
     const navigate = useNavigate();
 
     // Filter & Date Range States
@@ -212,12 +214,14 @@ export default function Dashboard() {
 
             // Specific data for employee's own requests
             if (userRole === 'employee') {
-                const [leavesRes, reimRes] = await Promise.all([
+                const [leavesRes, reimRes, regsRes] = await Promise.all([
                     getLeavesApi({ employee_id: userId, limit: 1000 }),
-                    getReimbursementsApi()
+                    getReimbursementsApi(),
+                    getRegularisationCountsApi()
                 ]);
                 setEmpLeaves(leavesRes.data.leaves || []);
                 setEmpReimbursements(reimRes.data || []);
+                setRegCounts(regsRes.data || { Requested: 0, Pending: 0, Approved: 0, Rejected: 0 });
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -296,8 +300,15 @@ export default function Dashboard() {
             rejected: empReimbursements.filter(r => r.status === 'Rejected').length
         };
 
-        return { leaves, reimbursements };
-    }, [userRole, empLeaves, empReimbursements]);
+        const regularisations = {
+            requested: regCounts.Requested || 0,
+            pending: regCounts.Pending || 0,
+            approved: regCounts.Approved || 0,
+            rejected: regCounts.Rejected || 0
+        };
+
+        return { leaves, reimbursements, regularisations };
+    }, [userRole, empLeaves, empReimbursements, regCounts]);
 
     const presentUsers = useMemo(() => {
         return employees.flatMap(emp =>
@@ -652,7 +663,7 @@ export default function Dashboard() {
                                             showYearDropdown
                                             showMonthDropdown
                                             dropdownMode="select"
-                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[110px]"
+                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[90px]"
                                             popperPlacement="bottom-end"
                                             portalId="root"
                                         />
@@ -667,7 +678,7 @@ export default function Dashboard() {
                                             selected={toDate ? new Date(toDate) : null}
                                             onChange={(date) => setToDate(date ? date.toLocaleDateString('sv-SE') : '')}
                                             dateFormat="yyyy-MM-dd"
-                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
+                                            className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[90px]"
                                             popperPlacement="bottom-end"
                                             portalId="root"
                                         />
@@ -1030,7 +1041,7 @@ export default function Dashboard() {
                                                 placeholder="Search..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full sm:w-80 text-[14px] shadow-xs"
+                                                className="pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full sm:w-80 text-[14px]"
                                             />
                                         </div>
                                     )}
@@ -1475,12 +1486,12 @@ export default function Dashboard() {
                                 <RequestOverviewCard
                                     title="Regularisations"
                                     actionLabel="Request"
-                                    onAction={() => navigate('/attendance/manage')}
+                                    onAction={() => navigate('/regularisations/apply')}
                                     stats={[
-                                        { label: "Requested", value: 0, bg: "bg-blue-50/50", textColor: "text-blue-600" },
-                                        { label: "Pending", value: 0, bg: "bg-orange-50/50", textColor: "text-orange-600" },
-                                        { label: "Approved", value: 0, bg: "bg-emerald-50/50", textColor: "text-emerald-600" },
-                                        { label: "Rejected", value: 0, bg: "bg-rose-50/50", textColor: "text-rose-600" },
+                                        { label: "Requested", value: requestStats?.regularisations.requested || 0, bg: "bg-blue-50/50", textColor: "text-blue-600" },
+                                        { label: "Pending", value: requestStats?.regularisations.pending || 0, bg: "bg-orange-50/50", textColor: "text-orange-600" },
+                                        { label: "Approved", value: requestStats?.regularisations.approved || 0, bg: "bg-emerald-50/50", textColor: "text-emerald-600" },
+                                        { label: "Rejected", value: requestStats?.regularisations.rejected || 0, bg: "bg-rose-50/50", textColor: "text-rose-600" },
                                     ]}
                                 />
                                 <RequestOverviewCard

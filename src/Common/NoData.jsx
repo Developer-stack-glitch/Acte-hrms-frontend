@@ -41,7 +41,7 @@ const NoData = ({
                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 mb-3 border border-gray-100/50">
                     {renderIcon()}
                 </div>
-                <p className="text-[14px] font-semibold text-gray-500 leading-tight">
+                <p className="text-[16px] font-semibold text-gray-500 leading-tight">
                     {title}
                 </p>
                 {description && <p className="text-[12px] text-gray-500/90 mt-1">{description}</p>}

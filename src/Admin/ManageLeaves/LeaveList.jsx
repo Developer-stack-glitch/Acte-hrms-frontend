@@ -129,6 +129,10 @@ export default function LeaveList() {
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 
+    const isManagerForSome = useMemo(() => leaves && leaves.length > 0 && leaves.some(l => 
+        l.reporting_manager && String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId)
+    ), [leaves, userId]);
+
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [leaveToDelete, setLeaveToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -148,8 +152,11 @@ export default function LeaveList() {
                 startDate,
                 endDate,
                 ...((userRole === 'admin' || userRole === 'superadmin') ? {} :
-                    userInfo.team_lead === 'yes' ? { team_lead_id: userId } :
-                        { employee_id: userId })
+                    { 
+                        reporting_manager: userId, 
+                        personal_user_id: userId,
+                        team_lead_id: userInfo.team_lead === 'yes' ? userId : null 
+                    })
             };
             const response = await getLeavesApi(params);
             setLeaves(response.data.leaves || []);
@@ -389,14 +396,17 @@ export default function LeaveList() {
             }
         ];
 
-        if (userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') {
+        if (userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' || isManagerForSome) {
             cols.push({
                 header: 'Actions',
                 key: 'actions',
                 render: (val, row) => (
                     <div className="flex items-center gap-2">
-                        {row.status === 'Pending' && (
-                            userRole === 'superadmin' || userRole === 'admin' || row.team_lead_id == userId
+                        {row.status === 'Pending' && String(row.employee_id) !== String(userId) && (
+                            userRole === 'superadmin' || 
+                            userRole === 'admin' || 
+                            String(row.team_lead_id) === String(userId) || 
+                            String(row.reporting_manager) === String(userId)
                         ) && (
                                 <>
                                     <button
@@ -421,7 +431,7 @@ export default function LeaveList() {
         }
 
         return cols;
-    }, [page, pageSize, userRole, userInfo.team_lead]);
+    }, [page, pageSize, userRole, userInfo.team_lead, leaves, userId, isManagerForSome]);
 
     if (loading) return <LeaveListSkeleton />;
 
@@ -432,11 +442,11 @@ export default function LeaveList() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-800">
-                            {(userRole === 'admin' || userRole === 'superadmin') ? "Leave Management" : userInfo.team_lead === 'yes' ? "Team Leave Approval" : "My Leave Requests"}
+                            {(userRole === 'admin' || userRole === 'superadmin') ? "Leave Management" : (userInfo.team_lead === 'yes' || isManagerForSome) ? "Team Leave Approval" : "My Leave Requests"}
                         </h2>
                         <p className="text-[13px] text-gray-500 font-medium mt-1">
                             {(userRole === 'admin' || userRole === 'superadmin') ? "Review and manage employee leave requests" :
-                                userInfo.team_lead === 'yes' ? "Review and manage leave requests for your department" :
+                                (userInfo.team_lead === 'yes' || isManagerForSome) ? "Review and manage leave requests for your team" :
                                     "Track and manage your leave applications"}
                         </p>
                     </div>
