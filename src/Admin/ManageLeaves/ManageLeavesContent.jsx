@@ -119,10 +119,10 @@ export default function ManageLeavesContent({ onViewAll }) {
                 startDate,
                 endDate,
                 ...((userRole === 'admin' || userRole === 'superadmin') ? {} :
-                    { 
-                        reporting_manager: userId, 
+                    {
+                        reporting_manager: userId,
                         personal_user_id: userId,
-                        team_lead_id: userInfo.team_lead === 'yes' ? userId : null 
+                        team_lead_id: userInfo.team_lead === 'yes' ? userId : null
                     })
             };
             const response = await getLeavesApi(params); // Get more for dashboard stats
@@ -146,8 +146,8 @@ export default function ManageLeavesContent({ onViewAll }) {
     };
 
     const isManagerRole = useMemo(() => {
-        return userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' || 
-               leaves.some(l => String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId));
+        return userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' ||
+            leaves.some(l => String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId));
     }, [userRole, userInfo.team_lead, leaves, userId]);
 
     useEffect(() => {
@@ -211,13 +211,13 @@ export default function ManageLeavesContent({ onViewAll }) {
             const isMyRequest = String(l.employee_id) === String(userId);
             const isManagedRequest = String(l.reporting_manager) === String(userId) || String(l.team_lead_id) === String(userId);
             const canAction = userRole === 'superadmin' || userRole === 'admin' || isManagedRequest;
-            
+
             // On dashboard, if manager, show pending requests from reportees. 
             // If normal employee, show all my requests.
-            const matchesStatus = isManagerRole 
-                ? (l.status === 'Pending' && canAction && !isMyRequest) 
+            const matchesStatus = isManagerRole
+                ? (l.status === 'Pending' && canAction && !isMyRequest)
                 : isMyRequest;
-                
+
             const matchesSearch = !searchTerm ||
                 l.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 l.emp_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -477,7 +477,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                             )}
                         </div>
 
-                        <div className="mt-6 space-y-3">
+                        <div className="mt-10 space-y-3">
                             <h4 className="text-[11px] font-semibold text-gray-600 uppercase tracking-widest px-1">
                                 {userRole === 'employee' ? 'My Categories' : 'Top Leave Categories'}
                             </h4>

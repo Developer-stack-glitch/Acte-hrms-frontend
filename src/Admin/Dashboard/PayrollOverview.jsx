@@ -126,7 +126,9 @@ export default function PayrollDashboard() {
             });
         } catch (error) {
             console.error('Error fetching payroll data:', error);
-            toast.error('Failed to sync payroll data');
+            if (error.response?.status !== 401) {
+                toast.error('Failed to sync payroll data');
+            }
         } finally {
             setLoading(false);
         }

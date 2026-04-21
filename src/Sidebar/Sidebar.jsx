@@ -14,7 +14,8 @@ import {
     UserPlus,
     ShieldCheck,
     BarChart3,
-    ClipboardCheck
+    ClipboardCheck,
+    Settings as SettingsIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -106,9 +107,16 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
                 { id: 'attendance', icon: Clock, label: userRole === 'admin' || userRole === 'superadmin' ? 'Attendance' : 'My Attendance', to: '/attendance' },
                 { id: 'leaves', icon: CalendarDays, label: userRole === 'admin' || userRole === 'superadmin' ? 'Leaves' : 'My Leaves', to: '/leaves' },
                 { id: 'regularisations', icon: ClipboardCheck, label: userRole === 'admin' || userRole === 'superadmin' ? 'Regularisations' : 'My Regularisations', to: '/regularisations' },
+                { id: 'shift_roster', icon: CalendarDays, label: 'Shift Roster', to: '/shift-roster', show: userRole === 'admin' || userRole === 'superadmin' },
                 { id: 'company_policies', icon: ShieldCheck, label: 'Company Policies', to: '/policies' },
                 { id: 'asset_management', icon: ToolCase, label: userRole === 'admin' || userRole === 'superadmin' ? 'Asset Management' : 'My Assets', to: userRole === 'admin' || userRole === 'superadmin' ? '/asset-management' : '/my-assets' },
                 { id: 'jobs_recruitment', icon: UserPlus, label: userRole === 'admin' || userRole === 'superadmin' ? 'Jobs & Recruitment' : 'Career Portal', to: userRole === 'admin' || userRole === 'superadmin' ? '/job-recruitment' : '/career' },
+            ]
+        },
+        {
+            title: 'System',
+            items: [
+                { id: 'settings', icon: SettingsIcon, label: 'Settings', to: '/settings' },
             ]
         }
     ];
@@ -119,7 +127,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
         ...section,
         items: section.items.filter(item => {
             if (userRole === 'superadmin') return true;
-            if (item.id === 'regularisations') return true;
+            if (item.show === false) return false;
+            if (item.show === true) return true;
+            if (item.id === 'regularisations' || item.id === 'settings') return true;
             return permissions.includes(item.id);
         })
     })).filter(section => section.items.length > 0);

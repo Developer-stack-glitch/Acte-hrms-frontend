@@ -31,7 +31,7 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="bg-white rounded-[20px] w-full max-w-md overflow-hidden shadow-2xl relative z-10 p-6 space-y-4"
+                        className="bg-white rounded-[15px] w-full max-w-md overflow-hidden shadow-2xl relative z-10 p-6 space-y-4"
                     >
                         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                             <h3 className="font-semibold text-gray-900">Request Details</h3>
@@ -54,7 +54,7 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
                                 <span className="text-[12px] font-semibold text-gray-600 block">Shift Time</span>
                                 <p className="font-semibold text-gray-800 mt-1">{request.check_in?.substring(0, 5)} - {request.check_out?.substring(0, 5)}</p>
                             </div>
-                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                                 <span className="text-[12px] font-semibold text-gray-600 block mb-1">Reason</span>
                                 <p className="text-sm text-gray-600 font-medium leading-relaxed italic">"{request.reason}"</p>
                             </div>
@@ -173,10 +173,10 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 
-    const isManagerRole = useMemo(() => 
-        userRole === 'admin' || userRole === 'superadmin' || 
-        recentRequests.some(r => String(r.reporting_manager) === String(userId) && String(r.user_id) !== String(userId))
-    , [userRole, recentRequests, userId]);
+    const isManagerRole = useMemo(() =>
+        userRole === 'admin' || userRole === 'superadmin' ||
+        recentRequests.some(r => String(r.user_id) !== String(userId))
+        , [userRole, recentRequests, userId]);
 
     useEffect(() => {
         fetchOverviewData();
@@ -187,7 +187,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
             setLoading(true);
             const [countsRes, recentRes] = await Promise.all([
                 getRegularisationCountsApi(),
-                getRegularisationsApi({ 
+                getRegularisationsApi({
                     limit: 5,
                     ...(userRole !== 'admin' && userRole !== 'superadmin' ? {
                         reporting_manager: userId,
@@ -297,7 +297,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                 <History size={20} />
                             </div>
                             <h4 className="font-semibold text-gray-900 tracking-tight">
-                                {isManagerRole ? 'Action Items' : 'Recent Activity'}
+                                {isManagerRole && recentRequests.some(r => String(r.user_id) !== String(userId)) ? 'Team Action Items' : 'Recent Activity'}
                             </h4>
                         </div>
                         <button
@@ -318,13 +318,23 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                                 {req.employee_name?.charAt(0)}
                                             </div>
                                             <div>
-                                                <h5 className="font-semibold text-sm text-gray-700 leading-tight">
-                                                    {userRole === 'employee' && String(req.user_id) === String(userId) 
-                                                        ? `Regularisation for ${format(parseISO(req.date), 'MMM dd')}` 
-                                                        : req.employee_name}
+                                                <h5 className="font-semibold text-sm text-gray-700 leading-tight flex items-center gap-2">
+                                                    {String(req.user_id) === String(userId) ? (
+                                                        <>
+                                                            {`Correction for ${format(parseISO(req.date), 'MMM dd')}`}
+                                                            <span className="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 font-bold uppercase tracking-wider">Self</span>
+
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {req.employee_name}
+                                                            <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-600 font-bold uppercase tracking-wider">Team</span>
+                                                        </>
+                                                    )}
                                                 </h5>
                                                 <p className="text-[12px] font-semibold text-gray-500 mt-0.5">
-                                                    {String(req.user_id) !== String(userId) && `${format(parseISO(req.date), 'MMM dd')} • `}{req.reason?.substring(0, 30)}...
+                                                    {String(req.user_id) !== String(userId) && `${format(parseISO(req.date), 'MMM dd')} • `}
+                                                    {req.reason?.length > 40 ? `${req.reason?.substring(0, 40)}...` : req.reason}
                                                 </p>
                                             </div>
                                         </div>
@@ -348,7 +358,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                                 </button>
                                             </Tooltip>
 
-                                            {(userRole !== 'employee' || String(req.reporting_manager) === String(userInfo.id)) && req.status === 'Pending' && (
+                                            {(userRole === 'admin' || userRole === 'superadmin' || String(req.reporting_manager) === String(userId)) && req.status === 'Pending' && String(req.user_id) !== String(userId) && (
                                                 <div className="flex items-center gap-2 border-l pl-3 ml-1 border-gray-100">
                                                     <Tooltip text="Approve">
                                                         <button

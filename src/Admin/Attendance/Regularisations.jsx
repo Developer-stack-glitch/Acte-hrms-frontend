@@ -153,7 +153,8 @@ const Regularisations = () => {
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
-    const isAdmin = userRole !== 'employee';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+    const isReportingManager = useMemo(() => requests.some(r => String(r.reporting_manager) === String(userId) && String(r.user_id) !== String(userId)), [requests, userId]);
 
     useEffect(() => {
         fetchRequests();
@@ -163,7 +164,8 @@ const Regularisations = () => {
         try {
             setLoading(true);
             const params = {
-                ...(statusFilter !== 'All' ? { status: statusFilter } : {})
+                ...(statusFilter !== 'All' ? { status: statusFilter } : {}),
+                ...(userRole !== 'admin' && userRole !== 'superadmin' ? { reporting_manager: userId, personal_user_id: userId } : {})
             };
             const [res, countsRes] = await Promise.all([
                 getRegularisationsApi(params),
@@ -233,7 +235,19 @@ const Regularisations = () => {
                             {(val || 'E').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[13px] font-semibold text-gray-800">{val}</span>
+                            <div className="flex items-center gap-1.5">
+                                {String(row.user_id) === String(userId) ? (
+                                    <>
+                                        <span className="text-[13px] font-semibold text-gray-800">{val}</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-wider border border-blue-100">Self</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-[13px] font-semibold text-gray-800">{val}</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-wider border border-emerald-100">Team</span>
+                                    </>
+                                )}
+                            </div>
                             <span className="text-[11px] text-gray-500">{row.emp_id}</span>
                         </div>
                     </div>
@@ -358,13 +372,13 @@ const Regularisations = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
-                            {isAdmin || requests.some(r => String(r.reporting_manager) === String(userId)) ? 'Team Regularisations' : 'My Regularisations'}
+                            {isAdmin || isReportingManager ? 'Team Regularisations' : 'My Regularisations'}
                             <div className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-semibold">
                                 {requests.length} Total
                             </div>
                         </h2>
                         <p className="text-[14px] font-medium text-gray-500 mt-1">
-                            {isAdmin || requests.some(r => String(r.reporting_manager) === String(userId)) ? 'Review and manage attendance correction requests for your team' : 'Manage and track your attendance correction requests'}
+                            {isAdmin || isReportingManager ? 'Review and manage attendance correction requests for your team' : 'Manage and track your attendance correction requests'}
                         </p>
                     </div>
 

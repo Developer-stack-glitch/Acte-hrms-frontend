@@ -56,20 +56,19 @@ const SearchableSelect = ({
                 <FormLabel label={label} icon={Icon} required={required} />
                 {extra}
             </div>
-            
+
             <div className="relative">
                 <button
                     type="button"
                     onClick={() => !disabled && setIsOpen(!isOpen)}
                     disabled={disabled}
-                    className={`w-full h-11 flex items-center justify-between px-4 bg-white border rounded-lg outline-none transition-all text-[14px] font-medium disabled:bg-gray-50 disabled:text-gray-500 ${
-                        isOpen ? 'border-primary ring-4 ring-primary/5' : 'border-gray-200 hover:border-primary/50'
-                    }`}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-[12px] outline-none transition-all text-[15px] font-medium disabled:bg-gray-50 disabled:text-gray-500 ${isOpen ? 'border-primary ring-0' : 'border-gray-200 hover:border-primary/50'
+                        }`}
                 >
-                    <span className={`truncate ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-900 font-medium'}`}>
+                    <span className={`truncate ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-700 font-medium'}`}>
                         {selectedOption ? selectedOption.label : placeholder}
                     </span>
-                    <ChevronDown size={18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180 text-primary' : 'text-gray-400'}`} />
+                    <ChevronDown size={20} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-gray-400'}`} />
                 </button>
 
                 <AnimatePresence>
@@ -92,7 +91,7 @@ const SearchableSelect = ({
                                         className="pl-9 pr-8 py-2 w-full bg-white border border-gray-200 rounded-lg outline-none focus:border-primary text-[13px] font-medium transition-all"
                                     />
                                     {searchTerm && (
-                                        <button 
+                                        <button
                                             onClick={() => setSearchTerm('')}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                         >
@@ -112,9 +111,8 @@ const SearchableSelect = ({
                                                     key={opt.value}
                                                     type="button"
                                                     onClick={() => handleSelect(opt.value)}
-                                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all text-left group ${
-                                                        isSelected ? 'bg-primary/5 text-primary' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-medium'
-                                                    }`}
+                                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all text-left group ${isSelected ? 'bg-primary/5 text-primary' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-medium'
+                                                        }`}
                                                 >
                                                     <span className={`text-[13px] ${isSelected ? 'font-bold' : ''}`}>
                                                         {opt.label}

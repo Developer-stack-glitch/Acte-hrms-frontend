@@ -818,7 +818,7 @@ export default function ManageAttedance() {
                         <table className="w-full border-collapse border-spacing-0">
                             <thead>
                                 <tr className="bg-white border-b border-gray-50">
-                                    <th className="sticky left-0 bg-white md:px-6 px-3 md:py-6 py-3 text-center border-r border-gray-100 shadow-[4px_0_15px_-4px_rgba(0,0,0,0.05)]">
+                                    <th className="sticky left-0 bg-white md:px-6 px-3 md:py-4 py-3 text-center border-r border-gray-100 shadow-[4px_0_15px_-4px_rgba(0,0,0,0.05)]">
                                         <span className="md:text-[13px] text-[11px] font-black text-gray-600 uppercase md:tracking-[0.2em] tracking-wider">Employee Information</span>
                                     </th>
                                     {daysInRange.map((day) => (

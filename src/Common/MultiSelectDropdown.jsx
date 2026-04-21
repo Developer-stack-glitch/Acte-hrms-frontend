@@ -45,7 +45,7 @@ const MultiSelectDropdown = ({ label, items, selectedItems, onChange, placeholde
                     }`}
             >
                 <span className="truncate">
-                    {selectedItems.length > 0 ? `${selectedItems.length} selected` : `Select ${label}`}
+                    {selectedItems.length > 0 ? `${selectedItems.length} selected` : label?.startsWith('Select') ? label : `Select ${label}`}
                 </span>
                 <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180 text-primary' : 'text-gray-400'}`} />
             </button>

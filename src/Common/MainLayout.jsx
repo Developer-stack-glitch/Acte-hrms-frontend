@@ -56,7 +56,11 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
                 <div className="hidden md:flex items-center gap-1 lg:gap-2">
                     <NotificationBell />
                     {[Settings].map((Icon, idx) => (
-                        <button key={idx} className="p-2 lg:p-3 text-gray-500 hover:bg-gray-50 hover:text-primary rounded-[10px] transition-all relative group overflow-hidden">
+                        <button 
+                            key={idx} 
+                            onClick={() => navigate('/settings')}
+                            className="p-2 lg:p-3 text-gray-500 hover:bg-gray-50 hover:text-primary rounded-[10px] transition-all relative group overflow-hidden"
+                        >
                             <Icon size={18} className="group-hover:scale-110 transition-transform lg:w-5 lg:h-5" />
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>

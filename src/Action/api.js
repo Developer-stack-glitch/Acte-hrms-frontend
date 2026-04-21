@@ -145,6 +145,12 @@ export const getRegularisationsApi = (params) => api.get('/regularisations', { p
 export const createRegularisationApi = (data) => api.post('/regularisations', data);
 export const updateRegularisationStatusApi = (id, data) => api.put(`/regularisations/${id}/status`, data);
 
+// Shift Roster APIs
+export const getShiftRosterApi = (params) => api.get('/shift-roster', { params });
+export const assignShiftApi = (data) => api.post('/shift-roster/assign', data);
+export const bulkAssignShiftsApi = (data) => api.post('/shift-roster/bulk-assign', data);
+export const deleteShiftAssignmentApi = (id) => api.delete(`/shift-roster/${id}`);
+
 // Holiday APIs
 export const getHolidaysApi = (params) => api.get('/holidays', { params });
 export const createHolidayApi = (data) => api.post('/holidays', data);

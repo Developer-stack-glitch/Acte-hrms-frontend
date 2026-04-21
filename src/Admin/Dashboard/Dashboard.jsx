@@ -225,7 +225,9 @@ export default function Dashboard() {
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
-            toast.error('Failed to sync dashboard data');
+            if (error.response?.status !== 401) {
+                toast.error('Failed to sync dashboard data');
+            }
         } finally {
             setLoading(false);
         }

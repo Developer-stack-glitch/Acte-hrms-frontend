@@ -116,7 +116,9 @@ export default function AssetOverview() {
             });
         } catch (error) {
             console.error('Error fetching asset data:', error);
-            toast.error('Failed to sync asset insights');
+            if (error.response?.status !== 401) {
+                toast.error('Failed to sync asset insights');
+            }
         } finally {
             setLoading(false);
         }

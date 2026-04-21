@@ -24,6 +24,8 @@ import OpenJobs from './Employee/OpenJobs';
 import Policies from './Admin/Policies/Policies';
 import Reports from './Admin/Reports/Reports';
 import RegularisationPage from './Admin/Attendance/RegularisationPage';
+import ShiftRoster from './Admin/Attendance/ShiftRoster';
+import Settings from './Common/Settings/Settings';
 
 import { NotificationProvider } from './utils/NotificationContext';
 
@@ -62,6 +64,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="organization/:tabId?/:subId?" element={<Organization />} />
           <Route path="attendance/:tabId?/:subId?" element={<Attendance />} />
           <Route path="regularisations/:tabId?" element={<RegularisationPage />} />
+          <Route path="shift-roster" element={<ShiftRoster />} />
           <Route path="biometric-manual/:tabId?" element={<BiometricManual />} />
           <Route path="leaves/:tabId?/:subId?" element={<Leaves />} />
           <Route path="payroll/:tabId?" element={<Payroll />} />
@@ -74,6 +77,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="job-recruitment/create/:id?" element={<CreateJob />} />
           <Route path="policies" element={<Policies />} />
           <Route path="reports/:tabId?" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="employees" element={<div className="p-10 text-2xl font-bold">Employee Management coming soon...</div>} />
         </Route>
         {/* Fallback for any other route */}
