@@ -132,7 +132,7 @@ const Settings = () => {
                 const updateData = new FormData();
                 updateData.append('off_contact_no', formData.off_contact_no);
                 updateData.append('per_contact_no', formData.per_contact_no);
-                
+
                 if (selectedFile) {
                     updateData.append('photo', selectedFile);
                 } else if (fullProfile.document_photo === null) {
@@ -325,7 +325,7 @@ const Settings = () => {
                         </section>
                         <section className="bg-gray-50/50 p-4 rounded-[15px] border border-gray-100 flex items-center justify-between gap-8 flex-wrap">
                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 bg-white rounded-3xl p-1 shadow-2xl border-2 border-primary/5 overflow-hidden flex items-center justify-center font-black italic text-primary">
+                                <div className="w-20 h-20 bg-white rounded-xl p-1 shadow-xs border-2 border-primary/5 overflow-hidden flex items-center justify-center font-semibold italic text-primary">
                                     {logoPreviewUrl ? (
                                         <img src={logoPreviewUrl} className="w-full h-full object-contain" />
                                     ) : (
@@ -372,7 +372,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="min-h-full bg-transparent p-2 sm:p-4 lg:p-6 pb-20">
+        <div className="min-h-full bg-transparent p-2 sm:p-4 lg:p-2 pb-20">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
                     <div className="p-4 bg-primary/10 rounded-full shadow-inner group cursor-pointer transition-all duration-500">
@@ -387,60 +387,84 @@ const Settings = () => {
 
             <div className="flex flex-col xl:flex-row gap-9">
                 <aside className="w-full xl:w-80 shrink-0">
-                    <div className="bg-white/90 backdrop-blur-3xl border border-gray-200 rounded-[15px] p-5 sticky top-24">
-                        <nav className="flex flex-col gap-3">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                                        flex items-center justify-between px-6 py-4 rounded-full transition-all duration-700 group relative overflow-hidden
-                                        ${activeTab === tab.id
-                                            ? 'bg-primary text-white shadow-md shadow-primary/10 scale-[1.03] active:scale-100'
-                                            : 'hover:bg-gray-100 bg-gray-100 text-gray-500 font-semibold'}
-                                    `}
-                                >
-                                    {activeTab === tab.id && (
-                                        <motion.div layoutId="tabMarker" className="absolute inset-0 bg-primary z-0" transition={{ type: "spring", bounce: 0.25, duration: 0.8 }} />
-                                    )}
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <tab.icon size={24} className={activeTab === tab.id ? 'text-white' : 'text-gray-400 transition-colors duration-500'} />
-                                        <span className="text-[15px] tracking-tight">{tab.label}</span>
-                                    </div>
-                                    <ChevronRight size={20} className={`${activeTab === tab.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'} transition-all duration-700 relative z-10`} />
-                                </button>
-                            ))}
+                    <div className="bg-white border border-gray-200 rounded-[15px] p-3 sticky top-24">
+                        <div className="px-4 py-2 mb-2">
+                            <h3 className="text-[16px] font-semibold text-gray-700">Management Space</h3>
+                        </div>
+                        <nav className="flex flex-col gap-1">
+                            {tabs.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`
+                                            flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group relative
+                                            ${isActive
+                                                ? 'bg-primary/5 text-primary shadow-sm shadow-primary/5'
+                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
+                                        `}
+                                    >
+                                        <div className={`
+                                            w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500
+                                            ${isActive
+                                                ? 'bg-primary text-white shadow-xs shadow-primary/30 rotate-0'
+                                                : 'bg-gray-50 text-gray-400 group-hover:bg-white group-hover:rotate-6 group-hover:scale-110 border border-gray-100/50'}
+                                        `}>
+                                            <tab.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                                        </div>
+
+                                        <div className="flex-1 text-left">
+                                            <span className={`text-[15px] block leading-none ${isActive ? 'font-semibold' : 'font-semibold'}`}>
+                                                {tab.label}
+                                            </span>
+                                        </div>
+
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeBar"
+                                                className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full shadow-[2px_0_10px_rgba(29,78,216,0.3)]"
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                            />
+                                        )}
+
+                                        {!isActive && (
+                                            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-gray-300" />
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </nav>
                     </div>
                 </aside>
 
                 <main className="flex-1 min-w-0">
                     <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden relative">
-                        <div className="p-10 md:p-8 xl:p-6">
+                        <div className="p-6 md:p-6">
                             {renderContent()}
 
                             <div className="mt-14 pt-8 border-t border-gray-100 flex items-center justify-between gap-8 flex-wrap">
                                 <div>
                                     <p className="text-[16px] font-semibold text-gray-800">Dynamic Preference Engine</p>
-                                    <p className="text-[13px] text-gray-400 font-semibold mt-0">
-                                        Active Profile Sync: {new Date().toLocaleTimeString()}
+                                    <p className="text-[12px] text-gray-400 font-semibold mt-1 uppercase tracking-wider">
+                                        Last Synced: {new Date().toLocaleTimeString()}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                                    <button className="flex-1 sm:flex-none px-9 py-3 rounded-full text-[15px] font-medium text-gray-400 bg-gray-100 hover:text-gray-800 hover:bg-gray-50 transition-all active:scale-95">Discard</button>
+                                    <button className="flex-1 sm:flex-none px-9 py-3 rounded-full text-[15px] font-semibold text-gray-500 bg-gray-50 hover:text-gray-800 hover:bg-gray-100 transition-all active:scale-95">Discard</button>
                                     <button
                                         onClick={handleSave}
                                         disabled={isSaving}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-12 py-3 bg-primary text-white rounded-full text-[16px] font-medium hover:bg-primary-hover transition-all disabled:opacity-75"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-12 py-3 bg-primary text-white rounded-full text-[16px] font-medium hover:bg-primary-hover shadow-xs shadow-primary/20 transition-all disabled:opacity-75 active:scale-95"
                                     >
                                         {isSaving ? (
                                             <>
-                                                <Loader2 className="w-6 h-6 animate-spin" />
+                                                <Loader2 className="w-5 h-5 animate-spin" />
                                                 <span>Applying Changes...</span>
                                             </>
                                         ) : (
                                             <>
-                                                <Save size={22} />
+                                                <Save size={20} />
                                                 <span>Save Preferences</span>
                                             </>
                                         )}
@@ -456,8 +480,8 @@ const Settings = () => {
 };
 
 const FormGroup = ({ label, name, type = "text", placeholder, value, readOnly, onChange }) => (
-    <div className="flex flex-col gap-3">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">{label}</label>
+    <div className="flex flex-col gap-2.5">
+        <label className="text-[15px] font-semibold text-gray-700 ml-1">{label}</label>
         <FormInput
             type={type}
             name={name}
@@ -466,19 +490,20 @@ const FormGroup = ({ label, name, type = "text", placeholder, value, readOnly, o
             onChange={onChange}
             readOnly={readOnly}
             disabled={readOnly}
+            className="rounded-xl border-gray-200 focus:ring-4 focus:ring-primary/5 transition-all"
         />
     </div>
 );
 
 const ToggleItem = ({ title, description, defaultChecked }) => (
-    <div className="flex items-center justify-between p-4 rounded-[15px] border border-transparent hover:border-primary/5 hover:bg-gray-50/50 transition-all duration-500 group">
+    <div className="flex items-center justify-between p-4 rounded-[15px] border border-transparent hover:border-gray-100 hover:bg-gray-50/50 transition-all duration-300 group">
         <div className="flex flex-col pr-4">
             <h4 className="text-[16px] font-semibold text-gray-800 group-hover:text-primary transition-colors">{title}</h4>
-            <p className="text-[13px] text-gray-400 font-semibold mt-1 leading-relaxed">{description}</p>
+            <p className="text-[13px] text-gray-400 font-semibold mt-1 leading-relaxed lowercase first-letter:uppercase">{description}</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer overflow-visible shrink-0 scale-110">
             <input type="checkbox" className="sr-only peer" defaultChecked={defaultChecked} />
-            <div className="w-12 h-7 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border-2 after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-md peer-checked:bg-primary transition-all shadow-inner"></div>
+            <div className="w-12 h-7 bg-gray-200/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border-0 after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-lg peer-checked:bg-primary transition-all shadow-inner"></div>
         </label>
     </div>
 );

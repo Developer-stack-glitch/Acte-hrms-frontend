@@ -16,6 +16,7 @@ const SearchableSelect = ({
     direction = "down",
     extra,
     name,
+    isClearable = true,
     ...props
 }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -50,6 +51,11 @@ const SearchableSelect = ({
         setSearchTerm('');
     };
 
+    const handleClear = (e) => {
+        e.stopPropagation();
+        handleSelect('');
+    };
+
     return (
         <div className={`space-y-2 ${className}`} ref={dropdownRef}>
             <div className="flex items-center justify-between">
@@ -57,7 +63,7 @@ const SearchableSelect = ({
                 {extra}
             </div>
 
-            <div className="relative">
+            <div className="relative group">
                 <button
                     type="button"
                     onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -65,10 +71,19 @@ const SearchableSelect = ({
                     className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-[12px] outline-none transition-all text-[15px] font-medium disabled:bg-gray-50 disabled:text-gray-500 ${isOpen ? 'border-primary ring-0' : 'border-gray-200 hover:border-primary/50'
                         }`}
                 >
-                    <span className={`truncate ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-700 font-medium'}`}>
+                    <span className={`truncate mr-6 ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-700 font-medium'}`}>
                         {selectedOption ? selectedOption.label : placeholder}
                     </span>
-                    <ChevronDown size={20} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-gray-400'}`} />
+                    <div className="flex items-center gap-2">
+                        {isClearable && selectedOption && !disabled && (
+                            <X
+                                size={18}
+                                className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                onClick={handleClear}
+                            />
+                        )}
+                        <ChevronDown size={20} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-gray-400'}`} />
+                    </div>
                 </button>
 
                 <AnimatePresence>
@@ -102,6 +117,16 @@ const SearchableSelect = ({
                             </div>
 
                             <div className="max-h-[300px] overflow-y-auto p-1.5 custom-scrollbar">
+                                {isClearable && value && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelect('')}
+                                        className="w-full flex items-center px-3 py-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors text-[13px] font-semibold mb-1 group/clear"
+                                    >
+                                        <X size={14} className="mr-2 group-hover/clear:scale-110 transition-transform" />
+                                        Clear Selection
+                                    </button>
+                                )}
                                 {filteredOptions.length > 0 ? (
                                     <div className="space-y-0.5">
                                         {filteredOptions.map((opt) => {

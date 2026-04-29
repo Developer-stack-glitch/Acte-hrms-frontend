@@ -52,7 +52,7 @@ const sections = [
             { name: 'doj', label: 'DOJ (Date of Joining)', type: 'date' },
             { name: 'dor', label: 'DOR (Date of Relieving)', type: 'date' },
             { name: 'duration', label: 'Duration', type: 'text' },
-            { name: 'reporting_manager', label: 'Reporting Manager', type: 'select', options: [] },
+            { name: 'reporting_manager', label: 'Reporting Manager *', type: 'select', options: [], required: true },
             { name: 'is_experienced', label: 'Has Work Experience?', type: 'checkbox' },
             { name: 'team_lead', label: 'Team Lead', type: 'checkbox' },
             { name: 'web_clock_in_allowed', label: 'Allow Web Clock-In', type: 'checkbox' },
@@ -471,7 +471,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
             if (onSuccess) onSuccess();
         } catch (error) {
             console.error('Error saving user:', error);
-            const errorMsg = error.response?.data?.error ? `${error.response.data.message}` : (error.response?.data?.message || 'Failed to save employee');
+            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to save employee';
             toast.error(errorMsg);
         } finally {
             setLoading(false);
