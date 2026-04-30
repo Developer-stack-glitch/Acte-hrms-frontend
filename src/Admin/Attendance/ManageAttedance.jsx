@@ -264,7 +264,10 @@ export default function ManageAttedance() {
         const record = attendanceMap[`${userId}_${dateKey}`];
 
         if (record) {
-            // If backend already flagged as week off and it's not Present/On Leave, force Week Off status
+            // If backend already flagged as week off or holiday and it's not Present/On Leave, force status
+            if (record.is_holiday && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
+                return { ...record, status: 'Holiday' };
+            }
             if (record.is_week_off && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
                 return { ...record, status: 'Week Off' };
             }
@@ -1486,8 +1489,12 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                         {(record?.status === 'Week Off' || record?.status === 'Holiday') && (
                             <div className="p-6 bg-gray-50 border border-gray-100 rounded-xl text-center flex flex-col items-center">
                                 <CalendarIcon size={36} className="text-gray-300 mb-3" />
-                                <h4 className="text-gray-900 font-bold mb-1 text-[15px]">{record.status} Day</h4>
-                                <p className="text-gray-500 text-[13px] font-medium">Enjoy your break! This is a non-working day.</p>
+                                <h4 className="text-gray-900 font-bold mb-1 text-[15px]">
+                                    {record.status === 'Holiday' ? (record.holiday_name || 'Public Holiday') : 'Week Off'}
+                                </h4>
+                                <p className="text-gray-500 text-[13px] font-medium">
+                                    {record.status === 'Holiday' ? 'Enjoy your organizational holiday!' : 'Enjoy your break! This is a non-working day.'}
+                                </p>
                             </div>
                         )}
 
