@@ -241,8 +241,9 @@ export default function SalaryStructure() {
                 getAllAssignedUsersIdsApi({ company_id: companyId })
             ]);
             setAllUsers(usersRes.data.users || usersRes.data || []);
-            setAssignedUserIds((assignedRes.data || []).map(u => u.id));
-            setAllAssignedUserIds(allAssignedRes.data || []);
+            const currentBatchIds = (assignedRes.data || []).map(u => u.id);
+            setAssignedUserIds(currentBatchIds);
+            setAllAssignedUserIds((allAssignedRes.data || []).filter(id => !currentBatchIds.includes(id)));
         } catch (error) {
             toast.error('Failed to load users');
         } finally {

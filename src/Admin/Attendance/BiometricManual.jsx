@@ -37,6 +37,7 @@ export default function BiometricManual() {
     const [editingId, setEditingId] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
+    const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
 
     const [formData, setFormData] = useState({
         user_id: '',
@@ -46,7 +47,7 @@ export default function BiometricManual() {
     });
 
     const location = useLocation();
-    
+
     useEffect(() => {
         fetchEmployees();
         fetchAttendance();
@@ -65,7 +66,7 @@ export default function BiometricManual() {
             // But usually, manual edit is for creating OR updating.
             // Let's check if a record already exists in attendanceList
         }
-    }, [location.state]);
+    }, [location.state, historyDate]);
 
     const fetchEmployees = async () => {
         try {
@@ -79,7 +80,7 @@ export default function BiometricManual() {
     const fetchAttendance = async () => {
         try {
             setFetching(true);
-            const res = await getAttendanceApi();
+            const res = await getAttendanceApi({ startDate: historyDate, endDate: historyDate });
             setAttendanceList(res.data);
         } catch (error) {
             toast.error('Failed to fetch attendance records');
@@ -140,6 +141,23 @@ export default function BiometricManual() {
             toast.error(error.response?.data?.message || 'Failed to sync all records');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSetShiftTimes = () => {
+        const user = employees.find(e => String(e.id) === String(formData.user_id));
+        if (!user || !user.shift_name) return;
+
+        const match = user.shift_name.match(/\((\d{2}:\d{2}(?::\d{2})?)\s*-\s*(\d{2}:\d{2}(?::\d{2})?)\)/);
+        if (match) {
+            setFormData(prev => ({
+                ...prev,
+                punch_in: match[1],
+                punch_out: match[2]
+            }));
+            toast.success('Shift times applied');
+        } else {
+            toast.error('Could not extract times from shift name');
         }
     };
 
@@ -336,16 +354,25 @@ export default function BiometricManual() {
                                     />
 
                                     {formData.user_id && (
-                                        <div className="md:col-span-2 p-5 bg-primary/[0.03] rounded-2xl border border-primary/10 flex items-center gap-4 transition-all animate-in fade-in slide-in-from-top-2">
-                                            <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary border border-primary/5">
-                                                <Clock size={24} />
-                                            </div>
-                                            <div>
-                                                <div className="text-[10px] font-black text-primary/60 uppercase tracking-[0.1em]">Current Shift</div>
-                                                <div className="text-[15px] font-bold text-gray-800">
-                                                    {employees.find(e => String(e.id) === String(formData.user_id))?.shift_name || 'No shift assigned'}
+                                        <div className="md:col-span-2 p-5 bg-primary/[0.03] rounded-2xl border border-primary/10 flex items-center justify-between transition-all animate-in fade-in slide-in-from-top-2">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary border border-primary/5">
+                                                    <Clock size={24} />
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] font-black text-primary/60 uppercase tracking-[0.1em]">Current Shift</div>
+                                                    <div className="text-[15px] font-bold text-gray-800">
+                                                        {employees.find(e => String(e.id) === String(formData.user_id))?.shift_name || 'No shift assigned'}
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleSetShiftTimes}
+                                                className="px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary hover:text-white transition-all active:scale-95"
+                                            >
+                                                Set This Time
+                                            </button>
                                         </div>
                                     )}
 
@@ -571,7 +598,31 @@ export default function BiometricManual() {
                         animate="visible"
                         exit="exit"
                     >
-                        <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden">
+                        <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden shadow-sm">
+                            <div className="py-4 px-6 bg-gray-50/50 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                        <List size={20} />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900">Attendance History</h3>
+                                </div>
+                                <div className="w-full md:w-72 flex items-center gap-2">
+                                    <FormDate
+                                        label="Select Date"
+                                        name="historyDate"
+                                        value={historyDate}
+                                        onChange={(e) => setHistoryDate(e.target.value)}
+                                        icon={Calendar}
+                                    />
+                                    <button
+                                        onClick={fetchAttendance}
+                                        className="mt-6 p-2.5 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-primary hover:border-primary transition-all active:scale-95 shadow-sm"
+                                        title="Refresh"
+                                    >
+                                        <RefreshCw size={18} className={fetching ? 'animate-spin' : ''} />
+                                    </button>
+                                </div>
+                            </div>
                             <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -595,13 +646,16 @@ export default function BiometricManual() {
                                             </tr>
                                         ) : (
                                             attendanceList.map((record) => (
-                                                <tr key={record.id} className="hover:bg-gray-50/30 transition-colors group">
+                                                <tr key={record.id} className={`hover:bg-gray-50/30 transition-colors group ${record.is_edited === 1 ? 'bg-amber-50/20' : ''}`}>
                                                     <td className="px-6 py-4">
                                                         <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{record.employee_name}</div>
                                                         <div className="text-[11px] mt-0.5 text-gray-400 flex items-center gap-2 font-medium uppercase tracking-tighter">
                                                             {record.emp_id}
                                                             {record.is_biometric && (
-                                                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-500 font-black text-[9px] ring-1 ring-blue-100">BIOMETRIC</span>
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-500 font-semibold text-[9px] ring-1 ring-blue-100">BIOMETRIC</span>
+                                                            )}
+                                                            {record.is_edited === 1 && (
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 font-semibold text-[9px] ring-1 ring-amber-100 tracking-wider">EDITED</span>
                                                             )}
                                                         </div>
                                                     </td>
@@ -696,7 +750,12 @@ export default function BiometricManual() {
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <h4 className="font-bold text-gray-900 leading-none">{record.employee_name}</h4>
-                                                    <p className="text-[10px] text-gray-500 mt-2 font-black uppercase tracking-widest">{format(new Date(record.date), 'dd MMM yyyy')}</p>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{format(new Date(record.date), 'dd MMM yyyy')}</p>
+                                                        {record.is_edited === 1 && (
+                                                            <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 font-black text-[8px] ring-1 ring-amber-100">EDITED</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-lg font-black text-primary leading-none">{record.total_hours}</div>

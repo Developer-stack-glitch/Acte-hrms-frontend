@@ -209,6 +209,12 @@ export const finalizePayrollRunApi = (id) => api.post(`/payroll-run/${id}/finali
 export const togglePayrollHoldApi = (data) => api.post('/payroll-run/toggle-hold', data);
 export const getPayrollHoldListApi = (params) => api.get('/payroll-run/holds', { params });
 export const getMyPayslipsApi = () => api.get('/payroll-run/my-payslips');
+export const deletePayrollRunApi = (id) => api.delete(`/payroll-run/${id}`);
+
+// Incentive (Addons) APIs
+export const getPayrollIncentivesApi = (params) => api.get('/incentives', { params });
+export const createPayrollIncentiveApi = (data) => api.post('/incentives', data);
+export const deletePayrollIncentiveApi = (id) => api.delete(`/incentives/${id}`);
 
 // Asset Management APIs
 export const getAssetCategoriesApi = () => api.get('/assets/categories');

@@ -20,7 +20,10 @@ import {
     RefreshCcw,
     AlertTriangle,
     Calendar,
-    Lock
+    Lock,
+    PlusCircle,
+    PieChart,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,7 +32,9 @@ import {
     updatePayrollRunApi,
     getBatchAllocationsApi,
     getUsersApi,
-    getPayrollHoldListApi
+    getPayrollHoldListApi,
+    updatePayrollRunStatusApi,
+    deletePayrollRunApi
 } from '../../Action/api';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../Common/ConfirmationModal';
@@ -37,6 +42,7 @@ import { useNavigate } from 'react-router-dom';
 import PageWithStatsSkeleton from '../../Common/CommonSkeletonLoader/PageWithStatsSkeleton';
 import TableSkeleton from '../../Common/CommonSkeletonLoader/TableSkeleton';
 import Tooltip from '../../Common/Tooltip';
+import Addons from './Addons';
 
 const StatCard = ({ title, value, subValue, icon: Icon, color, delay }) => (
     <motion.div
@@ -77,6 +83,7 @@ export default function PayrollDashboard({ onEdit }) {
     const [totalEmployeesCount, setTotalEmployeesCount] = useState(0);
     const [holdList, setHoldList] = useState([]);
     const [holdLoading, setHoldLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('Overview');
     const navigate = useNavigate();
 
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
@@ -98,6 +105,7 @@ export default function PayrollDashboard({ onEdit }) {
 
     const fetchData = async (page = 1) => {
         if (filterTab === 'Hold List') {
+            setLoading(false);
             fetchHoldList();
             return;
         }
@@ -194,7 +202,7 @@ export default function PayrollDashboard({ onEdit }) {
 
         setRunLoading(true);
         try {
-            const monthLabel = new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const monthLabel = format(new Date(year, month - 1), 'MMMM, yyyy');
 
             // Run for each selected batch
             const runPromises = runFormData.batch_allocation_ids.map(async (batchId) => {
@@ -204,6 +212,7 @@ export default function PayrollDashboard({ onEdit }) {
                     pay_type: runFormData.pay_type,
                     company_id: companyId,
                     batch_name: selected ? `${selected.name} - ${selected.batch}` : 'Standard Batch',
+                    payroll_month: monthLabel,
                     period_start: runFormData.period_start,
                     period_end: runFormData.period_end,
                     total_employees: totalEmployeesCount, // Controller will re-calculate correct count from batch
@@ -268,6 +277,27 @@ export default function PayrollDashboard({ onEdit }) {
         const options = { month: 'short', day: '2-digit' };
         const year = s.getFullYear();
         return `${s.toLocaleDateString('en-US', options)} - ${e.toLocaleDateString('en-US', options)}, ${year}`;
+    };
+
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, runId: null, batchName: '' });
+
+    const handleDeleteClick = (run) => {
+        setDeleteModal({
+            isOpen: true,
+            runId: run.id,
+            batchName: run.batch_name
+        });
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            await deletePayrollRunApi(deleteModal.runId);
+            toast.success('Payroll run deleted successfully');
+            setDeleteModal({ isOpen: false, runId: null, batchName: '' });
+            fetchData(pagination.page);
+        } catch (error) {
+            toast.error('Failed to delete payroll run');
+        }
     };
 
     return (
@@ -349,237 +379,276 @@ export default function PayrollDashboard({ onEdit }) {
                     </div>
 
                     {/* Recent Payrolls Section */}
-                    <div className="bg-white rounded-[15px] border border-gray-200 overflow-hidden min-h-[500px]">
-                        <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <h2 className="font-semibold text-gray-900 text-lg">Recent Payrolls</h2>
-
-                            <div className="flex items-center bg-gray-50 p-1 rounded-full border border-gray-200 shadow-inner">
-                                {['All', 'Active', 'Pending', 'Completed', 'Hold List'].map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setFilterTab(tab)}
-                                        className={`px-5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${filterTab === tab
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'text-gray-500 hover:text-gray-700'
-                                            }`}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
+                    <div className="space-y-6">
+                        <div className="flex items-center bg-white p-1 rounded-full border border-gray-200 w-fit">
+                            {['Overview', 'Addons'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-8 py-2 rounded-full text-[13px] font-semibold transition-all ${activeTab === tab
+                                        ? 'bg-primary text-white shadow-md'
+                                        : 'text-gray-500 hover:text-gray-900'
+                                        }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
                         </div>
 
-                        <div className="overflow-x-auto custom-scrollbar">
-                            {filterTab === 'Hold List' ? (
-                                <table className="w-full text-left whitespace-nowrap">
-                                    <thead className="bg-[#fff9f2]/50">
-                                        <tr>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest">Employee</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest">Payroll Run / Batch</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-center">Period</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-center">Run Status</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-right">Held Since</th>
-                                            <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-amber-50">
-                                        {holdLoading ? (
-                                            <TableSkeleton rows={8} columns={6} />
-                                        ) : holdList.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="6" className="px-6 py-20 text-center">
-                                                    <div className="flex flex-col items-center text-gray-400">
-                                                        <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
-                                                            <Lock size={32} className="text-amber-200" />
-                                                        </div>
-                                                        <p className="font-bold text-gray-500">No employees on salary hold</p>
-                                                        <p className="text-[12px] mt-1">Held salaries across all payroll cycles will appear here</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : holdList.map((hold) => (
-                                            <tr key={hold.id} className="hover:bg-amber-50/30 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[14.5px] font-bold text-gray-900">{hold.employee_name}</span>
-                                                        <span className="text-[11px] font-semibold text-amber-600/70 tracking-tight">{hold.emp_id} • {hold.email}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[13px] font-semibold text-gray-700">{hold.batch_name}</span>
-                                                        <span className="text-[10px] font-bold text-gray-400">RUN-#{hold.payroll_run_id}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-[12px] font-bold text-gray-600 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
-                                                        {new Date(hold.period_start).toLocaleDateString()} - {new Date(hold.period_end).toLocaleDateString()}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-tighter ${hold.run_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                        {hold.run_status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <span className="text-[12px] font-medium text-gray-500">
-                                                        {new Date(hold.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button
-                                                        onClick={() => onEdit({ id: hold.payroll_run_id, status: hold.run_status, batch_name: hold.batch_name })}
-                                                        className="px-4 py-1.5 bg-white border border-amber-200 text-amber-700 rounded-lg text-[11px] font-bold hover:bg-amber-50 transition-all shadow-sm"
-                                                    >
-                                                        Manage Run
-                                                    </button>
-                                                </td>
-                                            </tr>
+                        {activeTab === 'Overview' && (
+                            <div className="bg-white rounded-[15px] border border-gray-200 overflow-hidden min-h-[500px]">
+                                <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <h2 className="font-semibold text-gray-900 text-lg">Recent Payrolls</h2>
+
+                                    <div className="flex items-center bg-gray-50 p-1 rounded-full border border-gray-200 shadow-inner">
+                                        {['All', 'Active', 'Pending', 'Completed', 'Hold List'].map((tab) => (
+                                            <button
+                                                key={tab}
+                                                onClick={() => setFilterTab(tab)}
+                                                className={`px-5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${filterTab === tab
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                                    }`}
+                                            >
+                                                {tab}
+                                            </button>
                                         ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <table className="w-full text-left whitespace-nowrap">
-                                    <thead className="bg-primary/4">
-                                        <tr>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Batch</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Pay Type</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Period</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Employees</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Amount</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Status</th>
-                                            <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {loading ? (
-                                            <TableSkeleton rows={8} columns={7} />
-                                        ) : filteredData.map((payroll) => (
-                                            <tr key={payroll.id} className="hover:bg-gray-50/50 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[14px] font-semibold text-gray-900 leading-snug">{payroll.batch_name}</span>
-                                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-tight">RUN-#{payroll.id}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                                                        {payroll.pay_type}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex items-center justify-center gap-2 group/period">
-                                                        <span className="text-[13px] font-semibold text-gray-600 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-100">
-                                                            {formatPeriod(payroll.period_start, payroll.period_end)}
-                                                        </span>
-                                                        {payroll.status === 'Active' && (
+                                    </div>
+                                </div>
+
+                                <div className="overflow-x-auto custom-scrollbar">
+                                    {filterTab === 'Hold List' ? (
+                                        <table className="w-full text-left whitespace-nowrap">
+                                            <thead className="bg-[#fff9f2]/50">
+                                                <tr>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest">Employee</th>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest">Payroll Run / Batch</th>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-center">Period</th>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-center">Run Status</th>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-right">Held Since</th>
+                                                    <th className="px-6 py-4 text-[12px] font-semibold text-amber-900 uppercase tracking-widest text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-amber-50">
+                                                {holdLoading ? (
+                                                    <TableSkeleton rows={8} columns={6} />
+                                                ) : holdList.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="6" className="px-6 py-20 text-center">
+                                                            <div className="flex flex-col items-center text-gray-400">
+                                                                <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+                                                                    <Lock size={32} className="text-amber-200" />
+                                                                </div>
+                                                                <p className="font-bold text-gray-500">No employees on salary hold</p>
+                                                                <p className="text-[12px] mt-1">Held salaries across all payroll cycles will appear here</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : holdList.map((hold) => (
+                                                    <tr key={hold.id} className="hover:bg-amber-50/30 transition-colors group">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[14.5px] font-bold text-gray-900">{hold.employee_name}</span>
+                                                                <span className="text-[11px] font-semibold text-amber-600/70 tracking-tight">{hold.emp_id} • {hold.email}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[13px] font-semibold text-gray-700">{hold.batch_name}</span>
+                                                                <span className="text-[10px] font-bold text-gray-400">RUN-#{hold.payroll_run_id}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="text-[12px] font-bold text-gray-600 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
+                                                                {new Date(hold.period_start).toLocaleDateString()} - {new Date(hold.period_end).toLocaleDateString()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-tighter ${hold.run_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                {hold.run_status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <span className="text-[12px] font-medium text-gray-500">
+                                                                {new Date(hold.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
                                                             <button
-                                                                onClick={() => handleEditRunClick(payroll)}
-                                                                className="p-1 text-gray-400 hover:text-primary opacity-0 group-hover/period:opacity-100 transition-all"
-                                                                title="Edit Period/Name"
+                                                                onClick={() => onEdit({ id: hold.payroll_run_id, status: hold.run_status, batch_name: hold.batch_name })}
+                                                                className="px-4 py-1.5 bg-white border border-amber-200 text-amber-700 rounded-lg text-[11px] font-bold hover:bg-amber-50 transition-all shadow-sm"
                                                             >
-                                                                <Edit size={12} />
+                                                                Manage Run
                                                             </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center font-bold text-gray-700 text-[13px]">
-                                                    {payroll.processed_employees} / {payroll.total_employees}
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-semibold text-gray-900 text-[13.5px]">
-                                                    INR {parseFloat(payroll.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider ${payroll.status === 'Completed'
-                                                        ? 'bg-[#d1fae5] text-[#065f46] border border-[#d1fae5]'
-                                                        : payroll.status === 'Active'
-                                                            ? 'bg-green-50 text-green-600 border border-green-100'
-                                                            : 'bg-[#fef3c7] text-[#92400e] border border-[#fef3c7]'
-                                                        }`}>
-                                                        {payroll.status === 'Completed' ? <CheckCircle2 size={12} /> : payroll.status === 'Active' ? <TrendingUp size={12} /> : <Clock size={12} />}
-                                                        {payroll.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {payroll.status === 'Active' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setRunToReinit(payroll);
-                                                                    setIsReinitModalOpen(true);
-                                                                }}
-                                                                className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-                                                            >
-                                                                <Tooltip text="Re-initialize">
-                                                                    <RefreshCcw size={16} />
-                                                                </Tooltip>
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => onEdit(payroll)}
-                                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${payroll.status === 'Completed'
-                                                                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                                : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <table className="w-full text-left whitespace-nowrap">
+                                            <thead className="bg-primary/4">
+                                                <tr>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Batch</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Pay Type</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Period</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Employees</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Amount</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-center">Status</th>
+                                                    <th className="px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {loading ? (
+                                                    <TableSkeleton rows={8} columns={7} />
+                                                ) : filteredData.map((payroll) => (
+                                                    <tr key={payroll.id} className="hover:bg-gray-50/50 transition-colors group">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[14px] font-semibold text-gray-900 leading-snug">{payroll.batch_name}</span>
+                                                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-tight">RUN-#{payroll.id}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
+                                                                {payroll.pay_type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <div className="flex items-center justify-center gap-2 group/period">
+                                                                <span className="text-[13px] font-semibold text-gray-600 bg-gray-50/80 px-3 py-1 rounded-lg border border-gray-100">
+                                                                    {formatPeriod(payroll.period_start, payroll.period_end)}
+                                                                </span>
+                                                                {payroll.status === 'Active' && (
+                                                                    <button
+                                                                        onClick={() => handleEditRunClick(payroll)}
+                                                                        className="p-1 text-gray-400 hover:text-primary opacity-0 group-hover/period:opacity-100 transition-all"
+                                                                        title="Edit Period/Name"
+                                                                    >
+                                                                        <Edit size={12} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center font-bold text-gray-700 text-[13px]">
+                                                            {payroll.processed_employees} / {payroll.total_employees}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-semibold text-gray-900 text-[13.5px]">
+                                                            INR {parseFloat(payroll.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider ${payroll.status === 'Completed'
+                                                                ? 'bg-[#d1fae5] text-[#065f46] border border-[#d1fae5]'
+                                                                : payroll.status === 'Active'
+                                                                    ? 'bg-green-50 text-green-600 border border-green-100'
+                                                                    : 'bg-[#fef3c7] text-[#92400e] border border-[#fef3c7]'
                                                                 }`}>
-                                                            {payroll.status === 'Completed' ? <Eye size={14} /> : <Edit size={14} />}
-                                                            {payroll.status === 'Completed' ? 'View' : 'Process'}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                                {payroll.status === 'Completed' ? <CheckCircle2 size={12} /> : payroll.status === 'Active' ? <TrendingUp size={12} /> : <Clock size={12} />}
+                                                                {payroll.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {payroll.status === 'Active' && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setRunToReinit(payroll);
+                                                                            setIsReinitModalOpen(true);
+                                                                        }}
+                                                                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                                                                    >
+                                                                        <Tooltip text="Re-initialize">
+                                                                            <RefreshCcw size={16} />
+                                                                        </Tooltip>
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => onEdit(payroll)}
+                                                                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${payroll.status === 'Completed'
+                                                                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                                        : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                                                        }`}>
+                                                                    {payroll.status === 'Completed' ? <Eye size={14} /> : <Edit size={14} />}
+                                                                    {payroll.status === 'Completed' ? 'View' : 'Process'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteClick(payroll)}
+                                                                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                    title="Delete Run"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {!loading && filterTab !== 'Hold List' && pagination.totalPages > 1 && (
+                                    <div className="p-4 border-t border-gray-50 flex items-center justify-between bg-white">
+                                        <div className="text-[12px] font-medium text-gray-500">
+                                            Showing <span className="text-gray-900">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
+                                            <span className="text-gray-900">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
+                                            <span className="text-gray-900">{pagination.total}</span> entries
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => fetchData(pagination.page - 1)}
+                                                disabled={pagination.page === 1}
+                                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                            >
+                                                Previous
+                                            </button>
+                                            {[...Array(pagination.totalPages)].map((_, i) => (
+                                                <button
+                                                    key={i + 1}
+                                                    onClick={() => fetchData(i + 1)}
+                                                    className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-all ${pagination.page === i + 1
+                                                        ? 'bg-primary text-white shadow-sm'
+                                                        : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
+                                                        }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                            <button
+                                                onClick={() => fetchData(pagination.page + 1)}
+                                                disabled={pagination.page === pagination.totalPages}
+                                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!loading && filterTab !== 'Hold List' && filteredData.length === 0 && (
+                                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                                            <Search size={32} className="opacity-70" />
+                                        </div>
+                                        <p className="font-semibold text-gray-700">No payroll records found for "{filterTab}"</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'Addons' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="mt-6"
+                                >
+                                    <Addons />
+                                </motion.div>
                             )}
-                        </div>
-
-                        {/* Pagination Controls */}
-                        {!loading && filterTab !== 'Hold List' && pagination.totalPages > 1 && (
-                            <div className="p-4 border-t border-gray-50 flex items-center justify-between bg-white">
-                                <div className="text-[12px] font-medium text-gray-500">
-                                    Showing <span className="text-gray-900">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
-                                    <span className="text-gray-900">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
-                                    <span className="text-gray-900">{pagination.total}</span> entries
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => fetchData(pagination.page - 1)}
-                                        disabled={pagination.page === 1}
-                                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        Previous
-                                    </button>
-                                    {[...Array(pagination.totalPages)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => fetchData(i + 1)}
-                                            className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-all ${pagination.page === i + 1
-                                                ? 'bg-primary text-white shadow-sm'
-                                                : 'text-gray-500 hover:bg-gray-50 border border-gray-200'
-                                                }`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => fetchData(pagination.page + 1)}
-                                        disabled={pagination.page === pagination.totalPages}
-                                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {!loading && filterTab !== 'Hold List' && filteredData.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                                    <Search size={32} className="opacity-70" />
-                                </div>
-                                <p className="font-semibold text-gray-700">No payroll records found for "{filterTab}"</p>
-                            </div>
-                        )}
+                        </AnimatePresence>
                     </div>
                 </>
             )}
@@ -610,7 +679,7 @@ export default function PayrollDashboard({ onEdit }) {
                                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
                                         Select Batches <span className="text-primary text-[10px] uppercase font-black tracking-widest">{runFormData.batch_allocation_ids.length} selected</span>
                                     </label>
-                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 max-h-[150px] overflow-y-auto custom-scrollbar space-y-2">
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-2 max-h-[150px] overflow-y-auto custom-scrollbar space-y-2">
                                         {structures.map(s => (
                                             <div
                                                 key={s.id}
@@ -623,7 +692,7 @@ export default function PayrollDashboard({ onEdit }) {
                                                 }}
                                                 className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all ${runFormData.batch_allocation_ids.includes(s.id)
                                                     ? 'bg-primary/5 border-primary shadow-sm'
-                                                    : 'bg-white border-transparent hover:border-gray-200'
+                                                    : 'bg-white border-gray-200 border hover:border-gray-200'
                                                     }`}
                                             >
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${runFormData.batch_allocation_ids.includes(s.id)
@@ -879,15 +948,32 @@ export default function PayrollDashboard({ onEdit }) {
                     setRunToReinit(null);
                 }}
                 onConfirm={async () => {
-                    toast.success('Payroll run re-initialized successfully');
-                    setIsReinitModalOpen(false);
-                    setRunToReinit(null);
-                    fetchData(pagination.page);
+                    if (!runToReinit) return;
+                    try {
+                        await updatePayrollRunStatusApi(runToReinit.id, { status: 'Active' });
+                        toast.success('Payroll run re-initialized successfully');
+                        setIsReinitModalOpen(false);
+                        setRunToReinit(null);
+                        fetchData(pagination.page);
+                    } catch (error) {
+                        toast.error('Failed to re-initialize payroll run');
+                    }
                 }}
                 title="Re-initialize Payroll"
                 confirmText="Re-initialize"
                 type="warning"
                 message={`Are you sure you want to re-initialize "${runToReinit?.batch_name}"? This will reset all existing progress for this run.`}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, runId: null, batchName: '' })}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Payroll Run"
+                message={`Are you sure you want to delete "${deleteModal.batchName}"? This action cannot be undone and all associated payslip records for this run will be permanently removed.`}
+                confirmText="Yes, Delete"
+                type="danger"
             />
         </div>
     );

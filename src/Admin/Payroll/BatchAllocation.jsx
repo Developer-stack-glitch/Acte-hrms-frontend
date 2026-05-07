@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
     Search,
-    Edit2,
-    Trash2,
     Blocks,
     Calendar,
     Hash,
@@ -187,9 +185,9 @@ export default function BatchAllocation() {
             const users = usersRes.data.users || usersRes.data || [];
             setAllUsers(users);
 
-            const assignedIds = (assignedRes.data || []).map(u => u.id);
-            setAssignedUserIds(assignedIds);
-            setAllAssignedUserIds(allAssignedRes.data || []);
+            const currentBatchIds = (assignedRes.data || []).map(u => u.id);
+            setAssignedUserIds(currentBatchIds);
+            setAllAssignedUserIds((allAssignedRes.data || []).filter(id => !currentBatchIds.includes(id)));
         } catch (error) {
             toast.error('Failed to load users');
             console.error(error);

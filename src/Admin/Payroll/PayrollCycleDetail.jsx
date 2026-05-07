@@ -67,7 +67,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
     }, []);
 
     const formatPayslipData = (emp) => {
-        const monthYear = new Date(batchData.period_start).toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+        const monthYear = (batchData.payroll_month || new Date(batchData.period_start).toLocaleString('default', { month: 'long', year: 'numeric' })).toUpperCase();
         const n = (v) => Number(v || 0);
 
         // Dyamically build earnings from breakdown
@@ -120,7 +120,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
     };
 
     useEffect(() => {
-        if (batchData?.id) {
+        if (batchData?.id !== undefined && batchData?.id !== null) {
             fetchPayrollEmployees();
         }
     }, [batchData?.id]);
@@ -142,7 +142,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
             toast.error('Failed to fetch payroll employee data');
         } finally {
             setLoading(false);
-            setConfirmModal(false)
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }
     };
 
@@ -236,22 +236,25 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             className=" pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full sm:w-72 text-[14px]"
                         />
                     </div>
-                    {batchData?.status !== 'Completed' && (
-                        <button
-                            onClick={() => setConfirmModal({
-                                isOpen: true,
-                                title: "Finalize Payroll",
-                                message: `Are you sure you want to finalize the payroll for ${batchData?.batch_name || 'this cycle'}? This will lock all calculations and generate historical records and Send mail to all employees.`,
-                                confirmText: "Yes, Finalize",
-                                onConfirm: handleFinalize,
-                                type: 'primary'
-                            })}
-                            className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-full font-medium text-[13px] hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all active:scale-95"
-                        >
-                            <Play size={14} fill="currentColor" />
-                            Finalize & Sent Mail
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setConfirmModal({
+                            isOpen: true,
+                            title: batchData?.status === 'Completed' ? "Re-finalize Payroll" : "Finalize Payroll",
+                            message: batchData?.status === 'Completed'
+                                ? `This payroll is already finalized. Re-finalizing will update all records with current calculations and RE-SEND payslip emails to all employees. Are you sure?`
+                                : `Are you sure you want to finalize the payroll for ${batchData?.batch_name || 'this cycle'}? This will lock all calculations and generate historical records and Send mail to all employees.`,
+                            confirmText: batchData?.status === 'Completed' ? "Yes, Update & Re-send" : "Yes, Finalize",
+                            onConfirm: handleFinalize,
+                            type: batchData?.status === 'Completed' ? 'warning' : 'primary'
+                        })}
+                        className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium text-[13px] shadow-lg transition-all active:scale-95 ${batchData?.status === 'Completed'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20'
+                            : 'bg-primary text-white hover:bg-primary-hover shadow-primary/20'
+                            }`}
+                    >
+                        {batchData?.status === 'Completed' ? <RefreshCcw size={14} /> : <Play size={14} fill="currentColor" />}
+                        {batchData?.status === 'Completed' ? 'Update & Re-send' : 'Finalize & Sent Mail'}
+                    </button>
                     <button
                         onClick={() => {
                             if (batchData?.status === 'Completed') {
