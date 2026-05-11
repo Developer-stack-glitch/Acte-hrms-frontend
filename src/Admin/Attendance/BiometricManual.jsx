@@ -43,7 +43,8 @@ export default function BiometricManual() {
         user_id: '',
         date: new Date().toISOString().split('T')[0],
         punch_in: '',
-        punch_out: ''
+        punch_out: '',
+        status: 'Present'
     });
 
     const location = useLocation();
@@ -59,7 +60,8 @@ export default function BiometricManual() {
                 user_id: editRecord.user_id,
                 date: editRecord.date,
                 punch_in: editRecord.punch_in || '',
-                punch_out: editRecord.punch_out || ''
+                punch_out: editRecord.punch_out || '',
+                status: editRecord.status || 'Present'
             });
 
             // If we have an ID, we might want to set it as editing
@@ -166,7 +168,8 @@ export default function BiometricManual() {
             user_id: record.user_id,
             date: format(new Date(record.date), 'yyyy-MM-dd'),
             punch_in: record.punch_in || '',
-            punch_out: record.punch_out || ''
+            punch_out: record.punch_out || '',
+            status: record.status || 'Present'
         });
         setEditingId(record.id);
         setView('form');
@@ -232,7 +235,8 @@ export default function BiometricManual() {
                 user_id: '',
                 date: new Date().toISOString().split('T')[0],
                 punch_in: '',
-                punch_out: ''
+                punch_out: '',
+                status: 'Present'
             });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save attendance');
@@ -283,7 +287,8 @@ export default function BiometricManual() {
                                         user_id: '',
                                         date: new Date().toISOString().split('T')[0],
                                         punch_in: '',
-                                        punch_out: ''
+                                        punch_out: '',
+                                        status: 'Present'
                                     });
                                 }
                                 setView(tab.id);
@@ -390,6 +395,21 @@ export default function BiometricManual() {
                                         value={formData.punch_out}
                                         onChange={handleChange}
                                         icon={Clock}
+                                    />
+
+                                    <FormSelect
+                                        label="Attendance Status"
+                                        name="status"
+                                        required
+                                        value={formData.status}
+                                        onChange={handleChange}
+                                        options={[
+                                            { value: 'Present', label: 'Present' },
+                                            { value: 'Absent', label: 'Absent' },
+                                            { value: 'Week Off', label: 'Week Off' },
+                                            { value: 'Holiday', label: 'Holiday' }
+                                        ]}
+                                        icon={CheckCircle2}
                                     />
                                 </div>
 

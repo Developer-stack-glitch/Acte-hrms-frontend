@@ -264,11 +264,11 @@ export default function ManageAttedance() {
         const record = attendanceMap[`${userId}_${dateKey}`];
 
         if (record) {
-            // If backend already flagged as week off or holiday and it's not Present/On Leave, force status
-            if (record.is_holiday && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
+            // If backend already flagged as week off or holiday and it's not Present/On Leave, force status (unless manually edited)
+            if (!record.is_edited && record.is_holiday && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
                 return { ...record, status: 'Holiday' };
             }
-            if (record.is_week_off && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
+            if (!record.is_edited && record.is_week_off && (record.status === 'Absent' || record.status === 'Incomplete' || !record.status)) {
                 return { ...record, status: 'Week Off' };
             }
             return record;
@@ -1522,7 +1522,8 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                                             employee_name: employee?.employee_name,
                                             emp_id: employee?.emp_id,
                                             punch_in: record?.punch_in,
-                                            punch_out: record?.punch_out
+                                            punch_out: record?.punch_out,
+                                            status: record?.status
                                         }
                                     }
                                 });
