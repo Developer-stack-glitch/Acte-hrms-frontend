@@ -106,7 +106,7 @@ const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor,
 };
 
 export default function ManageAttedance() {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('attendance_searchTerm') || '');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -120,11 +120,18 @@ export default function ManageAttedance() {
     const [companyWeekOffs, setCompanyWeekOffs] = useState([]);
 
     // Date Range States
-    const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-    const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+    const [fromDate, setFromDate] = useState(() => localStorage.getItem('attendance_fromDate') || format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    const [toDate, setToDate] = useState(() => localStorage.getItem('attendance_toDate') || format(endOfMonth(new Date()), 'yyyy-MM-dd'));
     const [showFilters, setShowFilters] = useState(false);
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-    const [filters, setFilters] = useState({});
+    const [filters, setFilters] = useState(() => {
+        try {
+            const saved = localStorage.getItem('attendance_filters');
+            return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+            return {};
+        }
+    });
     const [selectedDetail, setSelectedDetail] = useState(null);
 
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
@@ -195,6 +202,22 @@ export default function ManageAttedance() {
     useEffect(() => {
         setCurrentPage(1);
     }, [debouncedSearch, filters]);
+
+    useEffect(() => {
+        localStorage.setItem('attendance_searchTerm', searchTerm);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        localStorage.setItem('attendance_fromDate', fromDate);
+    }, [fromDate]);
+
+    useEffect(() => {
+        localStorage.setItem('attendance_toDate', toDate);
+    }, [toDate]);
+
+    useEffect(() => {
+        localStorage.setItem('attendance_filters', JSON.stringify(filters));
+    }, [filters]);
 
     useEffect(() => {
         fetchData();

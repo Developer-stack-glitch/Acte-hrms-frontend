@@ -139,8 +139,8 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
 const Regularisations = () => {
     const [loading, setLoading] = useState(true);
     const [requests, setRequests] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All');
+    const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('regularisations_searchTerm') || '');
+    const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('regularisations_statusFilter') || 'All');
     const [refreshKey, setRefreshKey] = useState(0);
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const [requestToReject, setRequestToReject] = useState(null);
@@ -155,6 +155,14 @@ const Regularisations = () => {
     const userId = userInfo._id || userInfo.id;
     const isAdmin = userRole === 'admin' || userRole === 'superadmin';
     const isReportingManager = useMemo(() => requests.some(r => String(r.reporting_manager) === String(userId) && String(r.user_id) !== String(userId)), [requests, userId]);
+
+    useEffect(() => {
+        localStorage.setItem('regularisations_searchTerm', searchTerm);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        localStorage.setItem('regularisations_statusFilter', statusFilter);
+    }, [statusFilter]);
 
     useEffect(() => {
         fetchRequests();

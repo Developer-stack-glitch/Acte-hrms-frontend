@@ -112,14 +112,14 @@ const ReasonModal = ({ isOpen, onClose, reason, title = "Leave Reason" }) => {
 export default function LeaveList() {
     const [leaves, setLeaves] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('leavelist_searchTerm') || '');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
-    const [statusFilter, setStatusFilter] = useState('All');
-    const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-    const [endDate, setEndDate] = useState(format(endOfMonth(addMonths(new Date(), 1)), 'yyyy-MM-dd'));
+    const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('leavelist_statusFilter') || 'All');
+    const [startDate, setStartDate] = useState(() => localStorage.getItem('leavelist_startDate') || format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    const [endDate, setEndDate] = useState(() => localStorage.getItem('leavelist_endDate') || format(endOfMonth(addMonths(new Date(), 1)), 'yyyy-MM-dd'));
     const [allTotal, setAllTotal] = useState(0);
     const [approvedTotal, setApprovedTotal] = useState(0);
     const [rejectedTotal, setRejectedTotal] = useState(0);
@@ -140,6 +140,22 @@ export default function LeaveList() {
     const [selectedLeave, setSelectedLeave] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [reasonModal, setReasonModal] = useState({ open: false, content: '', title: '' });
+
+    useEffect(() => {
+        localStorage.setItem('leavelist_searchTerm', searchTerm);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        localStorage.setItem('leavelist_statusFilter', statusFilter);
+    }, [statusFilter]);
+
+    useEffect(() => {
+        localStorage.setItem('leavelist_startDate', startDate);
+    }, [startDate]);
+
+    useEffect(() => {
+        localStorage.setItem('leavelist_endDate', endDate);
+    }, [endDate]);
 
     const fetchLeaves = async () => {
         setLoading(true);

@@ -32,12 +32,12 @@ export default function BiometricManual() {
         }
     };
 
-    const [syncDate, setSyncDate] = useState(new Date().toISOString().split('T')[0]);
+    const [syncDate, setSyncDate] = useState(() => localStorage.getItem('biometric_syncDate') || new Date().toISOString().split('T')[0]);
     const [syncing, setSyncing] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
+    const [historyDate, setHistoryDate] = useState(() => localStorage.getItem('biometric_historyDate') || new Date().toISOString().split('T')[0]);
 
     const [formData, setFormData] = useState({
         user_id: '',
@@ -48,6 +48,14 @@ export default function BiometricManual() {
     });
 
     const location = useLocation();
+
+    useEffect(() => {
+        localStorage.setItem('biometric_syncDate', syncDate);
+    }, [syncDate]);
+
+    useEffect(() => {
+        localStorage.setItem('biometric_historyDate', historyDate);
+    }, [historyDate]);
 
     useEffect(() => {
         fetchEmployees();
