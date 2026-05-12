@@ -115,7 +115,14 @@ export const PayslipView = ({ companyInfo, logo, payslipData, printRef }) => (
                                 {payslipData.deductions[idx]?.label}
                             </td>
                             <td className={`border-[1.5px] border-black p-2 px-4 text-right whitespace-nowrap ${payslipData.deductions[idx]?.label === 'NET' ? 'font-bold' : ''}`}>
-                                {payslipData.deductions[idx] ? (typeof payslipData.deductions[idx].value === 'number' ? payslipData.deductions[idx].value.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : payslipData.deductions[idx].value) : ''}
+                                {payslipData.deductions[idx] ? (
+                                    typeof payslipData.deductions[idx].value === 'number'
+                                        ? payslipData.deductions[idx].value.toLocaleString('en-IN', {
+                                            minimumFractionDigits: payslipData.deductions[idx].label === 'NET' ? 0 : 2,
+                                            maximumFractionDigits: payslipData.deductions[idx].label === 'NET' ? 0 : 2
+                                        })
+                                        : payslipData.deductions[idx].value
+                                ) : ''}
                             </td>
                         </tr>
                     ))}

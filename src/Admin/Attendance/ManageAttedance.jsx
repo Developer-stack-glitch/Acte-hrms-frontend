@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, isToday, isBefore, startOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameYear, addMonths, subMonths, isToday, isBefore, startOfDay } from 'date-fns';
 import { getUserAttendanceApi, getAttendanceApi, getHolidaysApi, getLeavesApi, getWeekOffsApi, getCompanyWeekOffsApi } from '../../Action/api';
 import { isWithinInterval, parseISO } from 'date-fns';
 import DatePicker from 'react-datepicker';
@@ -779,7 +779,12 @@ export default function ManageAttedance() {
                             <ChevronLeft size={18} />
                         </button>
                         <div className="px-6 text-[13px] font-semibold text-gray-800 min-w-[140px] text-center uppercase tracking-widest">
-                            {isSameMonth(new Date(fromDate), new Date(toDate)) ? format(new Date(fromDate), 'MMMM yyyy') : 'Custom Range'}
+                            {isSameMonth(new Date(fromDate), new Date(toDate))
+                                ? format(new Date(fromDate), 'MMMM yyyy')
+                                : isSameYear(new Date(fromDate), new Date(toDate))
+                                    ? `${format(new Date(fromDate), 'MMM')} - ${format(new Date(toDate), 'MMM yyyy')}`
+                                    : `${format(new Date(fromDate), 'MMM yyyy')} - ${format(new Date(toDate), 'MMM yyyy')}`
+                            }
                         </div>
                         <button
                             onClick={() => {
@@ -1469,16 +1474,16 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                             </div>
                         )}
 
-                        {/* Leave Details */}
-                        {(record?.status === 'On Leave' || record?.status === 'Permission') && (
-                            <div className={`p-4 rounded-xl border ${record.status === 'Permission' ? 'bg-blue-50 border-blue-100' : 'bg-sky-50 border-sky-100'}`}>
+                        {/* Leave & Permission Details */}
+                        {(record?.status === 'On Leave' || record?.status === 'Permission' || (record?.permissions && record.permissions.length > 0)) && (
+                            <div className={`p-4 rounded-xl border ${(record.status === 'Permission' || (record.permissions && record.permissions.length > 0)) ? 'bg-blue-50 border-blue-100' : 'bg-sky-50 border-sky-100'}`}>
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2.5 rounded-xl ${record.status === 'Permission' ? 'bg-blue-500 text-white' : 'bg-sky-500 text-white'}`}>
+                                    <div className={`p-2.5 rounded-xl ${(record.status === 'Permission' || (record.permissions && record.permissions.length > 0)) ? 'bg-blue-500 text-white' : 'bg-sky-500 text-white'}`}>
                                         <FileText size={18} />
                                     </div>
                                     <div>
-                                        <h4 className={`font-bold text-[14px] ${record.status === 'Permission' ? 'text-blue-900' : 'text-sky-900'}`}>
-                                            {record.leave_type || record.status} Details
+                                        <h4 className={`font-semibold text-[14px] ${(record.status === 'Permission' || (record.permissions && record.permissions.length > 0)) ? 'text-blue-900' : 'text-sky-900'}`}>
+                                            {(record.leave_type || (record.permissions && record.permissions.length > 0 ? 'Permission' : record.status))} Details
                                         </h4>
                                         {record.is_half_day && (
                                             <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
@@ -1488,11 +1493,13 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                                     </div>
                                 </div>
 
-                                {record.status === 'Permission' && record.permissions && record.permissions[0] && (
+                                {((record.status === 'Permission') || (record.permissions && record.permissions.length > 0)) && record.permissions && record.permissions[0] && (
                                     <div className="mb-3 p-3 bg-white/60 rounded-lg">
                                         <div className="flex items-center justify-between text-sm">
-                                            <span className="font-bold text-gray-500">Duration</span>
-                                            <span className="font-black text-blue-700">{record.permissions[0].start_time?.slice(0, 5)} - {record.permissions[0].end_time?.slice(0, 5)}</span>
+                                            <span className="font-semibold text-gray-500">Permission Time</span>
+                                            <span className="font-black text-blue-700">
+                                                {record.permissions.map(p => `${(p.start_time || '').slice(0, 5)} - ${(p.end_time || '').slice(0, 5)}`).join(', ')}
+                                            </span>
                                         </div>
                                     </div>
                                 )}

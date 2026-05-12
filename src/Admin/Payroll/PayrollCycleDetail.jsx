@@ -248,8 +248,8 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             type: batchData?.status === 'Completed' ? 'warning' : 'primary'
                         })}
                         className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium text-[13px] shadow-lg transition-all active:scale-95 ${batchData?.status === 'Completed'
-                            ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20'
-                            : 'bg-primary text-white hover:bg-primary-hover shadow-primary/20'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'bg-primary text-white hover:bg-primary-hover'
                             }`}
                     >
                         {batchData?.status === 'Completed' ? <RefreshCcw size={14} /> : <Play size={14} fill="currentColor" />}
@@ -462,7 +462,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             render: (val) => (
                                 <div className="bg-primary/5 px-2 py-1 rounded">
                                     <span className="font-extrabold text-gray-900 text-[14px]">
-                                        {Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                        {Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </span>
                                 </div>
                             )
