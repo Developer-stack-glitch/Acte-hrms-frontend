@@ -730,7 +730,7 @@ export default function Dashboard() {
                                         <p className="text-gray-500 font-medium text-[12px]">
                                             {[...upcomingEvents.birthdays, ...upcomingEvents.anniversaries]
                                                 .filter(e => e.isToday)
-                                                .map(e => `${e.employee_name} (${e.years ? e.years + 'y Anniversary' : 'Birthday'})`)
+                                                .map(e => `${e.employee_name} (${e.years != null ? (e.years === 0 ? 'Became a Member Today' : e.years + 'y Anniversary') : 'Birthday'})`)
                                                 .join(', ')}
                                         </p>
                                     </div>
@@ -1608,11 +1608,19 @@ export default function Dashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-1">
-                                                    <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">
-                                                        {user.years} {user.years === 1 ? 'YEAR' : 'YEARS'}
-                                                    </span>
+                                                    {user.years === 0 ? (
+                                                        <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">
+                                                            Became a Member Today
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-black uppercase">
+                                                            {user.years} {user.years === 1 ? 'YEAR' : 'YEARS'}
+                                                        </span>
+                                                    )}
                                                     {user.isToday ? (
-                                                        <span className="text-[10px] font-semibold text-amber-600 animate-pulse uppercase tracking-tighter">Anniversary Today! ✨</span>
+                                                        <span className="text-[10px] font-semibold text-amber-600 animate-pulse uppercase tracking-tighter">
+                                                            {user.years === 0 ? 'Welcome! ✨' : 'Anniversary Today! ✨'}
+                                                        </span>
                                                     ) : (
                                                         <span className="text-[11px] font-semibold text-gray-500">{user.daysRemaining} days left</span>
                                                     )}

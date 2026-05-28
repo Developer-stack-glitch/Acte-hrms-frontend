@@ -161,10 +161,14 @@ export default function MyProfile() {
                 <div className="relative px-6 pt-12 pb-6 flex flex-col md:flex-row items-end gap-8">
                     {/* Avatar Container */}
                     <div className="relative group">
-                        <div className="w-26 h-26 md:w-32 md:h-32 rounded-[15px] premium-gradient p-0.5 shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 relative">
+                        <div className="w-26 h-26 md:w-32 md:h-32 rounded-[15px] premium-gradient shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 relative">
                             <div className="w-full h-full rounded-[15px] bg-white flex items-center justify-center overflow-hidden">
                                 <img
-                                    src={profile.document_photo ? `${import.meta.env.VITE_API_URL}/${profile.document_photo}` : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=200`}
+                                    src={
+                                        profile.document_photo
+                                            ? `${import.meta.env.VITE_API_URL}/api/${profile.document_photo}`
+                                            : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=200`
+                                    }
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />

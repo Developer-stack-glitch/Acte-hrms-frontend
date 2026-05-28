@@ -454,9 +454,9 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 }
             });
 
-            // Ensure name and email are present if needed by backend
-            if (!formData.name && formData.employee_name) data.append('name', formData.employee_name);
-            if (!formData.email && formData.off_mail_id) data.append('email', formData.off_mail_id);
+            // Ensure name and email always match the latest form fields
+            if (formData.employee_name) data.set('name', formData.employee_name);
+            if (formData.off_mail_id) data.set('email', formData.off_mail_id);
 
             if (isEdit) {
                 await updateUserApi(formData.id, data);
