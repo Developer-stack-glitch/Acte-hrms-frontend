@@ -12,6 +12,10 @@ export default function AddDesignation({ onSuccess }) {
     const [listLoading, setListLoading] = useState(true);
     const [departments, setDepartments] = useState([]);
     const [designations, setDesignations] = useState([]);
+    
+    // Pagination states
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     const [formData, setFormData] = useState({
         department_id: '',
@@ -182,13 +186,17 @@ export default function AddDesignation({ onSuccess }) {
                 <div className="border border-gray-100 rounded-xl overflow-hidden">
                     <DataTable
                         columns={columns}
-                        data={designations}
+                        data={designations.slice((page - 1) * pageSize, page * pageSize)}
                         isLoading={listLoading}
                         pagination={{
-                            current: 1,
-                            pageSize: 10,
+                            current: page,
+                            pageSize: pageSize,
                             total: designations.length,
-                            onChange: () => { }
+                            onChange: (p) => setPage(p),
+                            onPageSizeChange: (s) => {
+                                setPageSize(s);
+                                setPage(1);
+                            }
                         }}
                     />
                 </div>

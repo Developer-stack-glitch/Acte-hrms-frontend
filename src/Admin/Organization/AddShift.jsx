@@ -9,6 +9,8 @@ export default function AddShift({ onSuccess }) {
     const [loading, setLoading] = useState(false);
     const [listLoading, setListLoading] = useState(true);
     const [shifts, setShifts] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [formData, setFormData] = useState({
         name: '',
         start_time: '',
@@ -152,13 +154,17 @@ export default function AddShift({ onSuccess }) {
                 <div className="border border-gray-100 rounded-xl overflow-hidden">
                     <DataTable
                         columns={columns}
-                        data={shifts}
+                        data={shifts.slice((page - 1) * pageSize, page * pageSize)}
                         isLoading={listLoading}
                         pagination={{
-                            current: 1,
-                            pageSize: 10,
+                            current: page,
+                            pageSize: pageSize,
                             total: shifts.length,
-                            onChange: () => { }
+                            onChange: (p) => setPage(p),
+                            onPageSizeChange: (s) => {
+                                setPageSize(s);
+                                setPage(1);
+                            }
                         }}
                     />
                 </div>
