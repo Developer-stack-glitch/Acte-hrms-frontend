@@ -204,7 +204,7 @@ export const generatePayrollReportApi = (params) => api.get('/payroll-run/genera
 export const createPayrollRunApi = (data) => api.post('/payroll-run', data);
 export const updatePayrollRunStatusApi = (id, data) => api.put(`/payroll-run/${id}/status`, data);
 export const updatePayrollRunApi = (id, data) => api.put(`/payroll-run/${id}`, data);
-export const getPayrollEmployeesApi = (id) => api.get(`/payroll-run/${id}/employees`);
+export const getPayrollEmployeesApi = (id, params) => api.get(`/payroll-run/${id}/employees`, { params });
 export const finalizePayrollRunApi = (id) => api.post(`/payroll-run/${id}/finalize`);
 export const togglePayrollHoldApi = (data) => api.post('/payroll-run/toggle-hold', data);
 export const getPayrollHoldListApi = (params) => api.get('/payroll-run/holds', { params });

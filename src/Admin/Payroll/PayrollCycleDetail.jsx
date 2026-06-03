@@ -41,10 +41,11 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
         type: 'primary'
     });
     const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [companyInfo, setCompanyInfo] = useState(null);
     const [logo, setLogo] = useState(null);
-    const pageSize = 15;
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const printRefCount = React.useRef();
 
     useEffect(() => {
@@ -120,15 +121,26 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
     };
 
     useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    useEffect(() => {
         if (batchData?.id !== undefined && batchData?.id !== null) {
             fetchPayrollEmployees();
         }
-    }, [batchData?.id]);
+    }, [batchData?.id, currentPage, pageSize, debouncedSearchTerm]);
 
     const fetchPayrollEmployees = async () => {
         setLoading(true);
         try {
-            const res = await getPayrollEmployeesApi(batchData.id);
+            const res = await getPayrollEmployeesApi(batchData.id, {
+                page: currentPage,
+                limit: pageSize,
+                search: debouncedSearchTerm
+            });
             const data = res.data;
             setEmployees(data.employees || []);
             setPayrollSummary({
@@ -176,25 +188,9 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
         }
     };
 
-    const filteredEmployees = employees.filter(emp => {
-        if (!searchTerm) return true;
-        const term = searchTerm.toLowerCase();
-        return (
-            (emp.name || '').toLowerCase().includes(term) ||
-            (emp.emp_id || '').toLowerCase().includes(term) ||
-            (emp.department || '').toLowerCase().includes(term)
-        );
-    });
-
-    const totalPages = Math.ceil(filteredEmployees.length / pageSize);
-    const paginatedEmployees = filteredEmployees.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
-
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [debouncedSearchTerm]);
 
     return (
         <div className="p-4 space-y-6">
@@ -468,7 +464,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             )
                         }
                     ]}
-                    data={paginatedEmployees}
+                    data={employees}
                     isLoading={loading}
                     emptyMessage="No employees found"
                     rowClassName={(emp) => emp.is_hold ? 'bg-amber-50/30' : ''}
@@ -505,8 +501,12 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                     pagination={{
                         current: currentPage,
                         pageSize: pageSize,
-                        total: filteredEmployees.length,
-                        onChange: (page) => setCurrentPage(page)
+                        total: payrollSummary.totalEmployees || 0,
+                        onChange: (page) => setCurrentPage(page),
+                        onPageSizeChange: (size) => {
+                            setPageSize(size);
+                            setCurrentPage(1);
+                        }
                     }}
                 />
             </div>
