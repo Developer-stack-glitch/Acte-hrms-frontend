@@ -106,9 +106,9 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                 designation: emp.designation || 'EMPLOYEE',
                 payMode: 'BANK TRANSFER',
                 department: emp.department || 'GENERAL',
-                accountNo: emp.account_no || 'XXXXXXXXXXXX',
+                accountNo: emp.bank_ac_no || '-',
                 lossOfPay: emp.absentDays || 0,
-                pfNo: emp.pf_no || 'XXXXXXXXXXXX'
+                pfNo: emp.pf_no || '-'
             },
             earnings,
             deductions,
@@ -412,6 +412,20 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             )
                         },
                         {
+                            header: 'Addons',
+                            key: 'variable',
+                            align: 'right',
+                            render: (val, emp) => {
+                                const netAddons = Number(emp.variable || 0) + Number(emp.incentives || 0) - Number(emp.addon_deduction || 0);
+                                const isNegative = netAddons < 0;
+                                return (
+                                <span className={`font-bold text-[13px] ${isNegative ? 'text-red-500' : 'text-emerald-600'}`}>
+                                    {isNegative ? '-' : ''}{Math.abs(netAddons).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                </span>
+                                );
+                            }
+                        },
+                        {
                             header: 'CL Used',
                             key: 'cl_used',
                             align: 'center',
@@ -445,11 +459,16 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                             header: 'Deductions',
                             key: 'deductions',
                             align: 'right',
-                            render: (val) => (
+                            render: (val, emp) => {
+                                const netAddons = Number(emp.variable || 0) + Number(emp.incentives || 0) - Number(emp.addon_deduction || 0);
+                                const baseDeductions = Number(val || 0) - Number(emp.addon_deduction || 0);
+                                const displayDeductions = netAddons < 0 ? baseDeductions + Math.abs(netAddons) : baseDeductions;
+                                return (
                                 <span className="font-medium text-gray-600 text-[13px]">
-                                    {Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                    {displayDeductions.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
-                            )
+                                );
+                            }
                         },
                         {
                             header: 'Net In-Hand Salary',

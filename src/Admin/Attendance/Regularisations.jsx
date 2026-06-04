@@ -150,6 +150,8 @@ const Regularisations = () => {
     const [selectedRequestForReason, setSelectedRequestForReason] = useState(null);
     const [reasonModalOpen, setReasonModalOpen] = useState(false);
 
+    const [totalRequests, setTotalRequests] = useState(0);
+
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
@@ -165,13 +167,19 @@ const Regularisations = () => {
     }, [statusFilter]);
 
     useEffect(() => {
-        fetchRequests();
-    }, [refreshKey, statusFilter]);
+        const timeoutId = setTimeout(() => {
+            fetchRequests();
+        }, 500); // debounce search
+        return () => clearTimeout(timeoutId);
+    }, [refreshKey, statusFilter, page, pageSize, searchTerm]);
 
     const fetchRequests = async () => {
         try {
             setLoading(true);
             const params = {
+                page: page,
+                limit: pageSize,
+                search: searchTerm,
                 ...(statusFilter !== 'All' ? { status: statusFilter } : {}),
                 ...(userRole !== 'admin' && userRole !== 'superadmin' ? { reporting_manager: userId, personal_user_id: userId } : {})
             };
@@ -179,7 +187,8 @@ const Regularisations = () => {
                 getRegularisationsApi(params),
                 getRegularisationCountsApi()
             ]);
-            setRequests(res.data || []);
+            setRequests(res.data?.data || res.data || []);
+            setTotalRequests(res.data?.total || res.data?.length || 0);
             setCounts({
                 All: countsRes.data?.Requested || 0,
                 Pending: countsRes.data?.Pending || 0,
@@ -206,14 +215,6 @@ const Regularisations = () => {
             toast.error('Failed to update status');
         }
     };
-
-    const filteredRequests = useMemo(() => {
-        return requests.filter(req =>
-            req.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            req.emp_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            req.reason?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [requests, searchTerm]);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -385,19 +386,15 @@ const Regularisations = () => {
         return cols;
     }, [requests, page, pageSize, isAdmin, userId]);
 
-    if (loading && requests.length === 0) return null; // Or a skeleton
-
     return (
         <div className="flex flex-col h-full bg-white space-y-0">
-            <FullPageLoader isLoading={loading && requests.length > 0} message="Syncing Regularisations..." />
-
             <div className="p-6 border-b border-gray-100 bg-white">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
                             {isAdmin || isReportingManager ? 'Team Regularisations' : 'My Regularisations'}
                             <div className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-semibold">
-                                {requests.length} Total
+                                {totalRequests} Total
                             </div>
                         </h2>
                         <p className="text-[14px] font-medium text-gray-500 mt-1">
@@ -455,13 +452,13 @@ const Regularisations = () => {
             <div className="flex-1">
                 <DataTable
                     columns={columns}
-                    data={filteredRequests}
+                    data={requests}
                     isLoading={loading}
                     emptyMessage="No regularisation requests found"
                     pagination={{
                         current: page,
                         pageSize: pageSize,
-                        total: filteredRequests.length,
+                        total: totalRequests,
                         onChange: (p) => setPage(p),
                         onPageSizeChange: (s) => {
                             setPageSize(s);

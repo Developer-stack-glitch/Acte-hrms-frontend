@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getAdvanceSalariesApi, getMyAdvanceSalariesApi } from '../../Action/api';
 
 import PayrollDashboard from './PayrollDashboard';
 import PayrollCycleDetail from './PayrollCycleDetail';
@@ -47,6 +48,7 @@ export default function Payroll() {
     const { tabId } = useParams();
     const navigate = useNavigate();
     const [selectedBatch, setSelectedBatch] = useState(null);
+    const [pendingAdvanceCount, setPendingAdvanceCount] = useState(0);
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
@@ -54,7 +56,7 @@ export default function Payroll() {
     const filteredTabs = useMemo(() => {
         const baseTabs = userRole === 'employee' ? employeeTabs : tabs;
         if (userRole === 'superadmin') return baseTabs;
-        
+
         return baseTabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
     }, [userRole, userPermissions]);
 
@@ -72,6 +74,25 @@ export default function Payroll() {
             }
         }
     }, [tabId, filteredTabs, navigate]);
+
+    React.useEffect(() => {
+        const fetchPendingAdvanceCount = async () => {
+            try {
+                const apiCall = (userRole === 'admin' || userRole === 'superadmin') ? getAdvanceSalariesApi : getMyAdvanceSalariesApi;
+                const res = await apiCall({ status: 'Pending', limit: 1 });
+                if (res.data) {
+                    const count = res.data.total || (res.data.data ? res.data.data.length : res.data.length) || 0;
+                    setPendingAdvanceCount(count);
+                }
+            } catch (error) {
+                console.error('Failed to fetch pending advance salary count:', error);
+            }
+        };
+
+        if (filteredTabs.some(t => t.id === 'advance-salary')) {
+            fetchPendingAdvanceCount();
+        }
+    }, [userRole, filteredTabs]);
 
 
     return (
@@ -98,6 +119,12 @@ export default function Payroll() {
                                 }`}>
                                 {tab.label}
                             </span>
+
+                            {tab.id === 'advance-salary' && pendingAdvanceCount > 0 && (
+                                <span className="ml-0.5 inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] font-bold rounded-full bg-red-600 text-white">
+                                    {pendingAdvanceCount}
+                                </span>
+                            )}
 
                             {activeTab === tab.id && (
                                 <motion.div

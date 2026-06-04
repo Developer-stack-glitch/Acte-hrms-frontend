@@ -131,8 +131,8 @@ export default function AddCompany({ onSuccess, company }) {
                                     <span className="text-[11px] text-gray-400 mt-1 font-medium italic">PNG, JPG (Max 2MB)</span>
                                 </label>
                             ) : (
-                                <div className="relative w-full aspect-square bg-white border border-gray-100 rounded-3xl shadow-xl p-4 flex items-center justify-center">
-                                    <img src={logoPreview} alt="Company Logo" className="max-w-full max-h-full object-contain rounded-xl" />
+                                <div className="relative w-full aspect-square bg-white border border-gray-200 rounded-3xl shadow-xs p-4 flex items-center justify-center">
+                                    <img src={logoPreview} alt="Company Logo" className="max-w-full max-h-full object-contain" />
                                     <button
                                         type="button"
                                         onClick={removeLogo}

@@ -188,7 +188,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
             const [countsRes, recentRes] = await Promise.all([
                 getRegularisationCountsApi(),
                 getRegularisationsApi({
-                    limit: 5,
+                    limit: 10,
                     ...(userRole !== 'admin' && userRole !== 'superadmin' ? {
                         reporting_manager: userId,
                         personal_user_id: userId
@@ -196,7 +196,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                 })
             ]);
             setCounts(countsRes.data || { Requested: 0, Pending: 0, Approved: 0, Rejected: 0 });
-            setRecentRequests(recentRes.data || []);
+            setRecentRequests(recentRes.data?.data || recentRes.data || []);
         } catch (error) {
             console.error('Error fetching regularisation overview:', error);
         } finally {

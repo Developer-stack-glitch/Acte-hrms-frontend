@@ -27,7 +27,7 @@ const Pagination = ({ current, pageSize, total, onChange, onPageSizeChange, show
     }
 
     return (
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white mt-auto rounded-b-[20px]">
+        <div className="p-4 border-t border-gray-200 flex items-center justify-between bg-white mt-auto rounded-b-[20px]">
             <span className="text-[13px] text-gray-400 font-medium">
                 Showing {showingCount || 0} of {total} staff
             </span>

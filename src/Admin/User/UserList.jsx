@@ -170,9 +170,17 @@ export default function UserList({ onAddClick }) {
                     className="flex items-center gap-2 cursor-pointer group/name"
                     onClick={() => navigate(`/profile/${row.id}`)}
                 >
-                    <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-[12px] border border-primary/10 group-hover/name:bg-primary group-hover/name:text-white transition-all">
-                        {(val || row.name || 'U').charAt(0).toUpperCase()}
-                    </div>
+                    {row.document_photo ? (
+                        <img 
+                            src={`${import.meta.env.VITE_API_URL}/api/${row.document_photo}`} 
+                            alt={val || row.name} 
+                            className="w-8 h-8 rounded-full object-cover border border-primary/10 shrink-0" 
+                        />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-[12px] border border-primary/10 group-hover/name:bg-primary group-hover/name:text-white transition-all shrink-0">
+                            {(val || row.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                    )}
                     <span className="text-[13px] font-semibold text-gray-800 group-hover/name:text-primary transition-colors">{val || row.name}</span>
                 </div>
             )

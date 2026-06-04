@@ -43,8 +43,8 @@ export default function DataTable({
                                 </th>
                             ))}
                             {(onView || onEdit || onDelete || extraActions) && (
-                                <th className="px-5 py-4 text-[11px] font-bold text-primary uppercase tracking-wider text-right sticky right-0 bg-primary/2 z-9 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.1)]">
-                                    <div className="flex items-center justify-end gap-1">
+                                <th className="px-5 py-4 text-[11px] font-bold text-primary uppercase tracking-wider text-right sticky right-0 bg-white z-9 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.1)]">
+                                    <div className="flex items-center justify-end gap-1 text-md font-semibold">
                                         Action
                                     </div>
                                 </th>
@@ -86,7 +86,7 @@ export default function DataTable({
                                         </td>
                                     ))}
                                     {(onView || onEdit || onDelete || extraActions) && (
-                                        <td className="px-5 py-4 text-right sticky right-0 bg-white group-hover:bg-gray-50/50 transition-colors z-10 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.1)]">
+                                        <td className="px-5 py-4 text-right sticky right-0 bg-white transition-colors z-10 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.1)]">
                                             <div className="flex items-center justify-end gap-2 text-gray-400 group-hover:text-gray-600">
                                                 {extraActions && extraActions(row)}
                                                 {onView && (
@@ -131,7 +131,7 @@ export default function DataTable({
 
             {/* Pagination */}
             {pagination && (
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white mt-auto">
+                <div className="p-4 border-t border-gray-200 flex items-center justify-between bg-white mt-auto">
                     <span className="text-[13px] text-gray-400 font-medium">
                         Showing {data.length} of {pagination.total} records
                     </span>

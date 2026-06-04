@@ -19,9 +19,10 @@ import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
-import TableSkeleton from '../../Common/CommonSkeletonLoader/TableSkeleton';
 import SearchableSelect from '../../Common/Form/SearchableSelect';
 import ConfirmationModal from '../../Common/ConfirmationModal';
+import DataTable from '../../Common/DataTable';
+import Tooltip from '../../Common/Tooltip';
 
 export default function Addons() {
     const [incentives, setIncentives] = useState([]);
@@ -33,6 +34,7 @@ export default function Addons() {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const companyId = userInfo.company;
@@ -41,19 +43,43 @@ export default function Addons() {
         user_id: '',
         payroll_date: new Date(),
         amount: '',
-        description: ''
+        description: '',
+        type: 'addition'
     });
+
+    // Debounce search term
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     useEffect(() => {
         fetchIncentives();
+    }, [pagination.current, pagination.pageSize, debouncedSearchTerm]);
+
+    useEffect(() => {
         fetchUsers();
     }, []);
 
     const fetchIncentives = async () => {
         setLoading(true);
         try {
-            const res = await getPayrollIncentivesApi({ company_id: companyId });
-            setIncentives(res.data);
+            const res = await getPayrollIncentivesApi({
+                company_id: companyId,
+                page: pagination.current,
+                limit: pagination.pageSize,
+                search: debouncedSearchTerm
+            });
+            if (res.data && typeof res.data.total !== 'undefined') {
+                setIncentives(res.data.data);
+                setPagination(prev => ({ ...prev, total: res.data.total }));
+            } else {
+                setIncentives(res.data);
+                setPagination(prev => ({ ...prev, total: res.data.length }));
+            }
         } catch (error) {
             toast.error('Failed to fetch incentives');
         } finally {
@@ -89,7 +115,8 @@ export default function Addons() {
                 user_id: '',
                 payroll_date: new Date(),
                 amount: '',
-                description: ''
+                description: '',
+                type: 'addition'
             });
             fetchIncentives();
         } catch (error) {
@@ -120,10 +147,52 @@ export default function Addons() {
         }
     };
 
-    const filteredIncentives = incentives.filter(inc =>
-        (inc.employee_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (inc.emp_id || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setPagination(prev => ({ ...prev, current: 1 }));
+    };
+
+    const columns = [
+        {
+            header: 'Employee',
+            key: 'employee',
+            render: (_, row) => (
+                <div className="flex flex-col">
+                    <span className="text-[14px] font-semibold text-gray-900">{row.employee_name}</span>
+                    <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{row.emp_id}</span>
+                </div>
+            )
+        },
+        {
+            header: 'Payroll Month',
+            key: 'payroll_date',
+            render: (_, row) => (
+                <span className="text-[13px] font-medium text-gray-600 flex items-center gap-2">
+                    <Calendar size={14} className="text-gray-400" />
+                    {format(new Date(row.payroll_date), 'MMM, yyyy')}
+                </span>
+            )
+        },
+        {
+            header: 'Amount',
+            key: 'amount',
+            align: 'right',
+            render: (_, row) => (
+                <span className={`text-[14px] font-semibold ${row.type === 'deduction' ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {row.type === 'deduction' ? '-' : ''}₹{parseFloat(row.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+            )
+        },
+        {
+            header: 'Description',
+            key: 'description',
+            render: (_, row) => (
+                <span className="text-[13px] text-gray-500 italic max-w-xs truncate block">
+                    {row.description || 'No description'}
+                </span>
+            )
+        }
+    ];
 
     return (
         <div className="space-y-6">
@@ -134,7 +203,7 @@ export default function Addons() {
                         type="text"
                         placeholder="Search employee..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all w-full md:w-80"
                     />
                 </div>
@@ -147,70 +216,34 @@ export default function Addons() {
                 </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
-                                <th className="px-6 py-4 text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Payroll Month</th>
-                                <th className="px-6 py-4 text-[12px] font-semibold text-gray-500 uppercase tracking-wider text-right">Amount</th>
-                                <th className="px-6 py-4 text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                                <th className="px-6 py-4 text-[12px] font-semibold text-gray-500 uppercase tracking-wider text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {loading ? (
-                                <TableSkeleton rows={5} columns={5} />
-                            ) : filteredIncentives.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-20 text-center">
-                                        <div className="flex flex-col items-center text-gray-400">
-                                            <CircleDollarSign size={48} className="mb-4 opacity-20" />
-                                            <p className="font-semibold text-gray-500">No incentives found</p>
-                                            <p className="text-[12px]">Add incentives to see them here</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredIncentives.map((inc) => (
-                                    <tr key={inc.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-[14px] font-semibold text-gray-900">{inc.employee_name}</span>
-                                                <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{inc.emp_id}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[13px] font-medium text-gray-600 flex items-center gap-2">
-                                                <Calendar size={14} className="text-gray-400" />
-                                                {format(new Date(inc.payroll_date), 'MMM, yyyy')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="text-[14px] font-semibold text-emerald-600">
-                                                ₹{parseFloat(inc.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[13px] text-gray-500 italic max-w-xs truncate block">
-                                                {inc.description || 'No description'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button
-                                                onClick={() => handleDeleteClick(inc.id)}
-                                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+                <DataTable
+                    columns={columns}
+                    data={incentives}
+                    isLoading={loading}
+                    extraActions={(row) => (
+                        <Tooltip position="left" text={row.is_payroll_run ? "Payroll already run for this month" : "Delete"}>
+                            <button
+                                onClick={() => !row.is_payroll_run && handleDeleteClick(row.id)}
+                                disabled={row.is_payroll_run}
+                                className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${row.is_payroll_run
+                                        ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                                        : 'text-rose-500 hover:bg-rose-50'
+                                    }`}
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </Tooltip>
+                    )}
+                    emptyMessage="No incentives found"
+                    pagination={{
+                        current: pagination.current,
+                        pageSize: pagination.pageSize,
+                        total: pagination.total,
+                        onChange: (page) => setPagination(prev => ({ ...prev, current: page })),
+                        onPageSizeChange: (size) => setPagination(prev => ({ ...prev, pageSize: size, current: 1 }))
+                    }}
+                />
             </div>
 
             {/* Add Modal */}
@@ -251,6 +284,18 @@ export default function Addons() {
                                     />
                                     <Calendar size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type</label>
+                                <select
+                                    value={formData.type}
+                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                >
+                                    <option value="addition">Addition (Incentive)</option>
+                                    <option value="deduction">Deduction</option>
+                                </select>
                             </div>
 
                             <div>

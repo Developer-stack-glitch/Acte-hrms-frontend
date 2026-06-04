@@ -4,10 +4,11 @@ import {
     Shield, CreditCard, Building, Globe, Camera,
     Edit2, Camera as CameraIcon, CheckCircle2,
     Clock, Award, Heart, Fingerprint, FileText,
-    Eye, EyeOff
+    Eye, EyeOff, X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { getProfileApi, updateUserApi, getUserByIdApi } from '../Action/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getProfileApi, updateUserApi, getUserByIdApi, API_URL } from '../Action/api';
+import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ export default function MyProfile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -106,6 +108,35 @@ export default function MyProfile() {
 
     const InfoItem = ({ label, value, icon: Icon, isSensitive = false }) => {
         const [showSensitive, setShowSensitive] = useState(false);
+        const [showPasswordModal, setShowPasswordModal] = useState(false);
+        const [password, setPassword] = useState('');
+        const [showPassword, setShowPassword] = useState(false);
+        const [verifying, setVerifying] = useState(false);
+
+        const handleToggle = () => {
+            if (showSensitive) {
+                setShowSensitive(false);
+            } else {
+                setShowPasswordModal(true);
+            }
+        };
+
+        const handleVerifyPassword = async (e) => {
+            e.preventDefault();
+            if (!password) return;
+            setVerifying(true);
+            try {
+                // Use direct axios call to bypass the global 401 interceptor
+                await axios.post(`${API_URL}/api/auth/login`, { email: profile.email, password });
+                setShowSensitive(true);
+                setShowPasswordModal(false);
+                setPassword('');
+            } catch (error) {
+                toast.error('Incorrect password');
+            } finally {
+                setVerifying(false);
+            }
+        };
 
         const getDisplayValue = () => {
             if (!value) return 'Not provided';
@@ -125,8 +156,8 @@ export default function MyProfile() {
             <div className="group">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-3 ml-1">{label}</p>
                 <div className={`flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all border border-gray-200 duration-300 ${isSensitive && isValueProvided
-                    ? 'bg-primary/5 border-primary/20 shadow-sm'
-                    : 'bg-gray-50/50 border-transparent hover:border-primary/10 group-hover:bg-primary/5'
+                    ? 'bg-primary/5 border-primary/20'
+                    : 'bg-gray-30 hover:border-primary/10 group-hover:bg-primary/8'
                     }`}>
                     {Icon && <Icon size={16} className={`${isSensitive && isValueProvided ? 'text-primary' : 'text-gray-400'} group-hover:text-primary transition-colors shrink-0`} />}
                     <span className={`text-[14px] font-semibold truncate flex-1 ${isSensitive && isValueProvided ? 'text-primary' : 'text-gray-700'}`}>
@@ -134,7 +165,7 @@ export default function MyProfile() {
                     </span>
                     {isSensitive && isValueProvided && (
                         <button
-                            onClick={() => setShowSensitive(!showSensitive)}
+                            onClick={handleToggle}
                             className="p-1.5 hover:bg-primary/10 text-primary/50 hover:text-primary rounded-lg transition-all"
                             title={showSensitive ? 'Hide Sensitive Info' : 'Show Sensitive Info'}
                         >
@@ -142,6 +173,73 @@ export default function MyProfile() {
                         </button>
                     )}
                 </div>
+
+                {/* Password Verification Modal */}
+                <AnimatePresence>
+                    {showPasswordModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                            onClick={() => setShowPasswordModal(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="relative w-full max-w-md rounded-2xl overflow-hidden bg-white shadow-2xl p-6"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Verify Identity</h3>
+                                    <button
+                                        onClick={() => setShowPasswordModal(false)}
+                                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-4">Please enter your password to view this sensitive information.</p>
+                                <form onSubmit={handleVerifyPassword}>
+                                    <div className="relative mb-4">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter your password"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        >
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPasswordModal(false)}
+                                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={verifying || !password}
+                                            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {verifying ? 'Verifying...' : 'Verify'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         );
     };
@@ -162,7 +260,10 @@ export default function MyProfile() {
                     {/* Avatar Container */}
                     <div className="relative group">
                         <div className="w-26 h-26 md:w-32 md:h-32 rounded-[15px] premium-gradient shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 relative">
-                            <div className="w-full h-full rounded-[15px] bg-white flex items-center justify-center overflow-hidden">
+                            <div
+                                className="w-full h-full rounded-[15px] bg-white flex items-center justify-center overflow-hidden cursor-pointer"
+                                onClick={() => setIsImageModalOpen(true)}
+                            >
                                 <img
                                     src={
                                         profile.document_photo
@@ -170,7 +271,7 @@ export default function MyProfile() {
                                             : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=200`
                                     }
                                     alt="Profile"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                                 />
                             </div>
                             {uploading && (
@@ -290,7 +391,7 @@ export default function MyProfile() {
                     <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                             <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest ml-1">Current Address</p>
-                            <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 flex gap-4">
+                            <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-200 flex gap-1">
                                 <MapPin size={20} className="text-primary/40 shrink-0" />
                                 <p className="text-sm font-medium text-gray-600 leading-relaxed">
                                     {profile.temp_address || 'Address not specified'}
@@ -299,7 +400,7 @@ export default function MyProfile() {
                         </div>
                         <div className="space-y-3">
                             <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest ml-1">Permanent Address</p>
-                            <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 flex gap-4">
+                            <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-200 flex gap-1">
                                 <MapPin size={20} className="text-primary/40 shrink-0" />
                                 <p className="text-sm font-medium text-gray-600 leading-relaxed">
                                     {profile.perm_address || 'Address not specified'}
@@ -309,6 +410,43 @@ export default function MyProfile() {
                     </div>
                 </ProfileSection>
             </div>
+
+            {/* Image Popup Modal */}
+            <AnimatePresence>
+                {isImageModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setIsImageModalOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden bg-white shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => setIsImageModalOpen(false)}
+                                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-10"
+                            >
+                                <X size={20} />
+                            </button>
+                            <img
+                                src={
+                                    profile.document_photo
+                                        ? `${import.meta.env.VITE_API_URL}/api/${profile.document_photo}`
+                                        : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=500`
+                                }
+                                alt="Profile Full Size"
+                                className="w-full h-full object-contain max-h-[85vh]"
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
