@@ -89,7 +89,6 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
             { label: 'GROSS', value: n(emp.gross) },
             { label: 'VARIABLE', value: n(emp.variable) },
             { label: 'BALANCE', value: 0 },
-            { label: 'INCENTIVES', value: n(emp.incentives) },
         ];
 
         const deductions = [

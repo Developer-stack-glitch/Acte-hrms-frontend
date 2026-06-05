@@ -194,7 +194,6 @@ export default function PayslipTemplate() {
             { label: 'SPL ALLOW', value: 'XXXXXXXXXXXX' },
             { label: 'GROSS', value: 'XXXXXXXXXXXX' },
             { label: 'BALANCE', value: 'XXXXXXXXXXXX' },
-            { label: 'INCENTIVES', value: 'XXXXXXXXXXXX' },
         ],
         deductions: [
             { label: 'ESI', value: 'XXXXXXXXXXXX' },
