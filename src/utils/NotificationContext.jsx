@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { io } from 'socket.io-client';
 import { getMyNotificationsApi, markNotificationReadApi, markAllNotificationsReadApi } from '../Action/api';
 import toast from 'react-hot-toast';
+import { onMessageListener } from './firebase';
 
 const NotificationContext = createContext();
 
@@ -57,6 +58,27 @@ export const NotificationProvider = ({ children }) => {
         fetchNotifications();
 
         return () => newSocket.close();
+    }, [fetchNotifications]);
+
+    // FCM foreground message listener
+    useEffect(() => {
+        const listenForMessages = () => {
+            onMessageListener()
+                .then((payload) => {
+                    if (payload && payload.notification) {
+                        toast.success(payload.notification.title, {
+                            description: payload.notification.body,
+                            icon: '🔔'
+                        });
+                        // Refresh notifications from server
+                        fetchNotifications();
+                    }
+                    // Re-register the listener for the next message
+                    listenForMessages();
+                })
+                .catch((err) => console.error('FCM foreground listener error:', err));
+        };
+        listenForMessages();
     }, [fetchNotifications]);
 
     const markAsRead = async (id) => {

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginApi } from '../Action/api';
 import toast from 'react-hot-toast';
+import { requestForToken } from '../utils/firebase';
 
 const FloatingInput = ({ label, icon: Icon, type, name, value, onChange, required, showPassword, setShowPassword }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -68,7 +69,11 @@ export default function Login() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await loginApi(formData);
+            // Request FCM token
+            const fcmToken = await requestForToken();
+            const payload = { ...formData, fcmToken };
+
+            const response = await loginApi(payload);
             localStorage.setItem('userInfo', JSON.stringify(response.data));
             localStorage.setItem('companyId', response.data.company);
             toast.success('Login successful!');

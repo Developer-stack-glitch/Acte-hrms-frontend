@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import NotificationBell from './NotificationBell';
 import ConfirmationModal from './ConfirmationModal';
+import { getProfileApi } from '../Action/api';
 
 
 const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
@@ -18,6 +19,20 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
         if (userInfo) {
             setUser(JSON.parse(userInfo));
         }
+        
+        const fetchProfile = async () => {
+            try {
+                const { data } = await getProfileApi();
+                setUser(prev => ({ ...prev, ...data }));
+                if (userInfo) {
+                    const updatedUser = { ...JSON.parse(userInfo), ...data };
+                    localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+            }
+        };
+        fetchProfile();
     }, []);
 
     const handleLogout = () => {
@@ -56,8 +71,8 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
                 <div className="hidden md:flex items-center gap-1 lg:gap-2">
                     <NotificationBell />
                     {[Settings].map((Icon, idx) => (
-                        <button 
-                            key={idx} 
+                        <button
+                            key={idx}
                             onClick={() => navigate('/settings')}
                             className="p-2 lg:p-3 text-gray-500 hover:bg-gray-50 hover:text-primary rounded-[10px] transition-all relative group overflow-hidden"
                         >
@@ -80,7 +95,7 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
                         <div className="relative shrink-0">
                             <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full premium-gradient p-0.5 shadow-lg group-hover:rotate-6 transition-transform">
                                 <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-primary font-bold text-[10px] lg:text-xs overflow-hidden ring-2 ring-white">
-                                    <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=fff&color=1d4ed8&bold=true`} alt="avatar" />
+                                    <img src={user?.document_photo ? `https://hrms.actecrm.com/api/${user.document_photo}` : `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=fff&color=1d4ed8&bold=true`} alt="avatar" className="w-full h-full object-cover" />
                                 </div>
                             </div>
                             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 lg:w-3.5 lg:h-3.5 bg-green-500 border-2 border-white rounded-full" />
