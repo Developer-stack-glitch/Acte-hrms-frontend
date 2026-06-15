@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginApi } from '../Action/api';
 import toast from 'react-hot-toast';
 import { requestForToken } from '../utils/firebase';
+import Logo from '../assets/hrplus_whitelogo.png';
 
 const FloatingInput = ({ label, icon: Icon, type, name, value, onChange, required, showPassword, setShowPassword }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -118,7 +119,7 @@ export default function Login() {
                         <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/20 shadow-2xl">
                             <Command className="text-white" size={24} />
                         </div>
-                        <span className="text-white font-semibold text-xl">Enterprise HRMS</span>
+                        <span className="text-white font-semibold text-xl">Enterprise HRplus</span>
                     </motion.div>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] uppercase font-bold tracking-widest mb-6">
                         <Activity size={12} className="text-green-400" />
@@ -188,7 +189,10 @@ export default function Login() {
                         <motion.div variants={itemVariants} className="mb-9">
                             <div className="lg:hidden flex items-center gap-2 mb-8">
                                 <Command className="text-primary" size={28} />
-                                <span className="text-gray-900 font-bold text-xl tracking-tight">Enterprise HRMS</span>
+                                <span className="text-gray-900 font-bold text-xl tracking-tight">Enterprise HRplus</span>
+                            </div>
+                            <div className="mb-8 flex items-center justify-center">
+                                <img src={Logo} alt="HRM Logo" className="max-h-16 w-auto object-contain" />
                             </div>
                             <h2 className="text-[2.5rem] font-semibold text-gray-900 leading-tight mb-3">Sign in.</h2>
                             <p className="text-gray-500 font-medium">Enter your organizational credentials to continue.</p>

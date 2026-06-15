@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { forgotPasswordApi, verifyOtpApi, resetPasswordApi } from '../Action/api';
 import toast from 'react-hot-toast';
+import Logo from '../assets/hrplus_whitelogo.png';
 
 const FloatingInput = ({ label, icon: Icon, type, name, value, onChange, required, showPassword, setShowPassword }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -161,7 +162,7 @@ export default function ForgotPassword() {
                         <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/20 shadow-2xl">
                             <Command className="text-white" size={24} />
                         </div>
-                        <span className="text-white font-semibold text-xl">Enterprise HRMS</span>
+                        <span className="text-white font-semibold text-xl">Enterprise HRplus</span>
                     </motion.div>
                 </div>
 
@@ -202,6 +203,9 @@ export default function ForgotPassword() {
                                 exit={{ opacity: 0, x: -20 }}
                             >
                                 <motion.div variants={itemVariants} className="mb-9">
+                                    <div className="mb-8 flex items-center justify-center">
+                                        <img src={Logo} alt="HRM Logo" className="max-h-16 w-auto object-contain" />
+                                    </div>
                                     <Link to="/login" className="inline-flex items-center gap-2 text-primary font-semibold text-sm mb-8 hover:gap-3 transition-all">
                                         <ArrowLeft size={18} />
                                         Back to Login
@@ -253,6 +257,9 @@ export default function ForgotPassword() {
                                 exit={{ opacity: 0, x: -20 }}
                             >
                                 <motion.div variants={itemVariants} className="mb-9">
+                                    <div className="mb-8 flex items-center justify-center">
+                                        <img src={Logo} alt="HRM Logo" className="max-h-16 w-auto object-contain" />
+                                    </div>
                                     <button onClick={() => setStep('EMAIL')} className="inline-flex items-center gap-2 text-primary font-bold text-sm mb-8 hover:gap-3 transition-all">
                                         <ArrowLeft size={18} />
                                         Change Email

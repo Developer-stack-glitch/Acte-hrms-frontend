@@ -18,6 +18,8 @@ import {
     Settings as SettingsIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Logo from '../assets/hrplus_logo.png';
+import WhiteLogo from '../assets/hrplus_favicon.png';
 
 const SidebarItem = ({ icon: Icon, label, to, isCollapsed, onClick }) => {
     return (
@@ -203,19 +205,17 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
 
                     {/* Header Section */}
                     <div className="h-24 flex items-center px-6 relative shrink-0">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-10 h-10 premium-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shrink-0">
-                                H
-                            </div>
-                            {(!isCollapsed || isMobile) && (
+                        <div className="flex items-center gap-3 min-w-0 flex-1 justify-center">
+                            {(!isCollapsed || isMobile) ? (
                                 <motion.div
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="flex flex-col min-w-0"
+                                    className="flex items-center"
                                 >
-                                    <span className="font-medium text-[16px] leading-tight truncate">HRM Portal</span>
-                                    <span className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase">Management</span>
+                                    <img src={Logo} alt="HRM Logo" className="max-h-14 w-auto object-contain" />
                                 </motion.div>
+                            ) : (
+                                <img src={WhiteLogo} alt="HRM Logo" className="max-h-20 w-auto object-contain" />
                             )}
                         </div>
 
