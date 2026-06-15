@@ -33,7 +33,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Dispatch a custom event for session expiry
             window.dispatchEvent(new CustomEvent('session-expired'));
-            
+
             // Optional: Clear userInfo from localStorage immediately
             // localStorage.removeItem('userInfo');
         }
@@ -58,8 +58,6 @@ export const createUserApi = (data) => {
     }
     return api.post('/users', data);
 };
-
-
 
 export const getMilestonesApi = () => api.get('/users/milestones');
 export const getProfileApi = () => api.get('/users/me');
