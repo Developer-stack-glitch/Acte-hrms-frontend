@@ -290,7 +290,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="lg:col-span-2 bg-white rounded-[15px] border border-gray-200 overflow-hidden flex flex-col">
+                <div className="lg:col-span-2 bg-white rounded-[15px] border border-gray-200 overflow-hidden flex flex-col justify-between">
                     <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">

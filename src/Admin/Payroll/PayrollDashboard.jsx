@@ -460,7 +460,7 @@ export default function PayrollDashboard({ onEdit }) {
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             <span className="text-[12px] font-bold text-gray-600 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
-                                                                {new Date(hold.period_start).toLocaleDateString()} - {new Date(hold.period_end).toLocaleDateString()}
+                                                                {new Date(hold.period_start).toLocaleDateString('en-GB')} - {new Date(hold.period_end).toLocaleDateString('en-GB')}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">

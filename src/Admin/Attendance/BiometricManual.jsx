@@ -221,7 +221,7 @@ export default function BiometricManual() {
             });
 
             if (exists) {
-                return toast.error(`Attendance already exists for this employee on ${format(new Date(selectedDate), 'dd/MM/yy')}`);
+                return toast.error(`Attendance already exists for this employee on ${format(new Date(selectedDate), 'dd/MM/yyyy')}`);
             }
         }
 

@@ -12,6 +12,7 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [socket, setSocket] = useState(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -52,6 +53,9 @@ export const NotificationProvider = ({ children }) => {
                 description: notification.message,
                 icon: '🔔'
             });
+
+            // Increment refreshKey to trigger data refetch in other components
+            setRefreshKey(prev => prev + 1);
         });
 
         setSocket(newSocket);
@@ -72,6 +76,7 @@ export const NotificationProvider = ({ children }) => {
                         });
                         // Refresh notifications from server
                         fetchNotifications();
+                        setRefreshKey(prev => prev + 1);
                     }
                     // Re-register the listener for the next message
                     listenForMessages();
@@ -107,7 +112,8 @@ export const NotificationProvider = ({ children }) => {
             unreadCount,
             markAsRead,
             markAllRead,
-            fetchNotifications
+            fetchNotifications,
+            refreshKey
         }}>
             {children}
         </NotificationContext.Provider>

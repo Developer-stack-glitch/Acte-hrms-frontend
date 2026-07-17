@@ -220,7 +220,7 @@ const Policies = () => {
                                     <h2 className="text-2xl font-semibold text-gray-900 mb-2">{selectedPolicy.title}</h2>
                                     <div className="flex items-center gap-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                         <span className="bg-gray-100 px-2 py-0.5 rounded">{selectedPolicy.category || 'General'}</span>
-                                        <span>Updated: {new Date(selectedPolicy.updated_at).toLocaleDateString()}</span>
+                                        <span>Updated: {new Date(selectedPolicy.updated_at).toLocaleDateString('en-GB')}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

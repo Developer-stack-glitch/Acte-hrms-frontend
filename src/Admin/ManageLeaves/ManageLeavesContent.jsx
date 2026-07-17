@@ -4,7 +4,6 @@ import {
     RefreshCcw,
     CheckCircle2,
     Clock,
-    Users,
     Calendar,
     ArrowUpRight,
     PieChart as PieChartIcon,
@@ -245,6 +244,18 @@ export default function ManageLeavesContent({ onViewAll }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Date Filters */}
+                    <button
+                        onClick={() => {
+                            const today = new Date();
+                            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                            const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                            setStartDate(format(from, 'yyyy-MM-dd'));
+                            setEndDate(format(to, 'yyyy-MM-dd'));
+                        }}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap shrink-0"
+                    >
+                        This Month
+                    </button>
                     <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
                         <div className="flex items-center gap-2 px-2 group">
                             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">From</span>
@@ -340,7 +351,7 @@ export default function ManageLeavesContent({ onViewAll }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Approval Workbench / My Requests */}
-                <div className="lg:col-span-2 bg-white rounded-[15px] border border-gray-200 overflow-hidden flex flex-col">
+                <div className="lg:col-span-2 bg-white rounded-[15px] border border-gray-200 overflow-hidden flex flex-col justify-between">
                     <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-xl ${(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'bg-orange-50 text-orange-600' : 'bg-primary/10 text-primary'} flex items-center justify-center`}>

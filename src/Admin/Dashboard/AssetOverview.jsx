@@ -328,6 +328,18 @@ export default function AssetOverview() {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                        <button
+                            onClick={() => {
+                                const today = new Date();
+                                const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                                const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                                setFromDate(from.toLocaleDateString('sv-SE'));
+                                setToDate(to.toLocaleDateString('sv-SE'));
+                            }}
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap shrink-0"
+                        >
+                            This Month
+                        </button>
                         <div className="flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
                             <div className="flex items-center gap-1 sm:gap-1 px-1 sm:px-2 group">
                                 <span className="text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-widest mr-1">From</span>

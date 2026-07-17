@@ -40,6 +40,7 @@ import UserFilter from '../User/UserFilter';
 import DashboardSkeleton from '../../Common/CommonSkeletonLoader/DashboardSkeleton';
 import WebClockWidget from './WebClockWidget';
 import WebCalendar from './WebCalendar';
+import { useNotifications } from '../../utils/NotificationContext';
 
 // Modern Stat Card Component
 const DashboardStatCard = ({ title, value, subValue, icon: Icon, color, delay }) => {
@@ -140,10 +141,11 @@ export default function Dashboard() {
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo.id || userInfo._id;
+    const { refreshKey: contextRefreshKey } = useNotifications();
 
     useEffect(() => {
         fetchDashboardData();
-    }, [fromDate, toDate, filters]);
+    }, [fromDate, toDate, filters, contextRefreshKey]);
 
     const fetchDashboardData = async () => {
         try {
@@ -590,6 +592,18 @@ export default function Dashboard() {
 
                 {/* Filter Bar */}
                 <div className="flex items-center md:justify-end justify-center gap-2 sm:gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                    <button
+                        onClick={() => {
+                            const today = new Date();
+                            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                            const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                            setFromDate(format(from, 'yyyy-MM-dd'));
+                            setToDate(format(to, 'yyyy-MM-dd'));
+                        }}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap shrink-0"
+                    >
+                        This Month
+                    </button>
                     <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
                         <div className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 group">
                             <span className="text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider">From</span>

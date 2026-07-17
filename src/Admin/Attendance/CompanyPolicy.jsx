@@ -243,7 +243,7 @@ export default function CompanyPolicy() {
                                 <span className="text-lg font-semibold text-primary">{(parseFloat(policy.cl_limit) + parseFloat(policy.permission_limit)).toFixed(2)} Days</span>
                             </div>
                             <p className="text-[11px] text-gray-400 text-center font-medium italic">
-                                Last updated: {new Date().toLocaleDateString()}
+                                Last updated: {new Date().toLocaleDateString('en-GB')}
                             </p>
                         </div>
                     </div>

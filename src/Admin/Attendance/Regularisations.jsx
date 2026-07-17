@@ -12,6 +12,7 @@ import FullPageLoader from '../../Common/FullPageLoader';
 import DataTable from '../../Common/DataTable';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import Tooltip from '../../Common/Tooltip';
+import { useNotifications } from '../../utils/NotificationContext';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [reason, setReason] = useState('');
@@ -151,6 +152,7 @@ const Regularisations = () => {
     const [reasonModalOpen, setReasonModalOpen] = useState(false);
 
     const [totalRequests, setTotalRequests] = useState(0);
+    const { refreshKey: contextRefreshKey } = useNotifications();
 
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
@@ -171,7 +173,7 @@ const Regularisations = () => {
             fetchRequests();
         }, 500); // debounce search
         return () => clearTimeout(timeoutId);
-    }, [refreshKey, statusFilter, page, pageSize, searchTerm]);
+    }, [refreshKey, statusFilter, page, pageSize, searchTerm, contextRefreshKey]);
 
     const fetchRequests = async () => {
         try {

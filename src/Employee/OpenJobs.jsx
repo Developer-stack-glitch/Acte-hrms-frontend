@@ -128,7 +128,7 @@ const JobDetailsModal = ({ job, onClose }) => {
                                     {job.close_date && (
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-gray-500 font-medium">Close Date</span>
-                                            <span className="text-red-500 font-semibold">{new Date(job.close_date).toLocaleDateString()}</span>
+                                            <span className="text-red-500 font-semibold">{new Date(job.close_date).toLocaleDateString('en-GB')}</span>
                                         </div>
                                     )}
                                 </div>

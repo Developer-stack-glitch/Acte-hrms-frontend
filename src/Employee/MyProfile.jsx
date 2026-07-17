@@ -351,7 +351,7 @@ export default function MyProfile() {
                     <InfoItem label="Gender" value={profile.gender} icon={User} />
                     <InfoItem label="Personal Email" value={profile.per_mail_id} icon={Globe} />
                     <InfoItem label="Phone Number" value={profile.per_contact_no} icon={Phone} />
-                    <InfoItem label="Date of Birth" value={profile.dob ? new Date(profile.dob).toLocaleDateString() : 'N/A'} icon={Calendar} />
+                    <InfoItem label="Date of Birth" value={profile.dob ? new Date(profile.dob).toLocaleDateString('en-GB') : 'N/A'} icon={Calendar} />
                     <InfoItem label="Blood Group" value={profile.blood_group} icon={Heart} />
                     <InfoItem label="Father/Spouse" value={profile.father_spouse_name} icon={User} />
                     <InfoItem label="Mother's Name" value={profile.mother_name} icon={User} />
@@ -367,7 +367,7 @@ export default function MyProfile() {
                     <InfoItem label="Work Location" value={profile.work_location} icon={Globe} />
                     <InfoItem label="Shift" value={profile.shift_name} icon={Clock} />
                     <InfoItem label="Engagement Type" value={profile.employment_type_name} icon={Briefcase} />
-                    <InfoItem label="Joined On" value={profile.doj ? new Date(profile.doj).toLocaleDateString() : 'N/A'} icon={Calendar} />
+                    <InfoItem label="Joined On" value={profile.doj ? new Date(profile.doj).toLocaleDateString('en-GB') : 'N/A'} icon={Calendar} />
                 </ProfileSection>
 
                 {/* Documentation & Identifiers */}

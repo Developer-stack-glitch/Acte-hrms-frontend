@@ -17,6 +17,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import FullPageLoader from '../../Common/FullPageLoader';
+import { useNotifications } from '../../utils/NotificationContext';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
@@ -124,6 +125,7 @@ export default function LeaveList() {
     const [approvedTotal, setApprovedTotal] = useState(0);
     const [rejectedTotal, setRejectedTotal] = useState(0);
     const [pendingTotal, setPendingTotal] = useState(0);
+    const { refreshKey: contextRefreshKey } = useNotifications();
 
     const userInfo = React.useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
@@ -199,7 +201,7 @@ export default function LeaveList() {
 
     useEffect(() => {
         fetchLeaves();
-    }, [page, pageSize, debouncedSearch, statusFilter, startDate, endDate]);
+    }, [page, pageSize, debouncedSearch, statusFilter, startDate, endDate, contextRefreshKey]);
 
     // Reset page on filter/search change
     useEffect(() => {
@@ -269,7 +271,7 @@ export default function LeaveList() {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear()).slice(-2);
+        const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
 
@@ -484,6 +486,18 @@ export default function LeaveList() {
 
                     <div className="flex flex-wrap items-center gap-4">
                         {/* Date Filters */}
+                        <button
+                            onClick={() => {
+                                const today = new Date();
+                                const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                                const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                                setStartDate(format(from, 'yyyy-MM-dd'));
+                                setEndDate(format(to, 'yyyy-MM-dd'));
+                            }}
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap shrink-0"
+                        >
+                            This Month
+                        </button>
                         <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
                             <div className="flex items-center gap-2 px-2 relative group">
                                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">From</span>

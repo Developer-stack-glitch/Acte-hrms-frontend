@@ -41,7 +41,7 @@ export const generateReimbursementExcel = async (data, reportType, filters) => {
     // Data Rows
     data.forEach((item, index) => {
         const rowData = [
-            new Date(item.date).toLocaleDateString(),
+            new Date(item.date).toLocaleDateString('en-GB'),
             item.emp_id,
             item.employee_name,
             item.department_name || 'N/A',
@@ -138,7 +138,7 @@ export const generateReimbursementPDF = (data, reportType, filters) => {
     // Table
     const tableHeaders = [['Date', 'Emp ID', 'Employee Name', 'Department', 'Category', 'Amount', 'Status']];
     const tableData = data.map(item => [
-        new Date(item.date).toLocaleDateString(),
+        new Date(item.date).toLocaleDateString('en-GB'),
         item.emp_id,
         item.employee_name,
         item.department_name || 'N/A',

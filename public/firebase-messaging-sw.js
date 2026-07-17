@@ -28,7 +28,7 @@ messaging.onBackgroundMessage(function (payload) {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/vite.svg'
+    icon: '/hrplus_favicon.png'
   };
 
   self.registration.showNotification(notificationTitle,

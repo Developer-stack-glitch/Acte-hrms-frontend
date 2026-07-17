@@ -142,6 +142,20 @@ const AssetReport = () => {
                     <p className="text-[14px] text-gray-500 font-medium">Standardized generation for all asset tracking and inventory utilization.</p>
                 </div>
 
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => {
+                            const today = new Date();
+                            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                            const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                            setFromDate(from);
+                            setToDate(to);
+                        }}
+                        className="px-4 py-2 text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap"
+                    >
+                        This Month (26th - 25th)
+                    </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700 px-1">From Date</label>

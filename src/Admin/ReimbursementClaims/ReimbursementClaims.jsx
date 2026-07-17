@@ -17,6 +17,7 @@ import {
     deleteReimbursementApi
 } from '../../Action/api';
 import PageWithStatsSkeleton from '../../Common/CommonSkeletonLoader/PageWithStatsSkeleton';
+import { useNotifications } from '../../utils/NotificationContext';
 
 const DEFAULT_CATEGORIES = [
     'Travel',
@@ -33,6 +34,7 @@ const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Paid'];
 export default function ReimbursementClaims() {
     const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
     const userRole = userInfo.role;
+    const { refreshKey: contextRefreshKey } = useNotifications();
 
     // State
     const [claims, setClaims] = useState([]);
@@ -67,7 +69,7 @@ export default function ReimbursementClaims() {
     useEffect(() => {
         fetchClaims();
         fetchCategories();
-    }, [filterStatus]);
+    }, [filterStatus, contextRefreshKey]);
 
     const fetchCategories = async () => {
         try {
@@ -214,7 +216,7 @@ export default function ReimbursementClaims() {
             render: (val, row) => (
                 <div className="flex flex-col">
                     <span className="font-semibold text-primary text-[14px]">₹{parseFloat(row.amount).toLocaleString('en-IN')}</span>
-                    <span className="text-[11px] text-gray-400 font-medium">{new Date(row.date).toLocaleDateString()}</span>
+                    <span className="text-[11px] text-gray-400 font-medium">{new Date(row.date).toLocaleDateString('en-GB')}</span>
                 </div>
             )
         },

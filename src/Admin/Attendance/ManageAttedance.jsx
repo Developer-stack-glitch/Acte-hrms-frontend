@@ -615,6 +615,18 @@ export default function ManageAttedance() {
                 </div>
 
                 <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                        onClick={() => {
+                            const today = new Date();
+                            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+                            const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                            setFromDate(format(from, 'yyyy-MM-dd'));
+                            setToDate(format(to, 'yyyy-MM-dd'));
+                        }}
+                        className="px-4 py-2 text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap"
+                    >
+                        This Month
+                    </button>
                     <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
                         <div className="flex items-center gap-2 px-3 group">
                             <span className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest">From</span>
@@ -763,7 +775,7 @@ export default function ManageAttedance() {
                         </div>
                         <div>
                             <h3 className="md:text-2xl text-lg font-semibold text-gray-900 leading-none mb-1.5">Attendance Ledger</h3>
-                            <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider">Breakdown: {format(new Date(fromDate), 'dd/MM/yy')} - {format(new Date(toDate), 'dd/MM/yy')}</p>
+                            <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider">Breakdown: {format(new Date(fromDate), 'dd/MM/yyyy')} - {format(new Date(toDate), 'dd/MM/yyyy')}</p>
                         </div>
                     </div>
 

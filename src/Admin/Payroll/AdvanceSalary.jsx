@@ -358,7 +358,7 @@ export default function AdvanceSalary() {
                                 <DetailItem label="Employee Name" value={selectedRequest.employee_name} />
                                 <DetailItem label="Amount Requested" value={`₹ ${selectedRequest.amount}`} />
                                 <DetailItem label="Repayment Period" value={`${selectedRequest.repayment_months} Months`} />
-                                <DetailItem label="Request Date" value={new Date(selectedRequest.request_date).toLocaleDateString()} />
+                                <DetailItem label="Request Date" value={new Date(selectedRequest.request_date).toLocaleDateString('en-GB')} />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[12px] font-semibold text-gray-600 uppercase tracking-widest">Reason for Advance</label>
