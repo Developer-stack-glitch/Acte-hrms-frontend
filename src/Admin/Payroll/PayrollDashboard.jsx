@@ -86,7 +86,7 @@ export default function PayrollDashboard({ onEdit }) {
     const [activeTab, setActiveTab] = useState('Overview');
     const navigate = useNavigate();
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [runFormData, setRunFormData] = useState({

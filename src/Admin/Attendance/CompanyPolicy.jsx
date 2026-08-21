@@ -20,14 +20,14 @@ export default function CompanyPolicy() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [companyId, setCompanyId] = useState(null);
-    const userInfoData = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfoData = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const isAdmin = userInfoData.role === 'admin' || userInfoData.role === 'superadmin';
 
     useEffect(() => {
-        const userInfo = localStorage.getItem('userInfo');
+        const userInfo = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
         if (userInfo) {
             const parsedUser = JSON.parse(userInfo);
-            const cid = parsedUser.company || parsedUser.company_id || localStorage.getItem('companyId');
+            const cid = parsedUser.company || parsedUser.company_id || (localStorage.getItem('companyId') || sessionStorage.getItem('companyId'));
             setCompanyId(cid);
             if (cid) {
                 fetchPolicy(cid);

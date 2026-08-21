@@ -106,7 +106,7 @@ const NotificationBell = () => {
                                                         data = {};
                                                     }
 
-                                                    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                                                    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
                                                     const userRole = userInfo.role;
 
                                                     if (userRole === 'admin' || userRole === 'superadmin') {

@@ -32,7 +32,7 @@ const DEFAULT_CATEGORIES = [
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Paid'];
 
 export default function ReimbursementClaims() {
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const { refreshKey: contextRefreshKey } = useNotifications();
 

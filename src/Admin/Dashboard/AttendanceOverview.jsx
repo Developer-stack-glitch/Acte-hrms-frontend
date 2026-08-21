@@ -138,7 +138,7 @@ export default function Dashboard() {
     const [refreshKey, setRefreshKey] = useState(0);
     const handleActionSuccess = () => setRefreshKey(prev => prev + 1);
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo.id || userInfo._id;
     const { refreshKey: contextRefreshKey } = useNotifications();

@@ -65,7 +65,7 @@ const Card = ({ title, children, footerAction }) => (
 export default function StatutoryComplianceSettings() {
     const [activeTab, setActiveTab] = useState('PF');
     const [loading, setLoading] = useState(false);
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const company_id = userInfo.company;
 
     // State for all settings

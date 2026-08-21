@@ -45,7 +45,7 @@ const Policies = () => {
         file: null
     });
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin';
 
     useEffect(() => {

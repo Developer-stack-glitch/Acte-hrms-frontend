@@ -61,7 +61,7 @@ export default function BatchAllocation() {
     // Track assigned user count per structure
     const [assignedCounts, setAssignedCounts] = useState({});
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [formData, setFormData] = useState({

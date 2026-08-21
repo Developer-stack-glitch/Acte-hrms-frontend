@@ -69,7 +69,7 @@ export default function SalaryStructure() {
     const [selectedComponentIds, setSelectedComponentIds] = useState([]);
     const [compLoading, setCompLoading] = useState(false);
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [formData, setFormData] = useState({

@@ -26,7 +26,7 @@ export default function Reports() {
     const { tabId } = useParams();
     const navigate = useNavigate();
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const userRole = userInfo.role || 'employee';
     const permissions = userInfo.permissions || [];
 

@@ -12,13 +12,19 @@ const api = axios.create({
 // Add request interceptor to include token
 api.interceptors.request.use(
     (config) => {
-        const userInfo = localStorage.getItem('userInfo');
+        const userInfo = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
         if (userInfo) {
             const { token } = JSON.parse(userInfo);
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
         }
+        
+        // Let the browser set the Content-Type with boundary for FormData
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+        
         return config;
     },
     (error) => {
@@ -35,7 +41,7 @@ api.interceptors.response.use(
             window.dispatchEvent(new CustomEvent('session-expired'));
 
             // Optional: Clear userInfo from localStorage immediately
-            // localStorage.removeItem('userInfo');
+            // (localStorage.removeItem('userInfo'), sessionStorage.removeItem('userInfo'));
         }
         return Promise.reject(error);
     }

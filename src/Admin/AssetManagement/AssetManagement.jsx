@@ -32,7 +32,7 @@ const STATUSES = ['Available', 'Assigned', 'Maintenance', 'Broken'];
 export default function AssetManagement() {
     const navigate = useNavigate();
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
 
     useEffect(() => {

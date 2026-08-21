@@ -83,7 +83,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const { width } = useWindowSize();
     const isMobile = width < 1024;
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const userRole = userInfo.role || 'employee';
 
     const sidebarItems = [

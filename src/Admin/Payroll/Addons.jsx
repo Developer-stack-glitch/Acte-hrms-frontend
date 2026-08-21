@@ -36,7 +36,7 @@ export default function Addons() {
     const [deleting, setDeleting] = useState(false);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [formData, setFormData] = useState({

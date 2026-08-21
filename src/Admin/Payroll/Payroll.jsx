@@ -49,7 +49,7 @@ export default function Payroll() {
     const navigate = useNavigate();
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [pendingAdvanceCount, setPendingAdvanceCount] = useState(0);
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
 

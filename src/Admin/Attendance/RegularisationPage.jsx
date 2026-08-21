@@ -19,7 +19,7 @@ const tabs = [
 export default function RegularisationPage() {
     const { tabId } = useParams();
     const navigate = useNavigate();
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
 

@@ -5,13 +5,16 @@ import {
     CheckCircle2,
     XCircle,
     Calendar,
+    Paperclip,
+    Eye,
+    FileText,
+    X
 } from 'lucide-react';
 import DataTable from '../../Common/DataTable';
-import { getLeavesApi, updateLeaveApi, deleteLeaveApi } from '../../Action/api';
+import { getLeavesApi, updateLeaveApi, deleteLeaveApi, API_URL } from '../../Action/api';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import { LeaveListSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkeleton';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -110,6 +113,165 @@ const ReasonModal = ({ isOpen, onClose, reason, title = "Leave Reason" }) => {
     );
 };
 
+const DocumentListModal = ({ isOpen, onClose, documents, onImageClick }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6"
+            >
+                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Attached Documents</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="py-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {documents.map((doc, idx) => {
+                        const hasNoExtension = !doc.includes('.') || doc.split('/').pop().indexOf('.') === -1;
+                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc) || hasNoExtension;
+                        const fileName = doc.split('/').pop();
+                        const fullUrl = `${API_URL}/api${doc}`;
+                        
+                        return (
+                            <div 
+                                key={idx} 
+                                onClick={() => {
+                                    if (isImage) {
+                                        onImageClick(fullUrl);
+                                    } else {
+                                        window.open(fullUrl, '_blank');
+                                    }
+                                }}
+                                className="cursor-pointer border border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors h-28"
+                            >
+                                {isImage ? (
+                                    <img src={fullUrl} alt="doc" className="h-16 w-auto object-cover rounded mb-2" />
+                                ) : (
+                                    <div className="h-16 w-16 bg-primary/10 rounded flex items-center justify-center mb-2 text-primary">
+                                        <FileText size={24} />
+                                    </div>
+                                )}
+                                <span className="text-[11px] text-gray-600 truncate w-full text-center px-1" title={fileName}>
+                                    {fileName}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const ImageZoomModal = ({ isOpen, onClose, imageUrl }) => {
+    const [scale, setScale] = React.useState(1);
+    const [position, setPosition] = React.useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = React.useState(false);
+    const dragStart = React.useRef({ x: 0, y: 0 });
+
+    React.useEffect(() => {
+        if (!isOpen) {
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
+        }
+    }, [isOpen]);
+
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        setPosition({
+            x: e.clientX - dragStart.current.x,
+            y: e.clientY - dragStart.current.y
+        });
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-full h-full flex items-center justify-center overflow-hidden"
+            >
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors bg-black/50 p-2 rounded-full z-50"
+                >
+                    <X size={24} />
+                </button>
+                <div 
+                    className={`relative overflow-visible flex items-center justify-center w-full h-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    onWheel={(e) => {
+                        const zoomSensitivity = 0.002;
+                        const delta = e.deltaY * -zoomSensitivity;
+                        setScale(s => Math.min(Math.max(0.2, s + delta), 8)); 
+                    }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                >
+                    <img 
+                        src={imageUrl} 
+                        alt="Zoomed document" 
+                        style={{ 
+                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, 
+                            transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+                            transformOrigin: 'center center'
+                        }}
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl pointer-events-none select-none"
+                        draggable={false}
+                    />
+                </div>
+            </motion.div>
+            
+            {/* Zoom Controls Overlay */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full z-50 border border-white/10 shadow-2xl"
+            >
+                <button onClick={() => setScale(s => Math.max(0.2, s - 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">-</button>
+                <span className="text-white text-sm font-semibold w-12 text-center tracking-wide">{Math.round(scale * 100)}%</span>
+                <button onClick={() => setScale(s => Math.min(8, s + 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">+</button>
+                <div className="w-px h-6 bg-white/20 mx-1"></div>
+                <button 
+                    onClick={() => {
+                        setScale(1);
+                        setPosition({ x: 0, y: 0 });
+                    }} 
+                    className="text-white/80 hover:text-white transition-colors text-[11px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                >
+                    Reset
+                </button>
+            </motion.div>
+        </div>
+    );
+};
+
 export default function LeaveList() {
     const [leaves, setLeaves] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -127,7 +289,7 @@ export default function LeaveList() {
     const [pendingTotal, setPendingTotal] = useState(0);
     const { refreshKey: contextRefreshKey } = useNotifications();
 
-    const userInfo = React.useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = React.useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 
@@ -142,6 +304,8 @@ export default function LeaveList() {
     const [selectedLeave, setSelectedLeave] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [reasonModal, setReasonModal] = useState({ open: false, content: '', title: '' });
+    const [docListModal, setDocListModal] = useState({ open: false, documents: [] });
+    const [zoomModal, setZoomModal] = useState({ open: false, imageUrl: '' });
 
     useEffect(() => {
         localStorage.setItem('leavelist_searchTerm', searchTerm);
@@ -389,6 +553,31 @@ export default function LeaveList() {
                 }
             },
             {
+                header: 'Docs',
+                key: 'documents',
+                render: (val, row) => {
+                    if (!row.document_url) return <span className="text-gray-400 text-[13px]">-</span>;
+                    let docs = [];
+                    try {
+                        docs = JSON.parse(row.document_url);
+                        if (!Array.isArray(docs)) docs = [row.document_url];
+                    } catch (e) {
+                        docs = [row.document_url];
+                    }
+                    if (docs.length === 0) return <span className="text-gray-400 text-[13px]">-</span>;
+                    
+                    return (
+                        <button 
+                            onClick={() => setDocListModal({ open: true, documents: docs })}
+                            className="w-8 h-8 flex items-center justify-center bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors"
+                            title="View Documents"
+                        >
+                            <Eye size={15} />
+                        </button>
+                    );
+                }
+            },
+            {
                 header: 'Status',
                 key: 'status',
                 render: (val, row) => {
@@ -627,6 +816,17 @@ export default function LeaveList() {
                 onClose={() => setReasonModal({ ...reasonModal, open: false })}
                 reason={reasonModal.content}
                 title={reasonModal.title}
+            />
+            <DocumentListModal 
+                isOpen={docListModal.open}
+                onClose={() => setDocListModal({ ...docListModal, open: false })}
+                documents={docListModal.documents}
+                onImageClick={(url) => setZoomModal({ open: true, imageUrl: url })}
+            />
+            <ImageZoomModal 
+                isOpen={zoomModal.open}
+                onClose={() => setZoomModal({ ...zoomModal, open: false })}
+                imageUrl={zoomModal.imageUrl}
             />
         </div>
     );

@@ -324,7 +324,7 @@ export default function MyProfile() {
 
                     {/* Edit Employee Button for Admins - Moved to far right */}
                     {(() => {
-                        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                        const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
                         if ((userInfo.role === 'admin' || userInfo.role === 'superadmin') && profile?.id) {
                             return (
                                 <div className="pb-3 self-center md:self-end">

@@ -73,7 +73,7 @@ export default function AddRoles() {
     };
 
     const handleDelete = async (role) => {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
         const currentUserRole = userInfo.role;
         const normalizedRole = role.toLowerCase();
         const isSystemRole = ['superadmin', 'admin', 'employee'].includes(normalizedRole);
@@ -151,7 +151,7 @@ export default function AddRoles() {
             render: (_, row) => {
                 const val = row.role;
                 const userCount = row.userCount;
-                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
                 const currentUserRole = userInfo.role;
                 const isSystemRole = ['superadmin', 'admin', 'employee'].includes(val.toLowerCase());
                 const isSelfSuperAdmin = val.toLowerCase() === 'superadmin';

@@ -28,10 +28,10 @@ export default function MyPayslips() {
         }
     };
 
-    const handleDownload = async (id, employeeName, periodStart) => {
+    const handleDownload = async (id, employeeName, periodEnd) => {
         try {
             const url = `${API_URL}/api/payroll-run/payslip/${id}/download`;
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
             const token = userInfo.token;
 
             const toastId = toast.loading('Generating payslip...');
@@ -52,7 +52,7 @@ export default function MyPayslips() {
             const link = document.createElement('a');
             link.href = downloadUrl;
 
-            const monthName = format(parseISO(periodStart), 'MMMM_yyyy');
+            const monthName = format(parseISO(periodEnd), 'MMMM_yyyy');
             link.setAttribute('download', `Payslip_${employeeName.replace(/\s+/g, '_')}_${monthName}.pdf`);
 
             document.body.appendChild(link);
@@ -127,7 +127,7 @@ export default function MyPayslips() {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_start)}
+                                        onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_end)}
                                         className="p-2.5 text-gray-400 hover:text-white bg-transparent hover:bg-primary rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
                                         title="Download PDF"
                                     >
@@ -169,7 +169,7 @@ export default function MyPayslips() {
                             </div>
 
                             <button
-                                onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_start)}
+                                onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_end)}
                                 className="w-full py-4.5 bg-gray-50/80 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all duration-300 text-sm font-semibold text-gray-600 border-t border-gray-100"
                                 style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
                             >

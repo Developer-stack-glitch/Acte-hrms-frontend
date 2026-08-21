@@ -97,7 +97,7 @@ export default function ManageHolidays() {
     const [showModal, setShowModal] = useState(false);
     const [editingHoliday, setEditingHoliday] = useState(null);
     const [companies, setCompanies] = useState([]);
-    const [userInfo] = useState(JSON.parse(localStorage.getItem('userInfo') || '{}'));
+    const [userInfo] = useState(JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'));
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [holidayToDelete, setHolidayToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);

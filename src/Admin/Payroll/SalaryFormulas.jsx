@@ -223,7 +223,7 @@ export default function SalaryFormulas() {
     const [viewingFormula, setViewingFormula] = useState(null);
     const [editingFormula, setEditingFormula] = useState(null);
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [formData, setFormData] = useState({

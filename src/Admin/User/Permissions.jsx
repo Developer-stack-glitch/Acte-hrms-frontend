@@ -269,7 +269,7 @@ export default function Permissions() {
             setSavedPermissions(permissions);
 
             // Update local storage if the current user's role was updated
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
             if (userInfo.role === selectedRole) {
                 userInfo.permissions = permissions;
                 localStorage.setItem('userInfo', JSON.stringify(userInfo));

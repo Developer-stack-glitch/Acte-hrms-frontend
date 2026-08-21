@@ -15,7 +15,7 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const userInfo = localStorage.getItem('userInfo');
+        const userInfo = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
         if (userInfo) {
             setUser(JSON.parse(userInfo));
         }
@@ -36,7 +36,7 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('userInfo');
+        (localStorage.removeItem('userInfo'), sessionStorage.removeItem('userInfo'));
         toast.success('Signed out successfully');
         navigate('/login');
     };
@@ -187,7 +187,7 @@ const MainLayout = () => {
     }, []);
 
     const handleSessionExpiryConfirm = () => {
-        localStorage.removeItem('userInfo');
+        (localStorage.removeItem('userInfo'), sessionStorage.removeItem('userInfo'));
         setShowExpiryModal(false);
         navigate('/login', { replace: true });
     };

@@ -50,7 +50,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
 
     useEffect(() => {
         const fetchCompany = async () => {
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
             const companyId = userInfo.company;
             if (companyId) {
                 try {

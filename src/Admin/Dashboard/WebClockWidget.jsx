@@ -41,7 +41,7 @@ const WebClockWidget = ({ userId, onActionSuccess }) => {
 
     useEffect(() => {
         setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
-        const info = localStorage.getItem('userInfo');
+        const info = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
         if (info) setUserData(JSON.parse(info));
     }, []);
 

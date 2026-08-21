@@ -154,7 +154,7 @@ const Regularisations = () => {
     const [totalRequests, setTotalRequests] = useState(0);
     const { refreshKey: contextRefreshKey } = useNotifications();
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
     const isAdmin = userRole === 'admin' || userRole === 'superadmin';

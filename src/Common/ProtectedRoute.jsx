@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
 
     if (!userInfo) {
         // User is not logged in, redirect to login page

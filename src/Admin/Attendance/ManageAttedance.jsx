@@ -134,7 +134,7 @@ export default function ManageAttedance() {
     });
     const [selectedDetail, setSelectedDetail] = useState(null);
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id;
 

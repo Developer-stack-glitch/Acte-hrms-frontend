@@ -57,7 +57,7 @@ const Settings = () => {
     const fetchInitialData = async () => {
         setIsLoading(true);
         try {
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
             setUser(userInfo);
 
             // Fetch Full User Profile

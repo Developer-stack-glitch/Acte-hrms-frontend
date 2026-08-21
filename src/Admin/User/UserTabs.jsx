@@ -54,7 +54,7 @@ export default function UserTabs() {
     const { tabId } = useParams();
     const navigate = useNavigate();
     
-    const userInfo = React.useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = React.useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
 

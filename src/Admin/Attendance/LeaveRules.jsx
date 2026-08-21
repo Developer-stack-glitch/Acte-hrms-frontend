@@ -29,7 +29,7 @@ export default function LeaveRules() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [ruleToDelete, setRuleToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin';
 
     useEffect(() => {

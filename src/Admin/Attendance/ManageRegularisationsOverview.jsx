@@ -169,7 +169,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const [requestToReject, setRequestToReject] = useState(null);
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 

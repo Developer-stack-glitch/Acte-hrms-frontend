@@ -24,7 +24,7 @@ export default function WeekOff() {
     const [deletingId, setDeletingId] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const companyId = userInfo.company;
 

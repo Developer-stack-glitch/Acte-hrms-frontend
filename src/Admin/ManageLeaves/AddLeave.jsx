@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { createLeaveApi, getUsersApi } from '../../Action/api';
 import toast from 'react-hot-toast';
+import Compressor from 'compressorjs';
 import { FormInput, FormSelect, FormDate, FormTextarea, FormTime, SearchableSelect } from '../../Common/Form';
 import { AddLeaveSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkeleton';
 
@@ -24,7 +25,7 @@ const leaveTypes = [
 ];
 
 export default function AddLeave({ onSuccess, onCancel }) {
-    const userInfo = React.useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = React.useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 
@@ -45,6 +46,8 @@ export default function AddLeave({ onSuccess, onCancel }) {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [calculatedDays, setCalculatedDays] = useState(0);
+    const [documents, setDocuments] = useState([]);
+    const [isCompressing, setIsCompressing] = useState(false);
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -147,9 +150,22 @@ export default function AddLeave({ onSuccess, onCancel }) {
         }
         if (!formData.reason) return toast.error('Please provide a reason for leave');
 
+        let submitData;
+        if (documents.length > 0) {
+            submitData = new FormData();
+            Object.keys(finalData).forEach(key => {
+                if (finalData[key] !== null && finalData[key] !== undefined) {
+                    submitData.append(key, finalData[key]);
+                }
+            });
+            documents.forEach(doc => submitData.append('documents', doc));
+        } else {
+            submitData = finalData;
+        }
+
         setLoading(true);
         try {
-            await createLeaveApi(finalData);
+            await createLeaveApi(submitData);
             toast.success(formData.leave_type === 'Permission' ? 'Permission applied and approved successfully!' : 'Leave request submitted successfully!');
             if (onSuccess) onSuccess();
             // Clear form
@@ -166,6 +182,7 @@ export default function AddLeave({ onSuccess, onCancel }) {
                 start_time: '',
                 end_time: ''
             });
+            setDocuments([]);
         } catch (error) {
             console.error('Error creating leave:', error);
             toast.error(error.response?.data?.message || 'Failed to submit leave request');
@@ -399,6 +416,127 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                     rows={3}
                                 />
                             </div>
+
+                            {formData.leave_type && formData.leave_type !== 'Permission' && (
+                                <div className="space-y-3 md:col-span-2">
+                                    <label className="text-[13px] font-bold text-gray-700">Supporting Document(s) (Optional)</label>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            disabled={isCompressing}
+                                            onChange={async (e) => {
+                                                setIsCompressing(true);
+                                                try {
+                                                    const files = Array.from(e.target.files);
+                                                    const processedFiles = [];
+
+                                                    for (const file of files) {
+                                                        if (file.type === 'application/pdf') {
+                                                            if (file.size > 500 * 1024) {
+                                                                toast.error(`PDF "${file.name}" is over 500KB. Please compress it before uploading.`);
+                                                                continue;
+                                                            }
+                                                            processedFiles.push(file);
+                                                        } else if (file.type.startsWith('image/')) {
+                                                            try {
+                                                                let currentFile = file;
+                                                                let quality = 0.8;
+                                                                let maxWidth = undefined;
+                                                                const targetSize = 150 * 1024; // 150KB target
+                                                                
+                                                                while (currentFile.size > targetSize && quality > 0.1) {
+                                                                    currentFile = await new Promise((resolve, reject) => {
+                                                                        new Compressor(currentFile, {
+                                                                            quality: quality,
+                                                                            maxWidth: maxWidth,
+                                                                            mimeType: 'image/jpeg', // Force JPEG to enable lossy compression for PNGs
+                                                                            success(result) {
+                                                                                let finalName = file.name;
+                                                                                if (result.type === 'image/jpeg' && !/\.(jpe?g)$/i.test(finalName)) {
+                                                                                    finalName = finalName.replace(/\.[^/.]+$/, "") + ".jpg";
+                                                                                }
+                                                                                resolve(new File([result], finalName, {
+                                                                                    type: result.type,
+                                                                                    lastModified: Date.now(),
+                                                                                }));
+                                                                            },
+                                                                            error(err) {
+                                                                                reject(err);
+                                                                            },
+                                                                        });
+                                                                    });
+                                                                    
+                                                                    quality -= 0.15;
+                                                                    if (quality <= 0.5 && currentFile.size > targetSize) {
+                                                                        maxWidth = 1280; 
+                                                                    }
+                                                                }
+                                                                
+                                                                processedFiles.push(currentFile);
+                                                            } catch (error) {
+                                                                console.error('Error compressing image:', error);
+                                                                toast.error(`Failed to compress ${file.name}`);
+                                                                processedFiles.push(file);
+                                                            }
+                                                        } else {
+                                                            processedFiles.push(file);
+                                                        }
+                                                    }
+
+                                                    setDocuments(prev => [...prev, ...processedFiles]);
+                                                } finally {
+                                                    setIsCompressing(false);
+                                                    e.target.value = ''; // Reset input to avoid stale file name display
+                                                }
+                                            }}
+                                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-[10px] text-[14px] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 disabled:opacity-50"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                        />
+                                        {isCompressing && (
+                                            <div className="flex items-center gap-2 text-primary shrink-0 px-2">
+                                                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                                                <span className="text-[12px] font-semibold">Compressing...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[12px] text-gray-500">
+                                        {formData.leave_type === 'Sick Leave' ? 'Please upload a medical certificate if applicable.' : 'Please upload any supporting documents. ( PDF, JPG, JPEG, PNG )'}
+                                    </p>
+
+                                    {/* File Previews */}
+                                    {documents.length > 0 && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4">
+                                            {documents.map((file, index) => (
+                                                <div key={index} className="relative group border border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center bg-gray-50 h-24">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDocuments(docs => docs.filter((_, i) => i !== index))}
+                                                        className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-200"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+
+                                                    {file.type.startsWith('image/') ? (
+                                                        <img
+                                                            src={URL.createObjectURL(file)}
+                                                            alt="preview"
+                                                            className="h-12 w-auto object-cover rounded mb-1"
+                                                        />
+                                                    ) : (
+                                                        <div className="h-12 w-12 bg-primary/10 rounded flex items-center justify-center mb-1 text-primary">
+                                                            <FileText size={24} />
+                                                        </div>
+                                                    )}
+                                                    <span className="text-[10px] text-gray-600 truncate w-full text-center px-1">
+                                                        {file.name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
 
@@ -427,17 +565,20 @@ export default function AddLeave({ onSuccess, onCancel }) {
                     <div className="flex gap-4 w-full md:w-auto">
                         <button
                             type="button"
-                            onClick={() => setFormData({
-                                employee_id: userRole === 'employee' ? userId : '',
-                                leave_type: '',
-                                start_date: '',
-                                end_date: '',
-                                reason: '',
-                                status: 'Pending',
-                                is_half_day: false,
-                                half_day_period: 'Morning',
-                                contact_number: ''
-                            })}
+                            onClick={() => {
+                                setFormData({
+                                    employee_id: userRole === 'employee' ? userId : '',
+                                    leave_type: '',
+                                    start_date: '',
+                                    end_date: '',
+                                    reason: '',
+                                    status: 'Pending',
+                                    is_half_day: false,
+                                    half_day_period: 'Morning',
+                                    contact_number: ''
+                                });
+                                setDocuments([]);
+                            }}
                             className="flex-1 md:flex-none px-8 py-2.5 rounded-full border border-gray-200 text-gray-600 font-medium text-[14px] hover:bg-gray-50 transition-all active:scale-95"
                         >
                             Reset

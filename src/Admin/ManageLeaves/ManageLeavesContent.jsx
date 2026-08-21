@@ -96,7 +96,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay = 0 }) => (
 );
 
 export default function ManageLeavesContent({ onViewAll }) {
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userId = userInfo._id || userInfo.id;
 
@@ -385,7 +385,15 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                 <div>
                                                     <h4 className="font-semibold text-sm text-gray-900 group-hover:text-primary transition-colors">{leave.employee_name}</h4>
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-[12px] text-gray-500 font-medium">{leave.leave_type} • {leave.emp_id}</p>
+                                                        <p className="text-[12px] text-gray-500 font-medium">
+                                                            {leave.leave_type} • {
+                                                                leave.leave_type === 'Permission' && leave.start_time && leave.end_time
+                                                                    ? `${format(new Date(leave.start_date), 'dd MMM yyyy')} (${leave.start_time.slice(0, 5)} - ${leave.end_time.slice(0, 5)})`
+                                                                    : leave.start_date === leave.end_date || leave.is_half_day
+                                                                        ? format(new Date(leave.start_date), 'dd MMM yyyy')
+                                                                        : `${format(new Date(leave.start_date), 'dd MMM yyyy')} - ${format(new Date(leave.end_date), 'dd MMM yyyy')}`
+                                                            }
+                                                        </p>
                                                         {leave.is_half_day ? (
                                                             <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-medium uppercase tracking-tighter border border-amber-100/50">
                                                                 {leave.half_day_period} HD

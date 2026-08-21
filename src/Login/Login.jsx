@@ -75,8 +75,19 @@ export default function Login() {
             const payload = { ...formData, fcmToken };
 
             const response = await loginApi(payload);
-            localStorage.setItem('userInfo', JSON.stringify(response.data));
-            localStorage.setItem('companyId', response.data.company);
+            
+            if (formData.staySignedIn) {
+                localStorage.setItem('userInfo', JSON.stringify(response.data));
+                localStorage.setItem('companyId', response.data.company);
+                sessionStorage.removeItem('userInfo');
+                sessionStorage.removeItem('companyId');
+            } else {
+                sessionStorage.setItem('userInfo', JSON.stringify(response.data));
+                sessionStorage.setItem('companyId', response.data.company);
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('companyId');
+            }
+            
             toast.success('Login successful!');
             navigate('/dashboard');
         } catch (error) {

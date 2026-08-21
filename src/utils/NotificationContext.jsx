@@ -25,7 +25,7 @@ export const NotificationProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        const userInfoStr = localStorage.getItem('userInfo');
+        const userInfoStr = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));
         if (!userInfoStr) return;
         const userInfo = JSON.parse(userInfoStr);
 

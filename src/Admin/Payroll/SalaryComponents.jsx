@@ -43,7 +43,7 @@ export default function SalaryComponents() {
     const [componentToDelete, setComponentToDelete] = useState(null);
     const [activeTab, setActiveTab] = useState('Earnings'); // 'Earnings' or 'Deductions'
 
-    const userInfo = useMemo(() => JSON.parse(localStorage.getItem('userInfo') || '{}'), []);
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const companyId = userInfo.company;
 
     const [formData, setFormData] = useState({

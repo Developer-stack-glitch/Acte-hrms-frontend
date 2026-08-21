@@ -217,8 +217,8 @@ export default function PayslipTemplate() {
 
     useEffect(() => {
         const fetchCompanyData = async () => {
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-            const storedCompanyId = userInfo.company || localStorage.getItem('companyId');
+            const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
+            const storedCompanyId = userInfo.company || (localStorage.getItem('companyId') || sessionStorage.getItem('companyId'));
 
             if (storedCompanyId) {
                 setCompanyId(storedCompanyId);
