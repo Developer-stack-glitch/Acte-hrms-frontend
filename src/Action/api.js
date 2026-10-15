@@ -144,7 +144,7 @@ export const getCompanyPolicyApi = (companyId) => api.get(`/attendance/company-p
 export const saveCompanyPolicyApi = (data) => api.post('/attendance/company-policy', data);
 
 // Regularisation APIs
-export const getRegularisationCountsApi = () => api.get('/regularisations/counts');
+export const getRegularisationCountsApi = (params) => api.get('/regularisations/counts', { params });
 export const getRegularisationsApi = (params) => api.get('/regularisations', { params });
 export const createRegularisationApi = (data) => api.post('/regularisations', data);
 export const updateRegularisationStatusApi = (id, data) => api.put(`/regularisations/${id}/status`, data);

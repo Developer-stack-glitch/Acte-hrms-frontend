@@ -51,8 +51,16 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
                                 </div>
                             </div>
                             <div>
-                                <span className="text-[12px] font-semibold text-gray-600 block">Shift Time</span>
-                                <p className="font-semibold text-gray-800 mt-1">{request.check_in?.substring(0, 5)} - {request.check_out?.substring(0, 5)}</p>
+                                <span className="text-[12px] font-semibold text-gray-600 block">Correction Time</span>
+                                <p className="font-semibold text-gray-800 mt-1">
+                                    {request.check_in && request.check_out
+                                        ? `${request.check_in.substring(0, 5)} - ${request.check_out.substring(0, 5)}`
+                                        : request.check_in
+                                        ? `In: ${request.check_in.substring(0, 5)} (Punch In Only)`
+                                        : request.check_out
+                                        ? `Out: ${request.check_out.substring(0, 5)} (Punch Out Only)`
+                                        : '--'}
+                                </p>
                             </div>
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                                 <span className="text-[12px] font-semibold text-gray-600 block mb-1">Reason</span>

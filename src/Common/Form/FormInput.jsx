@@ -50,6 +50,11 @@ const FormInput = ({
         <div className={`space-y-2 ${className}`}>
             <FormLabel label={label} icon={Icon} required={required} />
             <div className="relative group/input">
+                {Icon && !label && (
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within/input:text-primary transition-colors">
+                        <Icon size={18} />
+                    </div>
+                )}
                 <input
                     type={inputType}
                     value={displayValue || ''}
@@ -57,7 +62,7 @@ const FormInput = ({
                     placeholder={placeholder}
                     required={required}
                     disabled={disabled}
-                    className={`w-full h-11 ${isPassword ? 'pr-11' : 'px-3'} px-4 bg-[#fff] border border-gray-200 rounded-[12px] outline-none focus:border-primary/50 focus:bg-white transition-all font-medium text-gray-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full h-11 ${Icon && !label ? 'pl-10 pr-4' : (isPassword ? 'pr-11 px-4' : 'px-4')} bg-[#fff] border border-gray-200 rounded-[12px] outline-none focus:border-primary/50 focus:bg-white transition-all font-medium text-gray-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                     {...props}
                 />
 

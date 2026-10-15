@@ -16,7 +16,7 @@ const FormDate = ({
     ...props
 }) => {
     // Handle the date object for react-datepicker
-    const selectedDate = value ? new Date(value) : null;
+    const selectedDate = value ? new Date(typeof value === 'string' && !value.includes('T') ? `${value}T00:00:00` : value) : null;
     const isValidDate = selectedDate instanceof Date && !isNaN(selectedDate);
 
     const handleDateChange = (date) => {

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, User, Calendar, Save, Loader2, List, RefreshCw, Send, Edit2, Trash2, ArrowLeft, CheckCircle2, AlertCircle, Search } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Clock, User, Calendar, Save, Loader2, List, RefreshCw, Send, Edit2, Trash2, ArrowLeft, CheckCircle2, AlertCircle, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { getUsersApi, saveAttendanceApi, getAttendanceApi, getBiometricLogsApi, syncBiometricApi, updateAttendanceApi, deleteAttendanceApi } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormSelect, FormDate, FormTime, SearchableSelect } from '../../Common/Form';
+import { FormInput, FormSelect, FormDate, FormTime, SearchableSelect } from '../../Common/Form';
 import ConfirmationModal from '../../Common/ConfirmationModal';
+import Pagination from '../../Common/Pagination';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TableSkeleton from '../../Common/CommonSkeletonLoader/TableSkeleton';
 import ListSkeleton from '../../Common/CommonSkeletonLoader/ListSkeleton';
@@ -35,48 +36,153 @@ export default function BiometricManual() {
     const [syncDate, setSyncDate] = useState(() => localStorage.getItem('biometric_syncDate') || new Date().toISOString().split('T')[0]);
     const [syncing, setSyncing] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [editingRecord, setEditingRecord] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const [historyDate, setHistoryDate] = useState(() => localStorage.getItem('biometric_historyDate') || new Date().toISOString().split('T')[0]);
+    const [historyStartDate, setHistoryStartDate] = useState(() => localStorage.getItem('biometric_historyStartDate') || localStorage.getItem('biometric_historyDate') || new Date().toISOString().split('T')[0]);
+    const [historyEndDate, setHistoryEndDate] = useState(() => localStorage.getItem('biometric_historyEndDate') || localStorage.getItem('biometric_historyDate') || new Date().toISOString().split('T')[0]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [serverEditedCount, setServerEditedCount] = useState(0);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter, historyStartDate, historyEndDate]);
 
     const [formData, setFormData] = useState({
         user_id: '',
         date: new Date().toISOString().split('T')[0],
         punch_in: '',
         punch_out: '',
-        status: 'Present'
+        status: 'Present',
+        actual_punch_in: '',
+        actual_punch_out: ''
     });
 
     const location = useLocation();
+
+    // Helper functions for proper data display
+    const formatTimeAMPM = (timeStr) => {
+        if (!timeStr || timeStr === '00:00' || timeStr === '00:00:00' || timeStr === '--:--' || timeStr === 'undefined') {
+            return '--:--';
+        }
+        const cleanStr = String(timeStr).trim();
+        if (cleanStr.toLowerCase().includes('am') || cleanStr.toLowerCase().includes('pm')) {
+            return cleanStr;
+        }
+        const parts = cleanStr.split(':');
+        if (parts.length < 2) return cleanStr;
+        let h = parseInt(parts[0], 10);
+        const m = parts[1].padStart(2, '0');
+        if (isNaN(h)) return cleanStr;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        if (h === 0) h = 12;
+        return `${h.toString().padStart(2, '0')}:${m} ${ampm}`;
+    };
+
+    const isTimeNonZero = (timeStr) => {
+        if (!timeStr || timeStr === '00:00' || timeStr === '00:00:00' || timeStr === '--:--' || timeStr === 'undefined') return false;
+        const parts = String(timeStr).split(':').map(Number);
+        return parts.some(n => !isNaN(n) && n > 0);
+    };
+
+    const calculateDuration = (inTime, outTime) => {
+        if (!inTime || !outTime) return null;
+        const [hIn, mIn] = inTime.split(':').map(Number);
+        const [hOut, mOut] = outTime.split(':').map(Number);
+        if (isNaN(hIn) || isNaN(mIn) || isNaN(hOut) || isNaN(mOut)) return null;
+        let diffMins = (hOut * 60 + mOut) - (hIn * 60 + mIn);
+        if (diffMins < 0) diffMins += 24 * 60; // Overnight
+        const h = Math.floor(diffMins / 60);
+        const m = diffMins % 60;
+        return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
+    };
+
+    const formatHoursDisplay = (record) => {
+        if (record.punch_in && record.punch_out && isTimeNonZero(record.total_hours)) {
+            return record.total_hours.slice(0, 5);
+        }
+        if (record.punch_in && (!record.punch_out || record.punch_out === '--:--')) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const recordDateStr = format(new Date(record.date), 'yyyy-MM-dd');
+            if (recordDateStr === todayStr) {
+                return '--:--';
+            }
+        }
+        return isTimeNonZero(record.total_hours) ? record.total_hours.slice(0, 5) : '00:00';
+    };
+
+    const getHoursSubtitle = (record) => {
+        if (record.punch_in && (!record.punch_out || record.punch_out === '--:--')) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const recordDateStr = format(new Date(record.date), 'yyyy-MM-dd');
+            return recordDateStr === todayStr ? 'In Progress' : 'Missing Out';
+        }
+        return 'Hours';
+    };
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Present':
+                return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+            case 'Absent':
+                return 'bg-rose-50 text-rose-700 border border-rose-200';
+            case 'Incomplete':
+                return 'bg-amber-50 text-amber-700 border border-amber-200';
+            case 'On Leave':
+                return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+            case 'Week Off':
+                return 'bg-purple-50 text-purple-700 border border-purple-200';
+            case 'Holiday':
+                return 'bg-teal-50 text-teal-700 border border-teal-200';
+            case 'Permission':
+                return 'bg-blue-50 text-blue-700 border border-blue-200';
+            default:
+                return 'bg-gray-100 text-gray-700 border border-gray-200';
+        }
+    };
 
     useEffect(() => {
         localStorage.setItem('biometric_syncDate', syncDate);
     }, [syncDate]);
 
     useEffect(() => {
-        localStorage.setItem('biometric_historyDate', historyDate);
-    }, [historyDate]);
+        localStorage.setItem('biometric_historyStartDate', historyStartDate);
+    }, [historyStartDate]);
+
+    useEffect(() => {
+        localStorage.setItem('biometric_historyEndDate', historyEndDate);
+    }, [historyEndDate]);
 
     useEffect(() => {
         fetchEmployees();
-        fetchAttendance();
 
         // Check for pre-fill state from navigation
         if (location.state?.editRecord) {
             const { editRecord } = location.state;
+            setEditingRecord(editRecord);
             setFormData({
                 user_id: editRecord.user_id,
                 date: editRecord.date,
                 punch_in: editRecord.punch_in || '',
                 punch_out: editRecord.punch_out || '',
-                status: editRecord.status || 'Present'
+                status: editRecord.status || 'Present',
+                actual_punch_in: editRecord.actual_punch_in || editRecord.punch_in || '',
+                actual_punch_out: editRecord.actual_punch_out || editRecord.punch_out || ''
             });
-
-            // If we have an ID, we might want to set it as editing
-            // But usually, manual edit is for creating OR updating.
-            // Let's check if a record already exists in attendanceList
         }
-    }, [location.state, historyDate]);
+    }, [location.state]);
+
+    const isRecordEdited = (record) => {
+        return Number(record?.is_edited) === 1 || record?.is_edited === true;
+    };
+
+    const editedCount = serverEditedCount;
+    const filteredAttendance = attendanceList;
 
     const fetchEmployees = async () => {
         try {
@@ -90,14 +196,40 @@ export default function BiometricManual() {
     const fetchAttendance = async () => {
         try {
             setFetching(true);
-            const res = await getAttendanceApi({ startDate: historyDate, endDate: historyDate });
-            setAttendanceList(res.data);
+            const res = await getAttendanceApi({
+                startDate: historyStartDate,
+                endDate: historyEndDate,
+                page: currentPage,
+                limit: pageSize,
+                search: searchQuery,
+                status: statusFilter
+            });
+
+            if (res.data && Array.isArray(res.data.data)) {
+                setAttendanceList(res.data.data);
+                setTotalRecords(res.data.pagination?.total ?? res.data.data.length);
+                if (typeof res.data.editedCount === 'number') {
+                    setServerEditedCount(res.data.editedCount);
+                }
+            } else if (Array.isArray(res.data)) {
+                setAttendanceList(res.data);
+                setTotalRecords(res.data.length);
+                setServerEditedCount(res.data.filter(isRecordEdited).length);
+            }
         } catch (error) {
             toast.error('Failed to fetch attendance records');
         } finally {
             setFetching(false);
         }
     };
+
+    // Refetch attendance when dates, pagination, or filters change
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchAttendance();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [historyStartDate, historyEndDate, currentPage, pageSize, statusFilter, searchQuery]);
 
     const fetchBiometric = async () => {
         try {
@@ -172,12 +304,15 @@ export default function BiometricManual() {
     };
 
     const handleEdit = (record) => {
+        setEditingRecord(record);
         setFormData({
             user_id: record.user_id,
             date: format(new Date(record.date), 'yyyy-MM-dd'),
             punch_in: record.punch_in || '',
             punch_out: record.punch_out || '',
-            status: record.status || 'Present'
+            status: record.status || 'Present',
+            actual_punch_in: record.actual_punch_in || record.punch_in || '',
+            actual_punch_out: record.actual_punch_out || record.punch_out || ''
         });
         setEditingId(record.id);
         setView('form');
@@ -227,16 +362,17 @@ export default function BiometricManual() {
 
         setLoading(true);
         try {
-            if (editingId) {
+            if (editingId && !String(editingId).startsWith('bio_') && !String(editingId).startsWith('gen_')) {
                 await updateAttendanceApi(editingId, formData);
                 toast.success('Attendance updated successfully!');
             } else {
                 await saveAttendanceApi(formData);
-                toast.success('Attendance recorded successfully!');
+                toast.success(editingId ? 'Attendance timings updated successfully!' : 'Attendance recorded successfully!');
             }
 
             fetchAttendance();
             setEditingId(null);
+            setEditingRecord(null);
             setView('list');
 
             setFormData({
@@ -244,7 +380,9 @@ export default function BiometricManual() {
                 date: new Date().toISOString().split('T')[0],
                 punch_in: '',
                 punch_out: '',
-                status: 'Present'
+                status: 'Present',
+                actual_punch_in: '',
+                actual_punch_out: ''
             });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save attendance');
@@ -266,7 +404,7 @@ export default function BiometricManual() {
     ];
 
     return (
-        <div className="min-h-screen bg-transparent md:p-4 p-3 max-w-7xl pb-6 md:pb-6">
+        <div className="min-h-screen bg-transparent md:p-4 p-3 max-w-9xl pb-6 md:pb-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:mb-8 mb-4">
                 <div className="flex items-start gap-4">
@@ -327,12 +465,22 @@ export default function BiometricManual() {
                                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                         <Edit2 size={20} />
                                     </div>
-                                    <h3 className="text-lg md:font-semibold font-semibold text-gray-900">{editingId ? 'Edit Attendance Record' : 'Record Manual Entry'}</h3>
+                                    <div>
+                                        <h3 className="text-lg md:font-semibold font-semibold text-gray-900">
+                                            {editingId ? 'Edit Attendance Record' : 'Record Manual Entry'}
+                                        </h3>
+                                        {editingId && editingRecord && (
+                                            <p className="text-xs text-gray-500 font-medium">
+                                                Editing timings for <span className="font-bold text-gray-800">{editingRecord.employee_name}</span> ({editingRecord.emp_id})
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 {editingId && (
                                     <button
                                         onClick={() => {
                                             setEditingId(null);
+                                            setEditingRecord(null);
                                             setView('list');
                                         }}
                                         className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -389,8 +537,30 @@ export default function BiometricManual() {
                                         </div>
                                     )}
 
+                                    {/* Recorded Actual Punch Info if editing */}
+                                    {editingId && (
+                                        <div className="md:col-span-2 p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 rounded-xl border border-blue-200/80 flex items-center justify-between gap-3 shadow-2xs">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
+                                                    <Clock size={16} />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
+                                                        Original Recorded Actual Punch
+                                                    </span>
+                                                    <span className="text-xs font-bold text-blue-950 font-mono">
+                                                        {formatTimeAMPM(formData.actual_punch_in || editingRecord?.actual_punch_in || editingRecord?.punch_in)} (In) → {formatTimeAMPM(formData.actual_punch_out || editingRecord?.actual_punch_out || editingRecord?.punch_out)} (Out)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                                                Original Punch
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <FormTime
-                                        label="Punch In Time"
+                                        label="Punch In Time (From)"
                                         name="punch_in"
                                         value={formData.punch_in}
                                         onChange={handleChange}
@@ -398,12 +568,46 @@ export default function BiometricManual() {
                                     />
 
                                     <FormTime
-                                        label="Punch Out Time"
+                                        label="Punch Out Time (To)"
                                         name="punch_out"
                                         value={formData.punch_out}
                                         onChange={handleChange}
                                         icon={Clock}
                                     />
+
+                                    {/* Dynamic Edited Timings Preview */}
+                                    {(formData.punch_in || formData.punch_out) && (
+                                        <div className="md:col-span-2 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold">
+                                                    <Clock size={20} />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">
+                                                        {editingId ? 'Edited Timings Dynamic Preview' : 'Entry Timings Preview'}
+                                                    </span>
+                                                    <div className="text-sm font-semibold text-gray-900 mt-0.5 space-y-0.5">
+                                                        <div>
+                                                            From <span className="text-amber-700 font-extrabold">{formatTimeAMPM(formData.punch_in)}</span> to <span className="text-amber-700 font-extrabold">{formatTimeAMPM(formData.punch_out)}</span>
+                                                            {calculateDuration(formData.punch_in, formData.punch_out) && (
+                                                                <span className="ml-2.5 px-2.5 py-0.5 text-xs rounded-full bg-white text-gray-800 font-bold border border-amber-200 shadow-xs">
+                                                                    Duration: {calculateDuration(formData.punch_in, formData.punch_out)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {editingId && (formData.actual_punch_in || editingRecord?.actual_punch_in) && (
+                                                            <div className="text-xs text-gray-500 font-medium">
+                                                                Actual Punch was: <span className="font-semibold text-gray-700">{formatTimeAMPM(formData.actual_punch_in || editingRecord?.actual_punch_in)}</span> to <span className="font-semibold text-gray-700">{formatTimeAMPM(formData.actual_punch_out || editingRecord?.actual_punch_out)}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 self-start sm:self-auto">
+                                                {editingId ? 'Manual Override' : 'New Entry'}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <FormSelect
                                         label="Attendance Status"
@@ -499,9 +703,9 @@ export default function BiometricManual() {
                                     <thead className="bg-gray-50 border-b border-gray-200">
                                         <tr>
                                             <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest">Employee Info</th>
-                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-center">In/Out Times</th>
-                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-center">Status</th>
-                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-center">Week Off</th>
+                                            <th className="px-6 py-5 text-[12px] font-semibold text-gray-600 uppercase tracking-widest text-center">In/Out Times</th>
+                                            <th className="px-6 py-5 text-[12px] font-semibold text-gray-600 uppercase tracking-widest text-center">Status</th>
+                                            <th className="px-6 py-5 text-[12px] font-semibold text-gray-600 uppercase tracking-widest text-center">Week Off</th>
                                             <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-right">Action</th>
                                         </tr>
                                     </thead>
@@ -590,11 +794,11 @@ export default function BiometricManual() {
                                             <div className="grid grid-cols-2 gap-4 mb-5">
                                                 <div className="bg-gray-50/50 md:p-3 p-2 md:rounded-2xl rounded-lg border border-gray-100">
                                                     <div className="text-[9px] font-black text-gray-400 uppercase mb-1">Punch In</div>
-                                                    <div className="text-sm font-bold text-gray-800">{log.punch_in || '--:--'}</div>
+                                                    <div className="text-sm font-semibold text-gray-800">{log.punch_in || '--:--'}</div>
                                                 </div>
                                                 <div className="bg-gray-50/50 md:p-3 p-2 md:rounded-2xl rounded-lg border border-gray-100">
                                                     <div className="text-[9px] font-black text-gray-400 uppercase mb-1">Punch Out</div>
-                                                    <div className="text-sm font-bold text-gray-800">{log.punch_out || '--:--'}</div>
+                                                    <div className="text-sm font-semibold text-gray-800">{log.punch_out || '--:--'}</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center justify-between pt-2 border-t border-gray-50">
@@ -627,63 +831,189 @@ export default function BiometricManual() {
                         exit="exit"
                     >
                         <div className="bg-white border border-gray-200 rounded-[15px] overflow-hidden shadow-sm">
-                            <div className="py-4 px-6 bg-gray-50/50 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                            {/* Header Section: Title & Date Range Controls */}
+                            <div className="p-4 sm:px-6 bg-white border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                        <List size={20} />
+                                    <div className="p-2.5 bg-primary/10 rounded-xl text-primary shrink-0">
+                                        <List size={22} />
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-900">Attendance History</h3>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-lg font-semibold text-gray-900 leading-tight">Attendance History</h3>
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                                {totalRecords} {totalRecords === 1 ? 'record' : 'records'}
+                                            </span>
+                                            {statusFilter === 'Edited' && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                    Edited Only
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-400 font-medium mt-0.5">
+                                            Daily biometric punches and manual attendance tracking
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="w-full md:w-72 flex items-center gap-2">
-                                    <FormDate
-                                        label="Select Date"
-                                        name="historyDate"
-                                        value={historyDate}
-                                        onChange={(e) => setHistoryDate(e.target.value)}
-                                        icon={Calendar}
-                                    />
+
+                                {/* Date Range and Actions */}
+                                <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+                                    <div className="w-36 sm:w-40">
+                                        <FormDate
+                                            name="historyStartDate"
+                                            value={historyStartDate}
+                                            onChange={(e) => setHistoryStartDate(e.target.value)}
+                                            placeholderText="From Date"
+                                            className="!space-y-0"
+                                        />
+                                    </div>
+
+                                    <div className="w-36 sm:w-40">
+                                        <FormDate
+                                            name="historyEndDate"
+                                            value={historyEndDate}
+                                            onChange={(e) => setHistoryEndDate(e.target.value)}
+                                            placeholderText="To Date"
+                                            className="!space-y-0"
+                                        />
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            const today = new Date().toISOString().split('T')[0];
+                                            setHistoryStartDate(today);
+                                            setHistoryEndDate(today);
+                                        }}
+                                        className={`h-9 px-4 text-xs font-medium rounded-lg border transition-all ${historyStartDate === new Date().toISOString().split('T')[0] && historyEndDate === new Date().toISOString().split('T')[0]
+                                            ? 'bg-primary text-white border-primary shadow-xs'
+                                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        Today
+                                    </button>
+
                                     <button
                                         onClick={fetchAttendance}
-                                        className="mt-6 p-2.5 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-primary hover:border-primary transition-all active:scale-95 shadow-sm"
-                                        title="Refresh"
+                                        className="h-11 w-11 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-primary hover:border-primary transition-all active:scale-95 shadow-xs"
+                                        title="Refresh Attendance"
                                     >
-                                        <RefreshCw size={18} className={fetching ? 'animate-spin' : ''} />
+                                        <RefreshCw size={18} className={fetching ? 'animate-spin text-primary' : ''} />
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Sub-toolbar: Search & Filters */}
+                            <div className="px-4 sm:px-6 py-3 bg-gray-50/70 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+                                    {/* Common Search Field */}
+                                    <div className="w-full sm:w-72">
+                                        <FormInput
+                                            placeholder="Search employee, ID, shift..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            icon={Search}
+                                            className="!space-y-0"
+                                        />
+                                    </div>
+
+                                    {/* Common Select Field */}
+                                    <div className="w-full sm:w-44">
+                                        <FormSelect
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            options={[
+                                                { value: 'All', label: 'All Statuses' },
+                                                { value: 'Present', label: 'Present' },
+                                                { value: 'Absent', label: 'Absent' },
+                                                { value: 'On Leave', label: 'On Leave' },
+                                                { value: 'Week Off', label: 'Week Off' },
+                                                { value: 'Holiday', label: 'Holiday' },
+                                                { value: 'Incomplete', label: 'Incomplete' },
+                                                { value: 'Edited', label: `Edited (${editedCount})` }
+                                            ]}
+                                            placeholder=""
+                                            className="!space-y-0"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Filter Pills */}
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStatusFilter('All')}
+                                        className={`h-9 px-3 rounded-lg text-xs font-semibold border transition-all ${statusFilter === 'All'
+                                            ? 'bg-white text-gray-900 border-gray-300'
+                                            : 'bg-transparent text-gray-500 border-transparent hover:text-gray-800 hover:bg-gray-100/80'
+                                            }`}
+                                    >
+                                        All Statuses
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setStatusFilter(prev => prev === 'Edited' ? 'All' : 'Edited')}
+                                        className={`h-9 px-3.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs ${statusFilter === 'Edited'
+                                            ? 'bg-amber-500 text-white border-amber-500 ring-2 ring-amber-200 shadow-amber-200/50'
+                                            : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50/70 hover:text-amber-700 hover:border-amber-300'
+                                            }`}
+                                        title={statusFilter === 'Edited' ? "Clear Edited filter (show all)" : "Click to view only edited employees"}
+                                    >
+                                        <Edit2 size={13} className={statusFilter === 'Edited' ? 'text-white' : 'text-amber-500'} />
+                                        <span>Edited</span>
+                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${statusFilter === 'Edited'
+                                            ? 'bg-white/25 text-white'
+                                            : 'bg-amber-100 text-amber-700'
+                                            }`}>
+                                            {editedCount}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Desktop Table View */}
                             <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-50 border-b border-gray-200">
                                         <tr>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest">Employee</th>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest">Date</th>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest text-center">Punch Time</th>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest text-center">Performance</th>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest text-right">Hours</th>
-                                            <th className="px-6 py-5 text-[13px] font-semibold text-gray-600 uppercase tracking-widest text-right">Actions</th>
+                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest">Employee</th>
+                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest">Date</th>
+                                            <th className="px-6 py-5 text-[12px] font-semibold text-gray-600 uppercase tracking-widest text-center">Punch Time (From - To)</th>
+                                            <th className="px-6 py-5 text-[12px] font-semibold text-gray-600 uppercase tracking-widest text-center">Status & Performance</th>
+                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-right">Hours</th>
+                                            <th className="px-6 py-5 text-[12px] font-bold text-gray-600 uppercase tracking-widest text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50/80">
                                         {fetching ? (
                                             <TableSkeleton rows={10} columns={6} />
-                                        ) : attendanceList.length === 0 ? (
+                                        ) : filteredAttendance.length === 0 ? (
                                             <tr>
                                                 <td colSpan="6">
-                                                    <EmptyState icon={User} title="History is empty" description="Attendance records will appear here once saved." />
+                                                    <EmptyState
+                                                        icon={Search}
+                                                        title={statusFilter === 'Edited' ? "No edited records found" : "No matching records found"}
+                                                        description={
+                                                            statusFilter === 'Edited'
+                                                                ? "No attendance records have been manually edited in this date range."
+                                                                : searchQuery
+                                                                    ? `No attendance records match "${searchQuery}".`
+                                                                    : "Try selecting a different date range."
+                                                        }
+                                                    />
                                                 </td>
                                             </tr>
                                         ) : (
-                                            attendanceList.map((record) => (
-                                                <tr key={record.id} className={`hover:bg-gray-50/30 transition-colors group ${record.is_edited === 1 ? 'bg-amber-50/20' : ''}`}>
+                                            filteredAttendance.map((record) => (
+                                                <tr key={record.id} className={`hover:bg-gray-50/40 transition-colors group ${isRecordEdited(record) ? 'bg-amber-50/20' : ''}`}>
                                                     <td className="px-6 py-4">
                                                         <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{record.employee_name}</div>
-                                                        <div className="text-[11px] mt-0.5 text-gray-400 flex items-center gap-2 font-medium uppercase tracking-tighter">
-                                                            {record.emp_id}
+                                                        <div className="text-[11px] mt-0.5 text-gray-400 flex flex-wrap items-center gap-1.5 font-medium uppercase tracking-tight">
+                                                            <span>{record.emp_id}</span>
                                                             {record.is_biometric && (
-                                                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-500 font-semibold text-[9px] ring-1 ring-blue-100">BIOMETRIC</span>
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 font-semibold text-[9px] ring-1 ring-blue-100">BIOMETRIC</span>
                                                             )}
-                                                            {record.is_edited === 1 && (
-                                                                <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 font-semibold text-[9px] ring-1 ring-amber-100 tracking-wider">EDITED</span>
+                                                            {isRecordEdited(record) && (
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-bold text-[9px] ring-1 ring-amber-200 tracking-wider">EDITED</span>
                                                             )}
                                                         </div>
                                                     </td>
@@ -691,74 +1021,127 @@ export default function BiometricManual() {
                                                         <div className="text-sm font-semibold text-gray-700 whitespace-nowrap">
                                                             {format(new Date(record.date), 'dd MMM, yyyy')}
                                                         </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center justify-center gap-3">
-                                                            <div className="text-center">
-                                                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">In</div>
-                                                                <div className="text-sm font-semibold text-gray-800">{record.punch_in || '--:--'}</div>
-                                                            </div>
-                                                            <div className="h-4 w-[1px] bg-gray-200"></div>
-                                                            <div className="text-center">
-                                                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Out</div>
-                                                                <div className="text-sm font-semibold text-gray-800">{record.punch_out || '--:--'}</div>
-                                                            </div>
+                                                        <div className="text-[11px] text-gray-400 font-medium">
+                                                            {format(new Date(record.date), 'EEEE')}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="flex flex-wrap justify-center gap-1.5">
-                                                            {record.permissions && record.permissions.length > 0 && record.permissions.map((p, pIdx) => (
-                                                                <span key={pIdx} className="px-2 py-0.5 rounded-md text-[9px] font-black bg-blue-50 text-blue-600 ring-1 ring-blue-100 whitespace-nowrap">
-                                                                    PERMISSION: {p.start_time.slice(0, 5)} - {p.end_time.slice(0, 5)}
-                                                                </span>
-                                                            ))}
-                                                            {(record.late_punch_in && record.late_punch_in !== '00:00' && record.late_punch_in !== 'undefined') ? (
-                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-rose-50 text-rose-600 ring-1 ring-rose-100 whitespace-nowrap">
-                                                                    LATE IN: {record.late_punch_in}
-                                                                </span>
-                                                            ) : record.punch_in ? (
-                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 whitespace-nowrap text-center">
-                                                                    ON TIME
-                                                                </span>
-                                                            ) : record.status === 'Permission' ? (
-                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-blue-50 text-blue-600 ring-1 ring-blue-100 whitespace-nowrap text-center">
-                                                                    PERMISSION ONLY
-                                                                </span>
-                                                            ) : (
-                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 whitespace-nowrap text-center">
-                                                                    ON TIME
-                                                                </span>
-                                                            )}
-                                                            {(record.early_punch_out && record.early_punch_out !== '00:00' && record.early_punch_out !== 'undefined') && (
-                                                                <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-orange-50 text-orange-600 ring-1 ring-orange-100 whitespace-nowrap">
-                                                                    EARLY OUT
-                                                                </span>
-                                                            )}
+                                                        {isRecordEdited(record) ? (
+                                                            <div className="flex flex-col items-stretch min-w-[215px] max-w-[240px] mx-auto bg-white rounded-xl border border-amber-200/90 shadow-2xs overflow-hidden">
+                                                                {/* Edited Timings Row */}
+                                                                <div className="px-2.5 py-1.5 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-50/90 flex items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800">
+                                                                            Edited
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 font-mono tracking-tight">
+                                                                        <span className="text-amber-950 font-black">{formatTimeAMPM(record.punch_in)}</span>
+                                                                        <span className="text-amber-400 font-normal text-[10px]">→</span>
+                                                                        <span className="text-amber-950 font-black">{formatTimeAMPM(record.punch_out)}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Actual Biometric / Initial Punch Row */}
+                                                                <div className="px-2.5 py-1.5 bg-gray-50/80 border-t border-amber-100/80 flex items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">
+                                                                            Actual
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 font-mono">
+                                                                        <span className={record.actual_punch_in && record.actual_punch_in !== record.punch_in ? 'text-gray-700 font-bold underline decoration-rose-300 decoration-1 underline-offset-2' : ''}>
+                                                                            {formatTimeAMPM(record.actual_punch_in || record.punch_in)}
+                                                                        </span>
+                                                                        <span className="text-gray-300 text-[10px]">→</span>
+                                                                        <span className={record.actual_punch_out && record.actual_punch_out !== record.punch_out ? 'text-gray-700 font-bold underline decoration-rose-300 decoration-1 underline-offset-2' : ''}>
+                                                                            {formatTimeAMPM(record.actual_punch_out || record.punch_out)}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <div className="flex items-center justify-center gap-3">
+                                                                    <div className="text-center min-w-[55px]">
+                                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">From (In)</div>
+                                                                        <div className={`text-sm font-semibold ${record.punch_in ? 'text-gray-800' : 'text-gray-400'}`}>
+                                                                            {formatTimeAMPM(record.punch_in)}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="h-5 w-[1px] bg-gray-200"></div>
+                                                                    <div className="text-center min-w-[55px]">
+                                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">To (Out)</div>
+                                                                        <div className={`text-sm font-semibold ${record.punch_out ? 'text-gray-800' : 'text-gray-400'}`}>
+                                                                            {formatTimeAMPM(record.punch_out)}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${getStatusStyle(record.status)}`}>
+                                                                {record.status || (record.punch_in ? 'Present' : 'Absent')}
+                                                            </span>
+
+                                                            <div className="flex flex-wrap justify-center items-center gap-1 mt-0.5">
+                                                                {record.permissions && record.permissions.length > 0 && record.permissions.map((p, pIdx) => (
+                                                                    <span key={pIdx} className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-600 ring-1 ring-blue-100 whitespace-nowrap">
+                                                                        PERMISSION: {p.start_time.slice(0, 5)} - {p.end_time.slice(0, 5)}
+                                                                    </span>
+                                                                ))}
+
+                                                                {isTimeNonZero(record.late_punch_in) && (
+                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-rose-50 text-rose-600 ring-1 ring-rose-200 whitespace-nowrap">
+                                                                        LATE IN: {record.late_punch_in.slice(0, 5)}
+                                                                    </span>
+                                                                )}
+
+                                                                {isTimeNonZero(record.early_punch_out) && (
+                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-orange-50 text-orange-600 ring-1 ring-orange-200 whitespace-nowrap">
+                                                                        EARLY OUT: {record.early_punch_out.slice(0, 5)}
+                                                                    </span>
+                                                                )}
+
+                                                                {record.punch_in && !isTimeNonZero(record.late_punch_in) && (record.status === 'Present' || !record.status) && (
+                                                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 whitespace-nowrap text-center">
+                                                                        ON TIME
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="text-sm font-semibold text-gray-900 tabular-nums">
-                                                            {record.total_hours}
+                                                            {formatHoursDisplay(record)}
                                                         </div>
-                                                        <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter">Hours</div>
+                                                        <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter">
+                                                            {getHoursSubtitle(record)}
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        {!record.is_biometric && (
-                                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={() => handleEdit(record)}
-                                                                    className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
-                                                                >
-                                                                    <Edit2 size={16} />
-                                                                </button>
+                                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => handleEdit(record)}
+                                                                className="p-2 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                                                                title="Edit attendance timings"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            {!String(record.id).startsWith('bio_') && !String(record.id).startsWith('gen_') && (
                                                                 <button
                                                                     onClick={() => handleDeleteClick(record.id)}
                                                                     className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                                                    title="Delete record"
                                                                 >
                                                                     <Trash2 size={16} />
                                                                 </button>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -767,78 +1150,141 @@ export default function BiometricManual() {
                                 </table>
                             </div>
 
+                            {/* Mobile View */}
                             <div className="md:hidden divide-y divide-gray-50">
                                 {fetching ? (
                                     <ListSkeleton count={5} />
-                                ) : attendanceList.length === 0 ? (
-                                    <EmptyState icon={User} title="History is empty" description="Attendance records will appear here once saved." />
+                                ) : filteredAttendance.length === 0 ? (
+                                    <EmptyState
+                                        icon={Search}
+                                        title={statusFilter === 'Edited' ? "No edited records found" : "No matching records found"}
+                                        description={
+                                            statusFilter === 'Edited'
+                                                ? "No attendance records have been manually edited in this date range."
+                                                : searchQuery
+                                                    ? `No attendance records match "${searchQuery}".`
+                                                    : "Try selecting a different date range."
+                                        }
+                                    />
                                 ) : (
-                                    attendanceList.map((record) => (
-                                        <div key={record.id} className="p-5 active:bg-gray-50 transition-colors">
-                                            <div className="flex justify-between items-start mb-4">
+                                    filteredAttendance.map((record) => (
+                                        <div key={record.id} className="p-4 active:bg-gray-50 transition-colors">
+                                            <div className="flex justify-between items-start mb-3">
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900 leading-none">{record.employee_name}</h4>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{format(new Date(record.date), 'dd MMM yyyy')}</p>
-                                                        {record.is_edited === 1 && (
-                                                            <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 font-black text-[8px] ring-1 ring-amber-100">EDITED</span>
+                                                    <h4 className="font-bold text-gray-900 text-sm leading-tight">{record.employee_name}</h4>
+                                                    <div className="flex items-center gap-1.5 mt-1">
+                                                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{record.emp_id}</span>
+                                                        <span className="text-gray-300">•</span>
+                                                        <span className="text-[10px] text-gray-500 font-semibold">{format(new Date(record.date), 'dd MMM yyyy')}</span>
+                                                        {isRecordEdited(record) && (
+                                                            <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-bold text-[8px] ring-1 ring-amber-200">EDITED</span>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <div className="text-lg font-black text-primary leading-none">{record.total_hours}</div>
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Total Hrs</span>
-                                                </div>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusStyle(record.status)}`}>
+                                                    {record.status || (record.punch_in ? 'Present' : 'Absent')}
+                                                </span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                                                    <div className="text-[9px] font-black text-gray-400 uppercase mb-1">In</div>
-                                                    <div className="text-sm font-bold text-gray-800">{record.punch_in || '--:--'}</div>
+
+                                            {isRecordEdited(record) ? (
+                                                <div className="mb-3 rounded-xl border border-amber-200/90 bg-amber-50/30 p-2.5 space-y-2">
+                                                    <div className="flex items-center justify-between text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                                                        <span className="flex items-center gap-1.5">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                            Punch Timings Comparison
+                                                        </span>
+                                                        <span className="text-[9px] bg-amber-100/90 text-amber-800 px-2 py-0.5 rounded-md font-bold">MANUAL OVERRIDE</span>
+                                                    </div>
+
+                                                    {/* Edited */}
+                                                    <div className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-amber-200/90 shadow-2xs">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white tracking-wider">EDITED</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 font-mono">
+                                                            <span className="text-amber-950 font-extrabold">{formatTimeAMPM(record.punch_in)}</span>
+                                                            <span className="text-amber-400">→</span>
+                                                            <span className="text-amber-950 font-extrabold">{formatTimeAMPM(record.punch_out)}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Actual */}
+                                                    <div className="flex items-center justify-between bg-gray-50/90 p-2 rounded-lg border border-gray-200/80">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 tracking-wider">ACTUAL</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 font-mono">
+                                                            <span className={record.actual_punch_in && record.actual_punch_in !== record.punch_in ? 'text-gray-700 font-bold underline decoration-rose-300 decoration-1' : ''}>
+                                                                {formatTimeAMPM(record.actual_punch_in || record.punch_in)}
+                                                            </span>
+                                                            <span className="text-gray-300">→</span>
+                                                            <span className={record.actual_punch_out && record.actual_punch_out !== record.punch_out ? 'text-gray-700 font-bold underline decoration-rose-300 decoration-1' : ''}>
+                                                                {formatTimeAMPM(record.actual_punch_out || record.punch_out)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                                                    <div className="text-[9px] font-black text-gray-400 uppercase mb-1">Out</div>
-                                                    <div className="text-sm font-bold text-gray-800">{record.punch_out || '--:--'}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 mb-5">
-                                                {record.permissions && record.permissions.length > 0 && record.permissions.map((p, pIdx) => (
-                                                    <span key={pIdx} className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-                                                        PERMISSION: {p.start_time.slice(0, 5)} - {p.end_time.slice(0, 5)}
-                                                    </span>
-                                                ))}
-                                                {(record.late_punch_in && record.late_punch_in !== '00:00') ? (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-rose-50 text-rose-600 ring-1 ring-rose-100">LATE: {record.late_punch_in}</span>
-                                                ) : record.punch_in ? (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 uppercase tracking-tighter">On Time In</span>
-                                                ) : record.status === 'Permission' ? (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-blue-50 text-blue-600 ring-1 ring-blue-100 uppercase tracking-tighter">Permission Only</span>
-                                                ) : (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 uppercase tracking-tighter">On Time In</span>
-                                                )}
-                                                {(record.early_punch_out && record.early_punch_out !== '00:00') && (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[9px] font-black bg-orange-50 text-orange-600 ring-1 ring-orange-100">EARLY OUT</span>
-                                                )}
-                                            </div>
-                                            {!record.is_biometric && (
-                                                <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                                    <button
-                                                        onClick={() => handleEdit(record)}
-                                                        className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100 active:scale-95 transition-all"
-                                                    >
-                                                        <Edit2 size={16} /> Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(record.id)}
-                                                        className="px-4 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold flex items-center justify-center hover:bg-rose-100 active:scale-95 transition-all"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
+                                            ) : (
+                                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                                    <div className="bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
+                                                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tight mb-0.5">From (Punch In)</div>
+                                                        <div className="text-sm font-semibold text-gray-800">{formatTimeAMPM(record.punch_in)}</div>
+                                                    </div>
+                                                    <div className="bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
+                                                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tight mb-0.5">To (Punch Out)</div>
+                                                        <div className="text-sm font-semibold text-gray-800">{formatTimeAMPM(record.punch_out)}</div>
+                                                    </div>
                                                 </div>
                                             )}
+
+                                            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-50">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {isTimeNonZero(record.late_punch_in) && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-rose-600 ring-1 ring-rose-200">
+                                                            LATE: {record.late_punch_in.slice(0, 5)}
+                                                        </span>
+                                                    )}
+                                                    {record.punch_in && !isTimeNonZero(record.late_punch_in) && (record.status === 'Present' || !record.status) && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
+                                                            ON TIME
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-right mr-2">
+                                                        <span className="text-sm font-semibold text-gray-900">{formatHoursDisplay(record)}</span>
+                                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">{getHoursSubtitle(record)}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleEdit(record)}
+                                                        className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg font-bold text-xs flex items-center gap-1 transition-all"
+                                                    >
+                                                        <Edit2 size={13} /> Edit
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
                                 )}
                             </div>
+
+                            {/* Pagination via API */}
+                            {!fetching && totalRecords > 0 && (
+                                <Pagination
+                                    current={currentPage}
+                                    pageSize={pageSize}
+                                    total={totalRecords}
+                                    onChange={(p) => setCurrentPage(p)}
+                                    onPageSizeChange={(s) => {
+                                        setPageSize(s);
+                                        setCurrentPage(1);
+                                    }}
+                                    pageSizeOptions={[20, 40, 60, 80, 100]}
+                                    showingCount={filteredAttendance.length}
+                                    entityName="records"
+                                />
+                            )}
                         </div>
                     </motion.div>
                 )}

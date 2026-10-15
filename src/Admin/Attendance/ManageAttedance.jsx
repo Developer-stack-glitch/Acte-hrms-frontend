@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Search,
     ChevronLeft,
@@ -23,7 +23,6 @@ import toast from 'react-hot-toast';
 import UserFilter from '../User/UserFilter';
 import AttendanceSkeleton from '../../Common/CommonSkeletonLoader/AttendanceSkeleton';
 import NoData from '../../Common/NoData';
-import FullPageLoader from '../../Common/FullPageLoader';
 
 const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor, showInfo, delay = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -107,8 +106,12 @@ const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor,
 
 export default function ManageAttedance() {
     const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('attendance_searchTerm') || '');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState(() => localStorage.getItem('attendance_searchTerm') || '');
     const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [overallStats, setOverallStats] = useState(null);
+    const [overallTotalEmployees, setOverallTotalEmployees] = useState(0);
+    const fetchIdRef = useRef(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [totalEmployees, setTotalEmployees] = useState(0);
@@ -224,6 +227,7 @@ export default function ManageAttedance() {
     }, [fromDate, toDate, filters, currentPage, pageSize, debouncedSearch]);
 
     const fetchData = async () => {
+        const fetchId = ++fetchIdRef.current;
         try {
             setLoading(true);
             const fetchStart = prevRange ? prevRange.start : fromDate;
@@ -250,6 +254,8 @@ export default function ManageAttedance() {
                 getCompanyWeekOffsApi()
             ]);
 
+            if (fetchId !== fetchIdRef.current) return;
+
             let lvs = leavesRes.data.leaves || [];
             let atts = attendanceRes.data || [];
             let wos = weekoffsRes.data || [];
@@ -262,6 +268,9 @@ export default function ManageAttedance() {
 
             setEmployees(emps);
             setTotalEmployees(total);
+            if (!debouncedSearch) {
+                setOverallTotalEmployees(total);
+            }
             setLeaves(lvs);
             setWeekOffs(wos);
             setCompanyWeekOffs(cwo);
@@ -275,10 +284,15 @@ export default function ManageAttedance() {
             setHolidays(holidaysRes.data || []);
 
         } catch (error) {
-            console.error('Error fetching data:', error);
-            toast.error('Sync failed. Please check connection.');
+            if (fetchId === fetchIdRef.current) {
+                console.error('Error fetching data:', error);
+                toast.error('Sync failed. Please check connection.');
+            }
         } finally {
-            setLoading(false);
+            if (fetchId === fetchIdRef.current) {
+                setLoading(false);
+                setInitialLoading(false);
+            }
         }
     };
 
@@ -568,20 +582,32 @@ export default function ManageAttedance() {
         };
     }, [employees, daysInRange, attendanceMap]);
 
-    if (loading && employees.length === 0) {
+    useEffect(() => {
+        if (!debouncedSearch && stats && stats.range) {
+            setOverallStats(stats);
+        }
+    }, [debouncedSearch, stats]);
+
+    const displayedStats = (debouncedSearch && overallStats) ? overallStats : stats;
+    const displayedTotalEmployees = (debouncedSearch && overallTotalEmployees) ? overallTotalEmployees : totalEmployees;
+
+    if (initialLoading && employees.length === 0) {
         return <AttendanceSkeleton />;
     }
 
     return (
         <div className="flex flex-col md:gap-8 gap-4 p-3 bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] min-h-screen">
-            <FullPageLoader isLoading={loading && employees.length > 0} message="Syncing Attendance..." />
             {/* Action Bar */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div className="w-full lg:flex-1 flex items-center gap-2">
                     {userRole !== 'employee' && (
                         <div className="relative flex-1 flex items-center bg-white rounded-[20px] shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-gray-100 p-1 transition-all focus-within:shadow-[0_8px_30px_rgb(0,0,0,0.04)] focus-within:border-primary focus:ring-4 focus:ring-primary/5 h-9 md:h-10 border border-gray-200">
-                            <div className="pl-4 text-gray-400 group-focus-within:text-primary transition-colors">
-                                <Search size={16} className="md:w-[18px]" />
+                            <div className="pl-4 text-gray-400 group-focus-within:text-primary transition-colors flex items-center justify-center">
+                                {(loading || searchTerm !== debouncedSearch) ? (
+                                    <RefreshCcw size={15} className="animate-spin text-primary" />
+                                ) : (
+                                    <Search size={16} className="md:w-[18px]" />
+                                )}
                             </div>
                             <input
                                 type="text"
@@ -590,6 +616,19 @@ export default function ManageAttedance() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearchTerm('');
+                                        setDebouncedSearch('');
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-gray-600 rounded-full transition-colors mr-1"
+                                    title="Clear search"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsFilterDrawerOpen(true)}
                                 className={`flex items-center gap-2 px-3 h-7 md:h-8 rounded-full font-bold text-[11px] transition-all uppercase tracking-wide mr-1 ${Object.keys(filters).some(key => filters[key]?.length > 0)
@@ -708,54 +747,54 @@ export default function ManageAttedance() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 <StatCard
                     title={userRole === 'employee' ? "My Attendance" : "Total Employees"}
-                    value={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status || '---') : totalEmployees}
-                    todayCount={userRole === 'employee' ? (attendanceMap[`${userId}_${format(new Date(), 'yyyy-MM-dd')}`] ? 1 : 0) : totalEmployees}
+                    value={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status || '---') : displayedTotalEmployees}
+                    todayCount={userRole === 'employee' ? (attendanceMap[`${userId}_${format(new Date(), 'yyyy-MM-dd')}`] ? 1 : 0) : displayedTotalEmployees}
                     textColor={userRole === 'employee' ? (getStatusForDay(userId, new Date())?.status === 'Absent' ? 'text-rose-500' : 'text-emerald-500') : 'text-gray-800'}
                     delay={0.05}
                 />
                 <StatCard
                     title="On Time"
-                    value={`${stats.range.onTime} %`}
-                    percentage={stats.comparison.onTime}
-                    isPositive={parseFloat(stats.comparison.onTime) >= 0}
-                    todayCount={stats.today.onTime}
+                    value={`${displayedStats.range.onTime} %`}
+                    percentage={displayedStats.comparison.onTime}
+                    isPositive={parseFloat(displayedStats.comparison.onTime) >= 0}
+                    todayCount={displayedStats.today.onTime}
                     textColor="text-emerald-500"
                     delay={0.1}
                 />
                 <StatCard
                     title="Late Login"
-                    value={`${stats.range.late} %`}
-                    percentage={stats.comparison.late}
-                    isPositive={parseFloat(stats.comparison.late) <= 0}
-                    todayCount={stats.today.late}
+                    value={`${displayedStats.range.late} %`}
+                    percentage={displayedStats.comparison.late}
+                    isPositive={parseFloat(displayedStats.comparison.late) <= 0}
+                    todayCount={displayedStats.today.late}
                     textColor="text-amber-500"
                     delay={0.15}
                 />
                 <StatCard
                     title="Casual Leave"
-                    value={`${stats.range.leave} %`}
-                    percentage={stats.comparison.leave}
+                    value={`${displayedStats.range.leave} %`}
+                    percentage={displayedStats.comparison.leave}
                     isPositive={true}
-                    todayCount={stats.today.leave}
+                    todayCount={displayedStats.today.leave}
                     textColor="text-indigo-500"
                     showInfo={true}
                     delay={0.2}
                 />
                 <StatCard
                     title="Absent"
-                    value={`${stats.range.absent} %`}
-                    percentage={stats.comparison.absent}
-                    isPositive={parseFloat(stats.comparison.absent) <= 0}
-                    todayCount={stats.today.absent}
+                    value={`${displayedStats.range.absent} %`}
+                    percentage={displayedStats.comparison.absent}
+                    isPositive={parseFloat(displayedStats.comparison.absent) <= 0}
+                    todayCount={displayedStats.today.absent}
                     textColor="text-rose-500"
                     delay={0.25}
                 />
                 <StatCard
                     title="Early Logout"
-                    value={`${stats.range.early} %`}
-                    percentage={stats.comparison.early}
-                    isPositive={parseFloat(stats.comparison.early) <= 0}
-                    todayCount={stats.today.early}
+                    value={`${displayedStats.range.early} %`}
+                    percentage={displayedStats.comparison.early}
+                    isPositive={parseFloat(displayedStats.comparison.early) <= 0}
+                    todayCount={displayedStats.today.early}
                     textColor="text-fuchsia-500"
                     delay={0.3}
                 />
@@ -765,8 +804,19 @@ export default function ManageAttedance() {
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white md:rounded-[15px] rounded-[15px] border border-gray-200 overflow-hidden flex flex-col"
+                className="bg-white md:rounded-[15px] rounded-[15px] border border-gray-200 overflow-hidden flex flex-col relative"
             >
+                {/* Subtle top progress bar when table updates */}
+                {loading && !initialLoading && (
+                    <div className="w-full h-[2px] bg-primary/10 overflow-hidden absolute top-0 left-0 right-0 z-20">
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            className="h-full bg-primary w-1/3"
+                        />
+                    </div>
+                )}
                 {/* Grid Header */}
                 <div className="md:px-6 md:py-5 px-3 py-3 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between md:gap-4 gap-2 bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-3 w-full md:w-auto">
@@ -848,15 +898,32 @@ export default function ManageAttedance() {
                 </div>
 
                 {/* The Dynamic Table */}
-                <div className="overflow-x-auto relative custom-scrollbar pb-2">
-                    {employees.length === 0 ? (
-                        <div className="bg-white rounded-xl border border-gray-100 p-8">
-                            <NoData
-                                icon={Search}
-                                title="No employee found"
-                                description="Try adjusting your search or filters to find what you're looking for."
-                            />
+                <div className="overflow-x-auto relative custom-scrollbar pb-2 min-h-[300px]">
+                    {/* Localized loading overlay on the table while fetching updates */}
+                    {loading && !initialLoading && employees.length > 0 && (
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-20 pointer-events-none transition-all">
+                            <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-full shadow-lg border border-gray-100 text-gray-700 text-[12px] font-semibold">
+                                <RefreshCcw size={14} className="animate-spin text-primary" />
+                                <span>Updating attendance table...</span>
+                            </div>
                         </div>
+                    )}
+
+                    {employees.length === 0 ? (
+                        loading ? (
+                            <div className="bg-white rounded-xl border border-gray-100 p-12 flex flex-col items-center justify-center gap-3">
+                                <RefreshCcw size={24} className="animate-spin text-primary" />
+                                <span className="text-[13px] font-medium text-gray-500">Searching employee attendance records...</span>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-xl border border-gray-100 p-8">
+                                <NoData
+                                    icon={Search}
+                                    title="No employee found"
+                                    description="Try adjusting your search or filters to find what you're looking for."
+                                />
+                            </div>
+                        )
                     ) : (
                         <table className="w-full border-collapse border-spacing-0">
                             <thead>

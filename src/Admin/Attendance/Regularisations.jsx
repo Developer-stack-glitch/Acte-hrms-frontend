@@ -13,6 +13,8 @@ import DataTable from '../../Common/DataTable';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import Tooltip from '../../Common/Tooltip';
 import { useNotifications } from '../../utils/NotificationContext';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [reason, setReason] = useState('');
@@ -117,8 +119,16 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
                             <p className="text-[13px] font-semibold text-gray-700">{format(parseISO(request.date), 'MMM dd, yyyy')}</p>
                         </div>
                         <div>
-                            <span className="text-[11px] font-bold text-gray-400 uppercase">Shift Time</span>
-                            <p className="text-[13px] font-semibold text-gray-700">{request.check_in?.substring(0, 5)} - {request.check_out?.substring(0, 5)}</p>
+                            <span className="text-[11px] font-bold text-gray-400 uppercase">Correction Time</span>
+                            <p className="text-[13px] font-semibold text-gray-700">
+                                {request.check_in && request.check_out
+                                    ? `${request.check_in.substring(0, 5)} - ${request.check_out.substring(0, 5)}`
+                                    : request.check_in
+                                        ? `In: ${request.check_in.substring(0, 5)} (Punch In Only)`
+                                        : request.check_out
+                                            ? `Out: ${request.check_out.substring(0, 5)} (Punch Out Only)`
+                                            : '--'}
+                            </p>
                         </div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -142,6 +152,8 @@ const Regularisations = () => {
     const [requests, setRequests] = useState([]);
     const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('regularisations_searchTerm') || '');
     const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('regularisations_statusFilter') || 'All');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const [requestToReject, setRequestToReject] = useState(null);
@@ -171,9 +183,9 @@ const Regularisations = () => {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchRequests();
-        }, 500); // debounce search
+        }, 400); // debounce search & date filters
         return () => clearTimeout(timeoutId);
-    }, [refreshKey, statusFilter, page, pageSize, searchTerm, contextRefreshKey]);
+    }, [refreshKey, statusFilter, page, pageSize, searchTerm, startDate, endDate, contextRefreshKey]);
 
     const fetchRequests = async () => {
         try {
@@ -183,11 +195,17 @@ const Regularisations = () => {
                 limit: pageSize,
                 search: searchTerm,
                 ...(statusFilter !== 'All' ? { status: statusFilter } : {}),
+                ...(startDate ? { startDate } : {}),
+                ...(endDate ? { endDate } : {}),
                 ...(userRole !== 'admin' && userRole !== 'superadmin' ? { reporting_manager: userId, personal_user_id: userId } : {})
+            };
+            const countParams = {
+                ...(startDate ? { startDate } : {}),
+                ...(endDate ? { endDate } : {}),
             };
             const [res, countsRes] = await Promise.all([
                 getRegularisationsApi(params),
-                getRegularisationCountsApi()
+                getRegularisationCountsApi(countParams)
             ]);
             setRequests(res.data?.data || res.data || []);
             setTotalRequests(res.data?.total || res.data?.length || 0);
@@ -296,9 +314,23 @@ const Regularisations = () => {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 text-[13px] font-bold text-gray-700">
                             <Clock size={14} className="text-primary/60" />
-                            {row.check_in?.substring(0, 5)} - {row.check_out?.substring(0, 5)}
+                            {row.check_in && row.check_out ? (
+                                `${row.check_in.substring(0, 5)} - ${row.check_out.substring(0, 5)}`
+                            ) : row.check_in ? (
+                                <span className="text-emerald-700 font-semibold">In: {row.check_in.substring(0, 5)}</span>
+                            ) : row.check_out ? (
+                                <span className="text-orange-700 font-semibold">Out: {row.check_out.substring(0, 5)}</span>
+                            ) : (
+                                '--'
+                            )}
                         </div>
-                        <span className="text-[11px] text-gray-400 font-medium">Punch In/Out Update</span>
+                        <span className="text-[11px] text-gray-400 font-medium">
+                            {row.check_in && row.check_out
+                                ? 'Punch In & Out'
+                                : row.check_in
+                                    ? 'Punch In Only'
+                                    : 'Punch Out Only'}
+                        </span>
                     </div>
                 )
             },
@@ -390,61 +422,134 @@ const Regularisations = () => {
 
     return (
         <div className="flex flex-col h-full bg-white space-y-0">
-            <div className="p-6 border-b border-gray-100 bg-white">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="p-5 md:p-6 border-b border-gray-100 bg-white">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+                        <h2 className="text-xl md:text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
                             {isAdmin || isReportingManager ? 'Team Regularisations' : 'My Regularisations'}
-                            <div className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-semibold">
+                            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11.5px] font-bold">
                                 {totalRequests} Total
-                            </div>
+                            </span>
                         </h2>
-                        <p className="text-[14px] font-medium text-gray-500 mt-1">
+                        <p className="text-[13px] text-gray-500 font-medium mt-0.5">
                             {isAdmin || isReportingManager ? 'Review and manage attendance correction requests for your team' : 'Manage and track your attendance correction requests'}
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="relative group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search by name or reason..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 focus:border-primary rounded-full text-[14px] font-medium outline-none w-64 lg:w-80 focus:ring-4 focus:ring-primary/5 transition-all"
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                        {/* Quick Preset: This Month */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const now = new Date();
+                                const firstDay = format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
+                                const lastDay = format(new Date(now.getFullYear(), now.getMonth() + 1, 0), 'yyyy-MM-dd');
+                                if (startDate === firstDay && endDate === lastDay) {
+                                    setStartDate('');
+                                    setEndDate('');
+                                } else {
+                                    setStartDate(firstDay);
+                                    setEndDate(lastDay);
+                                }
+                                setPage(1);
+                            }}
+                            className={`px-3 py-1.5 text-[12px] font-semibold rounded-xl border transition-all whitespace-nowrap shrink-0 ${startDate && endDate && startDate.startsWith(format(new Date(), 'yyyy-MM'))
+                                    ? 'bg-primary text-white border-primary shadow-xs'
+                                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-600 border-gray-200'
+                                }`}
+                        >
+                            This Month
+                        </button>
+
+                        {/* Date Filter Range Capsule */}
+                        <div className="flex items-center bg-gray-50/80 hover:bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 transition-all focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10 shadow-2xs">
+                            <Calendar size={14} className="text-primary/70 shrink-0 mr-2" />
+                            <DatePicker
+                                selected={startDate ? new Date(startDate) : null}
+                                onChange={(date) => {
+                                    setStartDate(date ? format(date, 'yyyy-MM-dd') : '');
+                                    setPage(1);
+                                }}
+                                dateFormat="dd-MM-yyyy"
+                                placeholderText="From date"
+                                className="bg-transparent border-none text-[12px] font-medium text-gray-700 outline-none w-[78px] cursor-pointer p-0 placeholder:text-gray-400"
+                                popperPlacement="bottom-start"
+                                portalId="root"
                             />
+                            <span className="text-gray-300 mx-1.5 text-xs font-light">to</span>
+                            <DatePicker
+                                selected={endDate ? new Date(endDate) : null}
+                                onChange={(date) => {
+                                    setEndDate(date ? format(date, 'yyyy-MM-dd') : '');
+                                    setPage(1);
+                                }}
+                                dateFormat="dd-MM-yyyy"
+                                placeholderText="To date"
+                                className="bg-transparent border-none text-[12px] font-medium text-gray-700 outline-none w-[78px] cursor-pointer p-0 placeholder:text-gray-400"
+                                popperPlacement="bottom-start"
+                                portalId="root"
+                            />
+                            {(startDate || endDate) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                        setPage(1);
+                                    }}
+                                    title="Clear date filter"
+                                    className="ml-1.5 p-0.5 text-gray-400 hover:text-rose-500 rounded-full hover:bg-gray-200/60 transition-colors"
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
                         </div>
 
-                        <button
-                            onClick={() => setRefreshKey(prev => prev + 1)}
-                            className="p-2.5 text-gray-400 hover:text-primary transition-all rounded-xl hover:bg-primary/5 border border-gray-100 hover:border-primary/20 bg-white"
-                        >
-                            <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
-                        </button>
+                        {/* Search and Refresh locked together */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <div className="relative group">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={15} />
+                                <input
+                                    type="text"
+                                    placeholder="Search requests..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="pl-8.5 pr-3 py-1.5 bg-gray-50/80 hover:bg-gray-50 border border-gray-200 focus:border-primary focus:bg-white rounded-xl text-[12.5px] font-medium outline-none w-44 md:w-52 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-gray-400"
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => setRefreshKey(prev => prev + 1)}
+                                title="Refresh data"
+                                className="p-2 text-gray-500 hover:text-primary transition-all rounded-xl hover:bg-primary/5 border border-gray-200 bg-gray-50/80 hover:bg-white shadow-2xs shrink-0"
+                            >
+                                <RefreshCcw size={15} className={loading ? 'animate-spin' : ''} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center gap-4 overflow-x-auto no-scrollbar">
+            <div className="px-6 py-3.5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-3 overflow-x-auto no-scrollbar">
                 {[
-                    { label: 'All Status', value: 'All', color: 'text-gray-500', activeClass: 'border-slate-300 bg-white' },
-                    { label: 'Approved', value: 'Approved', color: 'text-green-600', activeClass: 'border-green-300 bg-green-50' },
-                    { label: 'Rejected', value: 'Rejected', color: 'text-red-500', activeClass: 'border-red-300 bg-red-50' },
-                    { label: 'Pending', value: 'Pending', color: 'text-orange-500', activeClass: 'border-orange-300 bg-orange-50' }
+                    { label: 'All Status', value: 'All', color: 'text-gray-500', activeClass: 'border-slate-300 bg-white shadow-xs' },
+                    { label: 'Approved', value: 'Approved', color: 'text-green-600', activeClass: 'border-green-300 bg-green-50/70 shadow-xs' },
+                    { label: 'Rejected', value: 'Rejected', color: 'text-red-500', activeClass: 'border-red-300 bg-red-50/70 shadow-xs' },
+                    { label: 'Pending', value: 'Pending', color: 'text-orange-500', activeClass: 'border-orange-300 bg-orange-50/70 shadow-xs' }
                 ].map((item) => (
                     <button
                         key={item.value}
                         onClick={() => setStatusFilter(item.value)}
-                        className={`flex items-center gap-3 px-5 py-2.5 bg-white rounded-xl border transition-all duration-200 min-w-fit active:scale-[0.98] ${statusFilter === item.value
-                            ? `${item.activeClass}`
-                            : 'border-gray-200'
+                        className={`flex items-center gap-2.5 px-4 py-2 bg-white rounded-xl border transition-all duration-200 min-w-fit active:scale-[0.98] text-[13px] font-semibold ${statusFilter === item.value
+                            ? `${item.activeClass} text-gray-900`
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                             }`}
                     >
-                        <span className={`text-[13.5px] font-semibold ${statusFilter === item.value ? 'text-gray-900' : 'text-gray-600'}`}>
-                            {item.label}
-                        </span>
-                        <span className={`text-[14px] font-semibold ${item.color}`}>
+                        <span>{item.label}</span>
+                        <span className={`text-[13px] font-bold ${item.color}`}>
                             {counts[item.value]}
                         </span>
                     </button>
