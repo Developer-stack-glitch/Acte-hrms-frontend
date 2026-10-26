@@ -351,13 +351,15 @@ export default function HolidayCalendar() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             onClick={() => setSelectedHoliday(null)}
-                            className="absolute inset-0 bg-gray-900/40 backdrop-blur-md"
+                            className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             className="bg-white w-full max-w-md rounded-[15px] shadow-2xl relative overflow-hidden"
                         >
                             <div className={`h-26 bg-gradient-to-br ${holidayTypeColors[selectedHoliday.type]?.gradient || holidayTypeColors.default.gradient} relative px-6 py-0 flex flex-col justify-center`}>

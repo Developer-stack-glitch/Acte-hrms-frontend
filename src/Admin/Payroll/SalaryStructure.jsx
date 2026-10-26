@@ -300,7 +300,7 @@ export default function SalaryStructure() {
     });
 
     return (
-        <div className="p-4 space-y-6 max-w-[1600px] mx-auto">
+        <div className="p-4 space-y-6">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="space-y-1">

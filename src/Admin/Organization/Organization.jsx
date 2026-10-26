@@ -14,6 +14,7 @@ import AddShift from './AddShift';
 import AddRoles from './AddRoles';
 import CompanyDatabase from './CompanyDatabase';
 import { Database, Layout } from 'lucide-react';
+import TabsSlider from '../../Common/TabsSlider';
 
 const allTabs = [
     { id: 'company', label: 'Manage Company', icon: Building2, component: CompanyManagement, permissionId: 'organization_company' },
@@ -68,10 +69,11 @@ export default function Organization() {
         <div className="flex flex-col h-full bg-[#f8fafc]">
             {/* Horizontal Tabs Navigation */}
             <div className="bg-white rounded-lg border-b border-gray-100 md:px-3 px-3 pt-3 pb-0 sticky top-0 z-20">
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+                <TabsSlider activeKey={activeTab}>
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
+                            data-tab-id={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2.5 px-4 py-3 border-b-2 transition-all duration-300 relative whitespace-nowrap group ${activeTab === tab.id
                                 ? 'border-primary text-primary'
@@ -98,7 +100,7 @@ export default function Organization() {
                             )}
                         </button>
                     ))}
-                </div>
+                </TabsSlider>
             </div>
 
             {/* Content Area */}
@@ -110,7 +112,7 @@ export default function Organization() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        className="h-full"
                     >
                         <div className="overflow-hidden min-h-[600px]">
                             <ActiveComponent />

@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    Search, RefreshCcw, Clock, Calendar, AlertCircle,
+    Search, RefreshCcw, Clock, Calendar,
     CheckCircle2, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 import { getRegularisationsApi, updateRegularisationStatusApi, getRegularisationCountsApi } from '../../Action/api';
-import NoData from '../../Common/NoData';
-import FullPageLoader from '../../Common/FullPageLoader';
 import DataTable from '../../Common/DataTable';
-import ConfirmationModal from '../../Common/ConfirmationModal';
 import Tooltip from '../../Common/Tooltip';
 import { useNotifications } from '../../utils/NotificationContext';
 import DatePicker from 'react-datepicker';
@@ -37,13 +34,15 @@ const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                     />
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                         className="bg-white rounded-[15px] w-full max-w-md overflow-hidden shadow-md relative z-10 p-8 space-y-6"
                     >
                         <div className="space-y-2">
@@ -82,68 +81,111 @@ const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     );
 };
 
+const getStatusColor = (status) => {
+    switch (status) {
+        case 'Approved': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+        case 'Rejected': return 'bg-rose-50 text-rose-600 border-rose-100';
+        default: return 'bg-orange-50 text-orange-600 border-orange-100';
+    }
+};
+
 const ReasonModal = ({ isOpen, onClose, request }) => {
-    if (!request || !isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Request Details</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X size={20} />
-                    </button>
+        <AnimatePresence>
+            {request && isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Request Details</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-lg">
+                                    {request.employee_name?.charAt(0)}
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-gray-900">{request.employee_name}</h4>
+                                    <p className="text-sm text-gray-500">{request.emp_id}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl">
+                                <div>
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase">Date</span>
+                                    <p className="text-[13px] font-semibold text-gray-700">{format(parseISO(request.date), 'MMM dd, yyyy')}</p>
+                                </div>
+                                <div>
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase">Correction Time</span>
+                                    <p className="text-[13px] font-semibold text-gray-700">
+                                        {request.check_in && request.check_out
+                                            ? `${request.check_in.substring(0, 5)} - ${request.check_out.substring(0, 5)}`
+                                            : request.check_in
+                                                ? `In: ${request.check_in.substring(0, 5)} (Punch In Only)`
+                                                : request.check_out
+                                                    ? `Out: ${request.check_out.substring(0, 5)} (Punch Out Only)`
+                                                    : '--'}
+                                    </p>
+                                </div>
+                            </div>
+                            {request.status && request.status !== 'Pending' && (
+                                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div>
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase">Status</span>
+                                        <div className="mt-1">
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusColor(request.status)}`}>
+                                                {request.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase">
+                                            {request.status === 'Approved' ? 'Approved By' : 'Processed By'}
+                                        </span>
+                                        <p className="text-[13px] font-semibold text-gray-700 mt-1">
+                                            {request.approved_by_name || (request.approved_by ? `User #${request.approved_by}` : 'Admin')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <span className="text-[11px] font-bold text-gray-400 uppercase mb-1 block">Reason</span>
+                                <p className="text-[13px] text-gray-600 font-medium leading-relaxed italic">"{request.reason}"</p>
+                            </div>
+                            {request.rejection_reason && (
+                                <div className="bg-rose-50/70 p-3.5 rounded-xl border border-rose-100">
+                                    <span className="text-[11px] font-bold text-rose-500 uppercase mb-1 block">Rejection Note</span>
+                                    <p className="text-[13px] text-rose-700 font-medium leading-relaxed italic">
+                                        "{request.rejection_reason}"
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="w-full mt-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-full transition-all"
+                        >
+                            Close
+                        </button>
+                    </motion.div>
                 </div>
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-lg">
-                            {request.employee_name?.charAt(0)}
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-gray-900">{request.employee_name}</h4>
-                            <p className="text-sm text-gray-500">{request.emp_id}</p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl">
-                        <div>
-                            <span className="text-[11px] font-bold text-gray-400 uppercase">Date</span>
-                            <p className="text-[13px] font-semibold text-gray-700">{format(parseISO(request.date), 'MMM dd, yyyy')}</p>
-                        </div>
-                        <div>
-                            <span className="text-[11px] font-bold text-gray-400 uppercase">Correction Time</span>
-                            <p className="text-[13px] font-semibold text-gray-700">
-                                {request.check_in && request.check_out
-                                    ? `${request.check_in.substring(0, 5)} - ${request.check_out.substring(0, 5)}`
-                                    : request.check_in
-                                        ? `In: ${request.check_in.substring(0, 5)} (Punch In Only)`
-                                        : request.check_out
-                                            ? `Out: ${request.check_out.substring(0, 5)} (Punch Out Only)`
-                                            : '--'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase mb-1 block">Reason</span>
-                        <p className="text-[13px] text-gray-600 font-medium leading-relaxed italic">"{request.reason}"</p>
-                    </div>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="w-full mt-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-full transition-all"
-                >
-                    Close
-                </button>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
@@ -236,13 +278,6 @@ const Regularisations = () => {
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Approved': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'Rejected': return 'bg-rose-50 text-rose-600 border-rose-100';
-            default: return 'bg-orange-50 text-orange-600 border-orange-100';
-        }
-    };
 
     const columns = useMemo(() => {
         const cols = [
@@ -375,6 +410,22 @@ const Regularisations = () => {
                         )}
                     </div>
                 )
+            },
+            {
+                header: 'Approved By',
+                key: 'approved_by_name',
+                render: (val, row) => (
+                    <div className="flex flex-col">
+                        <span className="text-[13px] font-medium text-gray-700">
+                            {val || (row.status === 'Pending' ? '-' : (row.approved_by ? `User #${row.approved_by}` : 'Admin'))}
+                        </span>
+                        {row.status !== 'Pending' && (
+                            <span className="text-[10px] text-gray-400">
+                                {row.status === 'Approved' ? 'Approver' : 'Rejecter'}
+                            </span>
+                        )}
+                    </div>
+                )
             }
         ];
 
@@ -454,8 +505,8 @@ const Regularisations = () => {
                                 setPage(1);
                             }}
                             className={`px-3 py-1.5 text-[12px] font-semibold rounded-xl border transition-all whitespace-nowrap shrink-0 ${startDate && endDate && startDate.startsWith(format(new Date(), 'yyyy-MM'))
-                                    ? 'bg-primary text-white border-primary shadow-xs'
-                                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-600 border-gray-200'
+                                ? 'bg-primary text-white border-primary shadow-xs'
+                                : 'bg-gray-50/80 hover:bg-gray-100 text-gray-600 border-gray-200'
                                 }`}
                         >
                             This Month

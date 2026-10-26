@@ -1,15 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Download, FileText, Loader2, PiggyBank, Receipt, Wallet, FileCheck } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Download, Loader2, PiggyBank, Receipt, Wallet, FileCheck, RotateCcw, Filter, Calendar } from 'lucide-react';
 import { getMyPayslipsApi } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
+import { FormSelect } from '../../Common/Form';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
+
+const MONTH_OPTIONS = [
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+];
 
 export default function MyPayslips() {
     const [payslips, setPayslips] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedMonth, setSelectedMonth] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
 
     useEffect(() => {
         fetchPayslips();
@@ -19,13 +37,75 @@ export default function MyPayslips() {
         try {
             setLoading(true);
             const response = await getMyPayslipsApi();
-            setPayslips(response.data);
+            setPayslips(response.data || []);
         } catch (error) {
             console.error('Error fetching payslips:', error);
             toast.error('Failed to load payslips');
         } finally {
             setLoading(false);
         }
+    };
+
+    // Derive available years (comprehensive window from next year down to past 10 years + any payslip years)
+    const availableYears = useMemo(() => {
+        const yearsSet = new Set();
+        const currentYear = new Date().getFullYear();
+
+        // Populate a full range of years (currentYear + 1 down to past 10 years, and down to at least 2020)
+        const startYear = Math.max(currentYear + 1, 2027);
+        const endYear = Math.min(2020, currentYear - 8);
+        for (let y = startYear; y >= endYear; y--) {
+            yearsSet.add(String(y));
+        }
+
+        // Ensure any year present in actual payslip records is also included
+        payslips.forEach(p => {
+            const rawDate = p.period_end || p.period_start;
+            if (rawDate) {
+                try {
+                    const yr = format(parseISO(rawDate), 'yyyy');
+                    if (yr && !isNaN(Number(yr))) yearsSet.add(yr);
+                } catch {
+                    // Ignore parse errors
+                }
+            }
+        });
+
+        return Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
+    }, [payslips]);
+
+    const yearOptions = useMemo(() => {
+        return availableYears.map(yr => ({ value: yr, label: yr }));
+    }, [availableYears]);
+
+    // Filter payslips based on month and year
+    const filteredPayslips = useMemo(() => {
+        return payslips.filter(payslip => {
+            const rawDate = payslip.period_end || payslip.period_start;
+            if (!rawDate) return true;
+
+            let parsedDate;
+            try {
+                parsedDate = parseISO(rawDate);
+            } catch {
+                parsedDate = new Date(rawDate);
+            }
+
+            const pYear = format(parsedDate, 'yyyy');
+            const pMonth = format(parsedDate, 'M'); // '1' to '12'
+
+            const matchesYear = !selectedYear || pYear === String(selectedYear);
+            const matchesMonth = !selectedMonth || pMonth === String(selectedMonth);
+
+            return matchesYear && matchesMonth;
+        });
+    }, [payslips, selectedYear, selectedMonth]);
+
+    const isFilterActive = Boolean(selectedMonth || selectedYear);
+
+    const handleResetFilters = () => {
+        setSelectedMonth('');
+        setSelectedYear('');
     };
 
     const handleDownload = async (id, employeeName, periodEnd) => {
@@ -77,7 +157,7 @@ export default function MyPayslips() {
     }
 
     return (
-        <div className="space-y-8 pt-4 pb-12 px-4 max-w-7xl mx-auto">
+        <div className="space-y-6 pt-4 pb-12 px-4 max-w-9xl mx-auto">
             {/* Header Section */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 md:p-6 border border-primary/10 shadow-xs">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -96,90 +176,163 @@ export default function MyPayslips() {
                 <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
             </div>
 
-            {payslips.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {payslips.map((payslip, index) => (
-                        <motion.div
-                            key={payslip.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1, duration: 0.4, ease: "easeOut" }}
-                            className="relative bg-white rounded-3xl border border-gray-200 hover:border-primary/30 shadow-xs hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 group overflow-hidden flex flex-col"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Month & Year Filter Bar using Common FormSelect */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Month Filter */}
+                    <div className="min-w-[170px] flex-1 sm:flex-initial">
+                        <FormSelect
+                            icon={Calendar}
+                            placeholder="All Months"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            options={MONTH_OPTIONS}
+                        />
+                    </div>
 
-                            <div className="p-7 flex-grow">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-gray-50 rounded-xl group-hover:bg-primary/10 text-gray-500 group-hover:text-primary transition-colors duration-300 shadow-xs border border-gray-200 group-hover:border-primary/20">
-                                            <Wallet size={24} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-gray-900 tracking-tight">
-                                                {format(parseISO(payslip.period_end), 'MMMM yyyy')}
-                                            </h3>
-                                            <div className="flex items-center gap-1 mt-1">
-                                                <FileCheck size={12} className="text-primary/70" />
-                                                <p className="text-xs font-semibold text-primary/80 uppercase tracking-widest">
-                                                    {payslip.batch_name}
-                                                </p>
+                    {/* Year Filter */}
+                    <div className="min-w-[150px] flex-1 sm:flex-initial">
+                        <FormSelect
+                            icon={Filter}
+                            placeholder="All Years"
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            options={yearOptions}
+                        />
+                    </div>
+
+                    {/* Reset Filters */}
+                    {isFilterActive && (
+                        <button
+                            onClick={handleResetFilters}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 rounded-xl transition-all active:scale-95 border border-rose-200/60 cursor-pointer h-11"
+                            title="Reset filters"
+                        >
+                            <RotateCcw size={13} />
+                            Reset
+                        </button>
+                    )}
+                </div>
+
+                {/* Counter Badge */}
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 self-end sm:self-center">
+                    <span>
+                        Showing <strong className="text-gray-900 font-bold">{filteredPayslips.length}</strong> {filteredPayslips.length === 1 ? 'statement' : 'statements'}
+                    </span>
+                    {isFilterActive && (
+                        <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
+                            Filtered
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Statements List / Empty States */}
+            {filteredPayslips.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 lg:gap-8">
+                    <AnimatePresence mode="popLayout">
+                        {filteredPayslips.map((payslip, index) => (
+                            <motion.div
+                                key={payslip.id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: index * 0.05, duration: 0.3, ease: "easeOut" }}
+                                className="relative bg-white rounded-3xl border border-gray-200 hover:border-primary/30 shadow-xs hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 group overflow-hidden flex flex-col"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                <div className="p-6 flex-grow">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gray-50 rounded-xl group-hover:bg-primary/10 text-gray-500 group-hover:text-primary transition-colors duration-300 shadow-xs border border-gray-200 group-hover:border-primary/20">
+                                                <Wallet size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-semibold text-gray-900 tracking-tight">
+                                                    {format(parseISO(payslip.period_end), 'MMMM yyyy')}
+                                                </h3>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <FileCheck size={12} className="text-primary/70" />
+                                                    <p className="text-xs font-semibold text-primary/80 uppercase tracking-widest">
+                                                        {payslip.batch_name}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_end)}
-                                        className="p-2.5 text-gray-400 hover:text-white bg-transparent hover:bg-primary rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
-                                        title="Download PDF"
-                                    >
-                                        <Download size={20} />
-                                    </button>
+
+                                    <div className="grid grid-cols-2 gap-4 py-5 border-y border-gray-100 mb-6">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Gross Salary</p>
+                                            <p className="text-lg font-semibold text-gray-800">
+                                                ₹{Number(payslip.gross_salary).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1 text-right">
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Net Payable</p>
+                                            <p className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/80">
+                                                ₹{Number(payslip.net_salary).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2.5">
+                                        <div className="flex justify-between items-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                            <span>Take-home Percentage</span>
+                                            <span className="text-primary font-bold">
+                                                {((payslip.net_salary / payslip.gross_salary) * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${(payslip.net_salary / payslip.gross_salary) * 100}%` }}
+                                                transition={{ duration: 1, delay: index * 0.05 + 0.2 }}
+                                                className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 py-5 border-y border-gray-100 mb-6">
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Gross Salary</p>
-                                        <p className="text-lg font-semibold text-gray-800">
-                                            ₹{Number(payslip.gross_salary).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1 text-right">
-                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Net Payable</p>
-                                        <p className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/80">
-                                            ₹{Number(payslip.net_salary).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2.5">
-                                    <div className="flex justify-between items-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                        <span>Take-home Percentage</span>
-                                        <span className="text-primary font-bold">
-                                            {((payslip.net_salary / payslip.gross_salary) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-                                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(payslip.net_salary / payslip.gross_salary) * 100}%` }}
-                                            transition={{ duration: 1, delay: index * 0.1 + 0.3 }}
-                                            className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_end)}
-                                className="w-full py-4.5 bg-gray-50/80 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all duration-300 text-sm font-semibold text-gray-600 border-t border-gray-100"
-                                style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
-                            >
-                                <Download size={18} />
-                                Download Statement
-                            </button>
-                        </motion.div>
-                    ))}
+                                <button
+                                    onClick={() => handleDownload(payslip.id, payslip.employee_name, payslip.period_end)}
+                                    className="w-full py-4.5 bg-gray-50/80 flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white transition-all duration-300 text-sm font-semibold text-gray-600 border-t border-gray-100 cursor-pointer"
+                                    style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
+                                >
+                                    <Download size={18} />
+                                    Download Statement
+                                </button>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            ) : isFilterActive ? (
+                /* Filtered Empty State */
+                <div className="bg-white rounded-[2rem] border border-dashed border-gray-300 p-12 md:p-16 flex flex-col items-center justify-center text-center shadow-xs">
+                    <div className="p-5 bg-gray-50 rounded-full mb-4 ring-4 ring-white shadow-inner">
+                        <Filter size={36} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Statements Found</h3>
+                    <p className="text-gray-500 max-w-md mx-auto text-sm mb-6">
+                        No salary statements match your filter for{' '}
+                        <strong className="text-gray-700">
+                            {selectedMonth ? MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label : ''}{' '}
+                            {selectedYear || ''}
+                        </strong>
+                        .
+                    </p>
+                    <button
+                        onClick={handleResetFilters}
+                        className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm shadow-primary/20 flex items-center gap-2 cursor-pointer"
+                    >
+                        <RotateCcw size={15} />
+                        Clear Filter
+                    </button>
                 </div>
             ) : (
+                /* General Empty State */
                 <div className="bg-white rounded-[2rem] border border-dashed border-gray-300 p-16 md:p-24 flex flex-col items-center justify-center text-center shadow-sm">
                     <div className="p-6 bg-gray-50 rounded-full mb-6 ring-4 ring-white shadow-inner">
                         <PiggyBank size={56} className="text-gray-400" />

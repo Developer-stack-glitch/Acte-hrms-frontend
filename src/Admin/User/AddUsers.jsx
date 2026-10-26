@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Briefcase,
     Wallet,
@@ -26,10 +26,11 @@ import {
     getBatchAllocationsApi,
     getAllRolePermissionsApi,
     getEmploymentTypesApi,
-    getWorkLocationsApi
+    getWorkLocationsApi,
+    checkUserDuplicateApi
 } from '../../Action/api';
 import toast from 'react-hot-toast';
-import { FormInput, FormSelect, FormDate, FormTextarea, SearchableSelect } from '../../Common/Form';
+import { FormInput, FormDate, FormTextarea, SearchableSelect } from '../../Common/Form';
 import FormSkeleton from '../../Common/CommonSkeletonLoader/FormSkeleton';
 import BulkUploadModal from './BulkUploadModal';
 
@@ -168,6 +169,8 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         work_location: [],
         reporting_manager: []
     });
+    const [fieldErrors, setFieldErrors] = useState({});
+    const checkTimeoutRef = useRef({});
 
     const calculateDuration = (doj) => {
         if (!doj) return '';
@@ -361,6 +364,39 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         }
     }, [initialData, options.role]);
 
+    const validateDuplicateField = async (name, value) => {
+        if (!['emp_id', 'biometric_id', 'off_mail_id'].includes(name)) return;
+        if (!value || !value.toString().trim()) {
+            setFieldErrors(prev => {
+                if (!prev[name]) return prev;
+                const updated = { ...prev };
+                delete updated[name];
+                return updated;
+            });
+            return;
+        }
+
+        try {
+            const res = await checkUserDuplicateApi({
+                field: name,
+                value: value.toString().trim(),
+                excludeId: isEdit ? initialData?.id : undefined
+            });
+            if (res.data?.exists) {
+                setFieldErrors(prev => ({ ...prev, [name]: res.data.message }));
+            } else {
+                setFieldErrors(prev => {
+                    if (!prev[name]) return prev;
+                    const updated = { ...prev };
+                    delete updated[name];
+                    return updated;
+                });
+            }
+        } catch (err) {
+            console.error(`Error checking duplicate for ${name}:`, err);
+        }
+    };
+
     const handleChange = (e) => {
         if (isView) return;
         const { name, value, type, checked, files } = e.target;
@@ -379,9 +415,37 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         } else {
             setFormData(prev => {
                 const newData = { ...prev, [name]: value };
-
                 return newData;
             });
+
+            if (['emp_id', 'biometric_id', 'off_mail_id'].includes(name)) {
+                // Clear error immediately on change
+                setFieldErrors(prev => {
+                    if (!prev[name]) return prev;
+                    const updated = { ...prev };
+                    delete updated[name];
+                    return updated;
+                });
+
+                // Debounce duplicate check
+                if (checkTimeoutRef.current[name]) {
+                    clearTimeout(checkTimeoutRef.current[name]);
+                }
+                checkTimeoutRef.current[name] = setTimeout(() => {
+                    validateDuplicateField(name, value);
+                }, 400);
+            }
+        }
+    };
+
+    const handleBlur = (e) => {
+        if (isView) return;
+        const { name, value } = e.target;
+        if (['emp_id', 'biometric_id', 'off_mail_id'].includes(name)) {
+            if (checkTimeoutRef.current[name]) {
+                clearTimeout(checkTimeoutRef.current[name]);
+            }
+            validateDuplicateField(name, value);
         }
     };
 
@@ -413,6 +477,16 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                     return;
                 }
             }
+        }
+
+        // Validate no duplicate field errors exist
+        const activeDuplicateErrors = Object.entries(fieldErrors).filter(([_, msg]) => Boolean(msg));
+        if (activeDuplicateErrors.length > 0) {
+            const [firstField, firstMsg] = activeDuplicateErrors[0];
+            const targetSection = sections.find(s => s.fields.some(f => f.name === firstField));
+            if (targetSection) setActiveSection(targetSection.id);
+            toast.error(firstMsg);
+            return;
         }
 
         setLoading(true);
@@ -463,15 +537,24 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 toast.success('Employee updated successfully!');
             } else {
                 if (!formData.role) data.append('role', 'employee');
-                data.append('password', 'password123');
                 await createUserApi(data);
-                toast.success('Employee onboarding completed successfully!');
+                toast.success('Employee onboarded & welcome email sent!');
             }
 
             if (onSuccess) onSuccess();
         } catch (error) {
             console.error('Error saving user:', error);
             const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to save employee';
+            if (errorMsg.includes('Employee ID')) {
+                setFieldErrors(prev => ({ ...prev, emp_id: errorMsg }));
+                setActiveSection('professional');
+            } else if (errorMsg.includes('Biometric ID')) {
+                setFieldErrors(prev => ({ ...prev, biometric_id: errorMsg }));
+                setActiveSection('professional');
+            } else if (errorMsg.includes('Office Mail ID') || errorMsg.includes('email address')) {
+                setFieldErrors(prev => ({ ...prev, off_mail_id: errorMsg }));
+                setActiveSection('contact');
+            }
             toast.error(errorMsg);
         } finally {
             setLoading(false);
@@ -581,7 +664,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
 
                 {/* Form Content */}
                 <div className="flex-1 overflow-y-auto p-8">
-                    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
+                    <form onSubmit={handleSubmit} className="max-w-7xl mx-auto">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeSection}
@@ -748,6 +831,8 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         name={field.name}
                                                         value={formData[field.name] || ''}
                                                         onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        error={fieldErrors[field.name]}
                                                         onWheel={(e) => e.target.blur()}
                                                         disabled={isView || field.name === 'duration'}
                                                         placeholder={field.name === 'duration' ? 'Calculated automatically' : `Enter ${field.label.toLowerCase()}...`}
@@ -789,6 +874,14 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         toast.error(`${field.label} is mandatory`);
                                                         return;
                                                     }
+                                                }
+
+                                                // Check for duplicate field errors in current section
+                                                const currentFieldNames = currentSection.fields.map(f => f.name);
+                                                const duplicateInCurrent = Object.entries(fieldErrors).find(([f, msg]) => currentFieldNames.includes(f) && Boolean(msg));
+                                                if (duplicateInCurrent) {
+                                                    toast.error(duplicateInCurrent[1]);
+                                                    return;
                                                 }
 
                                                 setActiveSection(sections[idx + 1].id);

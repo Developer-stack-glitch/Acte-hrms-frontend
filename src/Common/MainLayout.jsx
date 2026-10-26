@@ -19,7 +19,7 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
         if (userInfo) {
             setUser(JSON.parse(userInfo));
         }
-        
+
         const fetchProfile = async () => {
             try {
                 const { data } = await getProfileApi();
@@ -205,7 +205,7 @@ const MainLayout = () => {
                 <TopHeader isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
 
                 <main className="flex-1 overflow-y-auto transition-all duration-500 ease-in-out relative custom-scrollbar">
-                    <div className="max-w-[1600px] mx-auto min-h-full flex flex-col p-2 sm:p-6 lg:p-6">
+                    <div className="min-h-full flex flex-col p-2 sm:p-6 lg:p-6">
                         <div className="flex-1">
                             <Outlet />
                         </div>

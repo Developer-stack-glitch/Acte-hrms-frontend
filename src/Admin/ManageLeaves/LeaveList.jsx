@@ -14,7 +14,7 @@ import DataTable from '../../Common/DataTable';
 import { getLeavesApi, updateLeaveApi, deleteLeaveApi, API_URL } from '../../Action/api';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../Common/ConfirmationModal';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LeaveListSkeleton } from '../../Common/CommonSkeletonLoader/LeaveSkeleton';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -25,150 +25,170 @@ import { useNotifications } from '../../utils/NotificationContext';
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Rejection Reason</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X size={20} />
-                    </button>
-                </div>
-                <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Enter reason for rejection..."
-                    className="w-full h-32 p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none"
-                    autoFocus
-                />
-                <div className="flex gap-3 mt-6">
-                    <button
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 border border-gray-100 text-gray-600 font-semibold rounded-full hover:bg-gray-50"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
                     >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => onConfirm(note)}
-                        disabled={loading || !note.trim()}
-                        className="flex-1 px-4 py-2 bg-rose-500 text-white font-medium rounded-full hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                        Confirm Reject
-                    </button>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Rejection Reason</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="Enter reason for rejection..."
+                            className="w-full h-32 p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none"
+                            autoFocus
+                        />
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2 border border-gray-100 text-gray-600 font-semibold rounded-full hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onConfirm(note)}
+                                disabled={loading || !note.trim()}
+                                className="flex-1 px-4 py-2 bg-rose-500 text-white font-medium rounded-full hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                Confirm Reject
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
 const ReasonModal = ({ isOpen, onClose, reason, title = "Leave Reason" }) => {
-    if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6"
-            >
-                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
-                <div className="py-2">
-                    <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-                        {reason || "No reason provided."}
-                    </p>
-                </div>
-                <div className="mt-3 flex justify-end">
-                    <button
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         onClick={onClose}
-                        className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-all text-sm"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6"
                     >
-                        Close
-                    </button>
+                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="py-2">
+                            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                                {reason || "No reason provided."}
+                            </p>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-all text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
 const DocumentListModal = ({ isOpen, onClose, documents, onImageClick }) => {
-    if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6"
-            >
-                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Attached Documents</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
-                <div className="py-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {documents.map((doc, idx) => {
-                        const hasNoExtension = !doc.includes('.') || doc.split('/').pop().indexOf('.') === -1;
-                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc) || hasNoExtension;
-                        const fileName = doc.split('/').pop();
-                        const fullUrl = `${API_URL}/api${doc}`;
-                        
-                        return (
-                            <div 
-                                key={idx} 
-                                onClick={() => {
-                                    if (isImage) {
-                                        onImageClick(fullUrl);
-                                    } else {
-                                        window.open(fullUrl, '_blank');
-                                    }
-                                }}
-                                className="cursor-pointer border border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors h-28"
-                            >
-                                {isImage ? (
-                                    <img src={fullUrl} alt="doc" className="h-16 w-auto object-cover rounded mb-2" />
-                                ) : (
-                                    <div className="h-16 w-16 bg-primary/10 rounded flex items-center justify-center mb-2 text-primary">
-                                        <FileText size={24} />
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden p-6"
+                    >
+                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Attached Documents</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="py-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {documents.map((doc, idx) => {
+                                const hasNoExtension = !doc.includes('.') || doc.split('/').pop().indexOf('.') === -1;
+                                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc) || hasNoExtension;
+                                const fileName = doc.split('/').pop();
+                                const fullUrl = `${API_URL}/api${doc}`;
+                                
+                                return (
+                                    <div 
+                                        key={idx} 
+                                        onClick={() => {
+                                            if (isImage) {
+                                                onImageClick(fullUrl);
+                                            } else {
+                                                window.open(fullUrl, '_blank');
+                                            }
+                                        }}
+                                        className="cursor-pointer border border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors h-28"
+                                    >
+                                        {isImage ? (
+                                            <img src={fullUrl} alt="doc" className="h-16 w-auto object-cover rounded mb-2" />
+                                        ) : (
+                                            <div className="h-16 w-16 bg-primary/10 rounded flex items-center justify-center mb-2 text-primary">
+                                                <FileText size={24} />
+                                            </div>
+                                        )}
+                                        <span className="text-[11px] text-gray-600 truncate w-full text-center px-1" title={fileName}>
+                                            {fileName}
+                                        </span>
                                     </div>
-                                )}
-                                <span className="text-[11px] text-gray-600 truncate w-full text-center px-1" title={fileName}>
-                                    {fileName}
-                                </span>
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
@@ -202,73 +222,82 @@ const ImageZoomModal = ({ isOpen, onClose, imageUrl }) => {
         setIsDragging(false);
     };
 
-    if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full h-full flex items-center justify-center overflow-hidden"
-            >
-                <button 
-                    onClick={onClose} 
-                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors bg-black/50 p-2 rounded-full z-50"
-                >
-                    <X size={24} />
-                </button>
-                <div 
-                    className={`relative overflow-visible flex items-center justify-center w-full h-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-                    onWheel={(e) => {
-                        const zoomSensitivity = 0.002;
-                        const delta = e.deltaY * -zoomSensitivity;
-                        setScale(s => Math.min(Math.max(0.2, s + delta), 8)); 
-                    }}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                >
-                    <img 
-                        src={imageUrl} 
-                        alt="Zoomed document" 
-                        style={{ 
-                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, 
-                            transition: isDragging ? 'none' : 'transform 0.05s ease-out',
-                            transformOrigin: 'center center'
-                        }}
-                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl pointer-events-none select-none"
-                        draggable={false}
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                     />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.96, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                    >
+                        <button 
+                            onClick={onClose} 
+                            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors bg-black/50 p-2 rounded-full z-50"
+                        >
+                            <X size={24} />
+                        </button>
+                        <div 
+                            className={`relative overflow-visible flex items-center justify-center w-full h-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                            onWheel={(e) => {
+                                const zoomSensitivity = 0.002;
+                                const delta = e.deltaY * -zoomSensitivity;
+                                setScale(s => Math.min(Math.max(0.2, s + delta), 8)); 
+                            }}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onMouseLeave={handleMouseUp}
+                        >
+                            <img 
+                                src={imageUrl} 
+                                alt="Zoomed document" 
+                                style={{ 
+                                    transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, 
+                                    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+                                    transformOrigin: 'center center'
+                                }}
+                                className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl pointer-events-none select-none"
+                                draggable={false}
+                            />
+                        </div>
+                    </motion.div>
+                    
+                    {/* Zoom Controls Overlay */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 15 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full z-50 border border-white/10 shadow-2xl"
+                    >
+                        <button onClick={() => setScale(s => Math.max(0.2, s - 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">-</button>
+                        <span className="text-white text-sm font-semibold w-12 text-center tracking-wide">{Math.round(scale * 100)}%</span>
+                        <button onClick={() => setScale(s => Math.min(8, s + 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">+</button>
+                        <div className="w-px h-6 bg-white/20 mx-1"></div>
+                        <button 
+                            onClick={() => {
+                                setScale(1);
+                                position && setPosition({ x: 0, y: 0 });
+                            }} 
+                            className="text-white/80 hover:text-white transition-colors text-[11px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                        >
+                            Reset
+                        </button>
+                    </motion.div>
                 </div>
-            </motion.div>
-            
-            {/* Zoom Controls Overlay */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full z-50 border border-white/10 shadow-2xl"
-            >
-                <button onClick={() => setScale(s => Math.max(0.2, s - 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">-</button>
-                <span className="text-white text-sm font-semibold w-12 text-center tracking-wide">{Math.round(scale * 100)}%</span>
-                <button onClick={() => setScale(s => Math.min(8, s + 0.2))} className="text-white hover:text-primary transition-colors text-xl leading-none w-8 h-8 flex items-center justify-center bg-white/10 rounded-full pb-1">+</button>
-                <div className="w-px h-6 bg-white/20 mx-1"></div>
-                <button 
-                    onClick={() => {
-                        setScale(1);
-                        setPosition({ x: 0, y: 0 });
-                    }} 
-                    className="text-white/80 hover:text-white transition-colors text-[11px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-white/5 hover:bg-white/10"
-                >
-                    Reset
-                </button>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 

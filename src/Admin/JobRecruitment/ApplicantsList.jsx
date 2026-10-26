@@ -779,7 +779,7 @@ const ApplicantsList = () => {
                     {/* Right Side: Applicant Details */}
                     <div className="flex-1 overflow-y-auto bg-gray-50/30 p-6 custom-scrollbar">
                         {selectedApplicant ? (
-                            <div className="max-w-5xl mx-auto space-y-6">
+                            <div className="max-w-7xl mx-auto space-y-6">
                                 {selectedApplicant.status === 'Completed' && (
                                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-5 bg-green-50 border border-green-200 rounded-2xl flex items-center justify-between shadow-sm">
                                         <div className="flex items-center gap-4">

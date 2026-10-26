@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getUsersApi, updateUserApi, getAllRolePermissionsApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput } from '../../Common/Form';
+import CommonSelect from '../../Common/CommonSelect';
 import CardGridSkeleton from '../../Common/CommonSkeletonLoader/CardGridSkeleton';
 
 export default function EmployeeCredentials() {
@@ -297,12 +298,21 @@ export default function EmployeeCredentials() {
             {/* Manage Credentials Modal */}
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-[15px] shadow-2xl w-full max-w-md overflow-hidden"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative z-10 bg-white rounded-[15px] shadow-2xl w-full max-w-md overflow-hidden"
                         >
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-8">
@@ -325,27 +335,21 @@ export default function EmployeeCredentials() {
 
                                 <div className="space-y-6">
                                     {/* Role Selection */}
-                                    <div>
-                                        <label className="block text-[14px] font-semibold text-slate-700 mb-2">Role <span className="text-red-500">*</span></label>
-                                        <select
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-[14px] font-medium disabled:bg-gray-50 disabled:text-gray-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19%209l-7%207-7-7%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:20px_20px] bg-[right_1rem_center] bg-no-repeat capitalize"
-                                        >
-                                            {roles.length > 0 ? (
-                                                roles.map((r) => (
-                                                    <option key={r.role} value={r.role}>
-                                                        {r.role === 'admin' ? 'Administrator' : r.role.charAt(0).toUpperCase() + r.role.slice(1)}
-                                                    </option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="employee">Employee</option>
-                                                    <option value="admin">Administrator</option>
-                                                </>
-                                            )}
-                                        </select>
-                                    </div>
+                                    <CommonSelect
+                                        variant="form"
+                                        label="Role"
+                                        required
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        options={roles.length > 0 ? roles.map((r) => ({
+                                            value: r.role,
+                                            label: r.role === 'admin' ? 'Administrator' : r.role.charAt(0).toUpperCase() + r.role.slice(1)
+                                        })) : [
+                                            { value: 'employee', label: 'Employee' },
+                                            { value: 'admin', label: 'Administrator' }
+                                        ]}
+                                        searchable={false}
+                                    />
 
                                     {/* Password Field */}
                                     <div>

@@ -58,8 +58,8 @@ const ApplyRegularisation = ({ onSuccess }) => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto p-2 sm:p-6 lg:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-[15px] border border-gray-200 p-6 md:p-8 space-y-8 shadow-sm">
+        <div className="max-w-9xl mx-auto p-2 sm:p-6 lg:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-[15px] p-6 md:p-8 space-y-8">
                 {/* Header */}
                 <div className="space-y-1.5 border-b border-gray-100 pb-5">
                     <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Apply for Regularisation</h2>
@@ -222,7 +222,7 @@ const ApplyRegularisation = ({ onSuccess }) => {
                                             <LogOut size={15} className="text-orange-500" />
                                             Expected Clock Out
                                         </span>
-                                        <span className="text-[10px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                                        <span className="text-[10px] font-semibold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
                                             Punch Out
                                         </span>
                                     </label>
@@ -266,13 +266,13 @@ const ApplyRegularisation = ({ onSuccess }) => {
                     </div>
 
                     {/* Submit Button */}
-                    <div className="pt-2">
+                    <div className="pt-2 flex items-center justify-center">
                         <motion.button
                             type="submit"
                             disabled={loading}
                             whileHover={{ scale: 1.005 }}
                             whileTap={{ scale: 0.995 }}
-                            className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-full font-medium transition-all shadow-md shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2.5 group"
+                            className="w-100 py-3 bg-primary hover:bg-primary-hover text-white rounded-full font-medium transition-all shadow-md shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2.5 group"
                         >
                             {loading ? (
                                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />

@@ -69,7 +69,11 @@ export default function Leaves() {
                             </div>
                             <span className={`text-[13.5px] font-semibold tracking-tight ${activeTab === tab.id ? 'text-primary' : 'text-gray-600'
                                 }`}>
-                                {tab.id === 'manage-leaves' && userRole === 'employee' ? 'Overview' : tab.label}
+                                {tab.id === 'manage-leaves' && userRole === 'employee'
+                                    ? 'Overview'
+                                    : tab.id === 'holiday' && userRole === 'employee'
+                                        ? 'Holiday Calendar'
+                                        : tab.label}
                             </span>
 
                             {activeTab === tab.id && (
@@ -93,7 +97,7 @@ export default function Leaves() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        className="h-full"
                     >
                         <div className="overflow-hidden min-h-[600px]">
                             {activeTab === 'leave-list' ? (

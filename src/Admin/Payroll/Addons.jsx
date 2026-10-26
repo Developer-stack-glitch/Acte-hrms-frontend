@@ -23,6 +23,7 @@ import SearchableSelect from '../../Common/Form/SearchableSelect';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import DataTable from '../../Common/DataTable';
 import Tooltip from '../../Common/Tooltip';
+import CommonSelect from '../../Common/CommonSelect';
 
 export default function Addons() {
     const [incentives, setIncentives] = useState([]);
@@ -286,17 +287,17 @@ export default function Addons() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type</label>
-                                <select
-                                    value={formData.type}
-                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                                >
-                                    <option value="addition">Addition (Incentive)</option>
-                                    <option value="deduction">Deduction</option>
-                                </select>
-                            </div>
+                            <CommonSelect
+                                variant="form"
+                                label="Type"
+                                value={formData.type}
+                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                options={[
+                                    { value: 'addition', label: 'Addition (Incentive)' },
+                                    { value: 'deduction', label: 'Deduction' }
+                                ]}
+                                searchable={false}
+                            />
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Amount (₹)</label>

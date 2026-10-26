@@ -58,15 +58,19 @@ const WebClockWidget = ({ userId, onActionSuccess }) => {
     };
 
     const parseTime = (timeStr) => {
-        if (!timeStr) return 0;
+        if (!timeStr || typeof timeStr !== 'string' || timeStr.startsWith('-')) return 0;
         const [h, m, s] = timeStr.split(':').map(Number);
-        return (h * 3600 + m * 60 + (s || 0)) * 1000;
+        const safeH = Math.max(0, h || 0);
+        const safeM = Math.max(0, m || 0);
+        const safeS = Math.max(0, s || 0);
+        return (safeH * 3600 + safeM * 60 + safeS) * 1000;
     };
 
     const formatTime = (ms) => {
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
+        const safeMs = Math.max(0, ms || 0);
+        const h = Math.floor(safeMs / 3600000);
+        const m = Math.floor((safeMs % 3600000) / 60000);
+        const s = Math.floor((safeMs % 60000) / 1000);
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
@@ -112,7 +116,9 @@ const WebClockWidget = ({ userId, onActionSuccess }) => {
                         let activeBreakMs = 0;
 
                         if (status === 'on_break' && activeBreak?.break_start) {
-                            activeBreakMs = now - new Date(activeBreak.break_start);
+                            const startStr = activeBreak.break_start.includes('T') ? activeBreak.break_start : activeBreak.break_start.replace(' ', 'T') + '+05:30';
+                            const parsedStart = new Date(startStr);
+                            activeBreakMs = Math.max(0, now - (isNaN(parsedStart.getTime()) ? new Date(activeBreak.break_start) : parsedStart));
                             setBreakTimer(formatTime(activeBreakMs));
                         } else {
                             setBreakTimer('00:00:00');
@@ -365,7 +371,9 @@ const WebClockWidget = ({ userId, onActionSuccess }) => {
                             <span className="text-lg font-medium text-white tabular-nums">
                                 {status === 'on_break' ? (
                                     formatTime(parseTime(attendance?.total_break_time) + parseTime(breakTimer))
-                                ) : (attendance?.total_break_time ? (attendance.total_break_time + (attendance.total_break_time.split(':').length === 2 ? ':00' : '')) : '00:00:00')}
+                                ) : (attendance?.total_break_time && !attendance.total_break_time.startsWith('-') ? (
+                                    attendance.total_break_time + (attendance.total_break_time.split(':').length === 2 ? ':00' : '')
+                                ) : '00:00:00')}
                             </span>
                         </motion.div>
                     </div>

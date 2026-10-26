@@ -62,10 +62,32 @@ const ReasonModal = ({ isOpen, onClose, request }) => {
                                         : '--'}
                                 </p>
                             </div>
+                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <div>
+                                    <span className="text-[12px] font-semibold text-gray-600 block">Status</span>
+                                    <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${request.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : request.status === 'Rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-orange-50 text-orange-600 border-orange-100'}`}>
+                                        {request.status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-[12px] font-semibold text-gray-600 block">
+                                        {request.status === 'Approved' ? 'Approved By' : request.status === 'Rejected' ? 'Rejected By' : 'Processed By'}
+                                    </span>
+                                    <p className="font-semibold text-gray-800 mt-1 text-[13px]">
+                                        {request.approved_by_name || (request.status === 'Pending' ? '-' : (request.approved_by ? `User #${request.approved_by}` : 'Admin'))}
+                                    </p>
+                                </div>
+                            </div>
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                                 <span className="text-[12px] font-semibold text-gray-600 block mb-1">Reason</span>
                                 <p className="text-sm text-gray-600 font-medium leading-relaxed italic">"{request.reason}"</p>
                             </div>
+                            {request.rejection_reason && (
+                                <div className="bg-rose-50/70 p-3 rounded-xl border border-rose-100">
+                                    <span className="text-[12px] font-semibold text-rose-600 block mb-1">Rejection Note</span>
+                                    <p className="text-sm text-rose-700 font-medium leading-relaxed italic">"{request.rejection_reason}"</p>
+                                </div>
+                            )}
                         </div>
                         <button
                             onClick={onClose}
@@ -343,6 +365,11 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                                 <p className="text-[12px] font-semibold text-gray-500 mt-0.5">
                                                     {String(req.user_id) !== String(userId) && `${format(parseISO(req.date), 'MMM dd')} • `}
                                                     {req.reason?.length > 40 ? `${req.reason?.substring(0, 40)}...` : req.reason}
+                                                    {req.status !== 'Pending' && (
+                                                        <span className="text-gray-400 font-normal ml-1">
+                                                            • {req.status === 'Approved' ? 'Approved' : 'Rejected'} by {req.approved_by_name || (req.approved_by ? `User #${req.approved_by}` : 'Admin')}
+                                                        </span>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>

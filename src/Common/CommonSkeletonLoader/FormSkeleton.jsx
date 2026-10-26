@@ -13,16 +13,16 @@ export default function FormSkeleton() {
                 </div>
                 <div className="w-32 h-10 bg-slate-100/50 animate-shimmer rounded-full"></div>
             </div>
-            
+
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-64 bg-white border-r border-gray-100 p-4 space-y-4">
                     {[...Array(6)].map((_, i) => (
                         <div key={i} className="h-10 bg-slate-50 animate-shimmer rounded-xl"></div>
                     ))}
                 </div>
-                
+
                 <div className="flex-1 p-8">
-                    <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                         {[...Array(8)].map((_, i) => (
                             <div key={i} className="space-y-3">
                                 <div className="h-4 bg-slate-200/50 animate-shimmer rounded-lg w-1/3"></div>

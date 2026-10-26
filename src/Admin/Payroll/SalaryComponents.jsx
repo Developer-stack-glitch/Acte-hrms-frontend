@@ -200,7 +200,7 @@ export default function SalaryComponents() {
     }, [components, activeTab, searchTerm]);
 
     return (
-        <div className="p-4 space-y-6 max-w-[1600px] mx-auto">
+        <div className="p-4 space-y-6">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="space-y-1">

@@ -23,6 +23,7 @@ import toast from 'react-hot-toast';
 import UserFilter from '../User/UserFilter';
 import AttendanceSkeleton from '../../Common/CommonSkeletonLoader/AttendanceSkeleton';
 import NoData from '../../Common/NoData';
+import CommonSelect from '../../Common/CommonSelect';
 
 const StatCard = ({ title, value, percentage, isPositive, todayCount, textColor, showInfo, delay = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -1149,19 +1150,21 @@ export default function ManageAttedance() {
                             {/* Page Size Selector */}
                             <div className="flex items-center gap-2">
                                 <span className="text-[13px] text-gray-400 font-medium whitespace-nowrap">Show Rows</span>
-                                <select
-                                    className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-medium text-gray-600 outline-none focus:border-primary/30 transition-colors cursor-pointer"
+                                <CommonSelect
                                     value={pageSize}
                                     onChange={(e) => {
                                         setPageSize(parseInt(e.target.value));
                                         setCurrentPage(1);
                                     }}
-                                >
-                                    <option value={10}>10 / page</option>
-                                    <option value={20}>20 / page</option>
-                                    <option value={50}>50 / page</option>
-                                    <option value={100}>100 / page</option>
-                                </select>
+                                    options={[
+                                        { value: 10, label: '10 / page' },
+                                        { value: 20, label: '20 / page' },
+                                        { value: 50, label: '50 / page' },
+                                        { value: 100, label: '100 / page' }
+                                    ]}
+                                    searchable={false}
+                                    className="!py-1 !px-3 !text-[12px]"
+                                />
                             </div>
                         </div>
                     </div>

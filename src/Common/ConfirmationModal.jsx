@@ -13,8 +13,6 @@ const ConfirmationModal = ({
     type = "primary", // 'danger', 'warning', or 'primary'
     loading = false
 }) => {
-    if (!isOpen) return null;
-
     const themes = {
         primary: {
             iconBg: 'bg-blue-50',
@@ -43,73 +41,77 @@ const ConfirmationModal = ({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
-                {/* Backdrop */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                />
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
 
-                {/* Modal Content */}
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className={`relative w-full max-w-md bg-white rounded-[15px] shadow-2xl overflow-hidden border ${theme.border}`}
-                >
-                    {/* Close Button */}
-                    {cancelText && (
-                        <button
-                            onClick={onClose}
-                            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-                        >
-                            <X size={20} />
-                        </button>
-                    )}
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className={`relative w-full max-w-md bg-white rounded-[15px] shadow-2xl overflow-hidden border ${theme.border}`}
+                    >
+                        {/* Close Button */}
+                        {cancelText && (
+                            <button
+                                onClick={onClose}
+                                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
 
-                    <div className="p-4">
-                        <div className="flex flex-col items-center text-center">
-                            {/* Icon Wrapper */}
-                            <div className={`w-14 h-14 rounded-3xl flex items-center justify-center mb-5 ${theme.iconBg} ${theme.iconText}`}>
-                                <AlertCircle size={32} />
+                        <div className="p-4">
+                            <div className="flex flex-col items-center text-center">
+                                {/* Icon Wrapper */}
+                                <div className={`w-14 h-14 rounded-3xl flex items-center justify-center mb-5 ${theme.iconBg} ${theme.iconText}`}>
+                                    <AlertCircle size={32} />
+                                </div>
+
+                                <h3 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">{title}</h3>
+                                <p className="text-gray-500 text-[15px] leading-relaxed font-medium px-4">
+                                    {message}
+                                </p>
                             </div>
 
-                            <h3 className="text-2xl font-semibold text-gray-900 mb-3 tracking-tight">{title}</h3>
-                            <p className="text-gray-500 text-[15px] leading-relaxed font-medium px-4">
-                                {message}
-                            </p>
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-4 mt-6 w-full">
+                                {cancelText && (
+                                    <button
+                                        onClick={onClose}
+                                        disabled={loading}
+                                        className={`flex-1 px-4 py-3 font-semibold rounded-full transition-all disabled:opacity-50 text-[14px] ${theme.cancelBg}`}
+                                    >
+                                        {cancelText}
+                                    </button>
+                                )}
+                                {confirmText && (
+                                    <button
+                                        onClick={onConfirm}
+                                        disabled={loading}
+                                        className={`flex-1 px-4 py-3 text-white font-medium rounded-full transition-all shadow-xs flex items-center justify-center gap-2 text-[14px] ${theme.confirmBg} disabled:opacity-50`}
+                                    >
+                                        {loading && (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        )}
+                                        {confirmText}
+                                    </button>
+                                )}
+                            </div>
                         </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-4 mt-6 w-full">
-                            {cancelText && (
-                                <button
-                                    onClick={onClose}
-                                    disabled={loading}
-                                    className={`flex-1 px-4 py-3 font-semibold rounded-full transition-all disabled:opacity-50 text-[14px] ${theme.cancelBg}`}
-                                >
-                                    {cancelText}
-                                </button>
-                            )}
-                            {confirmText && (
-                                <button
-                                    onClick={onConfirm}
-                                    disabled={loading}
-                                    className={`flex-1 px-4 py-3 text-white font-medium rounded-full transition-all shadow-xs flex items-center justify-center gap-2 text-[14px] ${theme.confirmBg} disabled:opacity-50`}
-                                >
-                                    {loading && (
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    )}
-                                    {confirmText}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
+                    </motion.div>
+                </div>
+            )}
         </AnimatePresence>
     );
 };

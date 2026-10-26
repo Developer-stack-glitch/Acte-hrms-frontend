@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     Monitor, Laptop, Mouse, Smartphone, Cpu, Search, Filter,
     Plus, Trash2, CheckCircle2, AlertTriangle, Tag, UserPlus, Loader2, ArrowUpRight,
-    X, Eye,
+    X, Eye, Calendar,
     XCircle
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import DataTable from '../../Common/DataTable';
+import CommonSelect from '../../Common/CommonSelect';
 import { FormInput, FormSelect, FormDate, FormTextarea } from '../../Common/Form';
 import {
     getUsersApi,
@@ -241,6 +242,45 @@ export default function AssetManagement() {
                     {val}
                 </span>
             )
+        },
+        {
+            header: 'Created Date',
+            key: 'created_at',
+            render: (val, row) => (
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                        <Calendar size={13} className="text-gray-400" />
+                        {row.created_at ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </div>
+                    {row.created_at && (
+                        <div className="text-[10px] text-gray-400 font-medium ml-4">
+                            {new Date(row.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    )}
+                </div>
+            )
+        },
+        {
+            header: 'Assigned Date',
+            key: 'assigned_date',
+            render: (val, row) => {
+                const assignedDateVal = row.assigned_date || (row.assignedTo ? (row.updated_at || row.created_at) : null);
+                return row.assignedTo ? (
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                            <Calendar size={13} className="text-blue-400" />
+                            {assignedDateVal ? new Date(assignedDateVal).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </div>
+                        {assignedDateVal && (
+                            <div className="text-[10px] text-gray-400 font-medium ml-4">
+                                {new Date(assignedDateVal).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <span className="text-xs font-medium text-gray-400">—</span>
+                );
+            }
         }
     ];
 
@@ -652,29 +692,27 @@ export default function AssetManagement() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200">
-                                <Filter size={16} className="text-gray-400" />
-                                <select
-                                    className="outline-none text-[13px] font-semibold text-gray-600 bg-transparent cursor-pointer"
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                >
-                                    <option value="All">All Categories</option>
-                                    {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
-                                </select>
-                            </div>
+                            <CommonSelect
+                                icon={Filter}
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                options={[
+                                    { value: 'All', label: 'All Categories' },
+                                    ...categories.map(cat => ({ value: cat.name, label: cat.name }))
+                                ]}
+                                placeholder="All Categories"
+                            />
 
-                            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200">
-                                <Tag size={16} className="text-gray-400" />
-                                <select
-                                    className="outline-none text-[13px] font-semibold text-gray-600 bg-transparent cursor-pointer"
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                >
-                                    <option value="All">All Statuses</option>
-                                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
+                            <CommonSelect
+                                icon={Tag}
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                options={[
+                                    { value: 'All', label: 'All Statuses' },
+                                    ...STATUSES.map(s => ({ value: s, label: s }))
+                                ]}
+                                placeholder="All Statuses"
+                            />
                         </div>
                     </div>
 
@@ -777,7 +815,17 @@ export default function AssetManagement() {
                                         <FormInput label="Asset Name" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. MacBook Pro M3" />
 
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormSelect label="Category" required value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} options={categories.map(c => ({ value: c.id, label: c.name }))} placeholder="Select Category" />
+                                            <CommonSelect
+                                                variant="form"
+                                                label="Category"
+                                                required
+                                                searchable={true}
+                                                searchPlaceholder="Search category..."
+                                                value={formData.category_id}
+                                                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                                                options={categories.map(c => ({ value: c.id, label: c.name }))}
+                                                placeholder="Select Category"
+                                            />
                                             <FormInput label="Serial Number" required value={formData.serial} onChange={(e) => setFormData({ ...formData, serial: e.target.value })} placeholder="S/N: 123-ABC" />
                                         </div>
 
@@ -786,9 +834,11 @@ export default function AssetManagement() {
                                             <FormInput label="Cost (₹)" isNumber={true} value={formData.cost} onChange={(e) => setFormData({ ...formData, cost: e.target.value })} placeholder="0.00" />
                                         </div>
 
-                                        <FormSelect
+                                        <CommonSelect
+                                            variant="form"
                                             label="Initial Status"
                                             required
+                                            searchable={false}
                                             value={formData.status}
                                             onChange={(e) => {
                                                 const newStatus = e.target.value;
@@ -799,19 +849,23 @@ export default function AssetManagement() {
                                                 });
                                             }}
                                             options={STATUSES.map(s => ({ value: s, label: s }))}
+                                            placeholder="Select Status"
                                         />
 
                                         {formData.status === 'Assigned' && (
-                                            <FormSelect
+                                            <CommonSelect
+                                                variant="form"
                                                 label="Assign to User"
                                                 required
+                                                searchable={true}
+                                                searchPlaceholder="Search employee name or ID..."
                                                 value={formData.assigned_to}
                                                 onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
                                                 options={employees.map(user => ({
                                                     value: user.id,
                                                     label: `${user.name || user.employee_name} (${user.emp_id})`
                                                 }))}
-                                                placeholder="Select User"
+                                                placeholder="Search & Select User..."
                                             />
                                         )}
 
@@ -896,7 +950,7 @@ export default function AssetManagement() {
                                     <button
                                         type="submit"
                                         disabled={categoryLoading}
-                                        className="px-6 py-2 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-hover transition-all shadow-md shadow-primary/10 active:scale-95 flex items-center gap-2 uppercase tracking-widest"
+                                        className="px-4 py-1 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-hover transition-all shadow-md shadow-primary/10 active:scale-95 flex items-center gap-2"
                                     >
                                         {categoryLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                         <span>Add</span>
@@ -983,12 +1037,15 @@ export default function AssetManagement() {
                                 </div>
 
                                 <form onSubmit={handleAssignSubmit} className="space-y-8">
-                                    <FormSelect
+                                    <CommonSelect
+                                        variant="form"
                                         label="Select Employee"
+                                        searchable={true}
+                                        searchPlaceholder="Search by name or emp ID..."
                                         value={assignData.userId}
                                         onChange={(e) => setAssignData({ userId: e.target.value })}
                                         options={[
-                                            ...employees.map(e => ({ value: e.id, label: `${e.employee_name} (${e.emp_id})` })),
+                                            ...employees.map(e => ({ value: e.id, label: `${e.employee_name || e.name} (${e.emp_id})` })),
                                             ...(employees.length === 0 ? [{ value: '999', label: 'Mock User - Alex Johnson' }] : [])
                                         ]}
                                         placeholder="Search & Select Employee..."

@@ -9,7 +9,7 @@ import {
     PieChart as PieChartIcon,
     ArrowRight
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, startOfMonth, endOfMonth, isToday, addMonths } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -23,52 +23,58 @@ import FullPageLoader from '../../Common/FullPageLoader';
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
-            >
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Rejection Reason</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                        <X size={20} />
-                    </button>
-                </div>
-                <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Enter reason for rejection..."
-                    className="w-full h-32 p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none"
-                    autoFocus
-                />
-                <div className="flex gap-3 mt-6">
-                    <button
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 m-0">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 border border-gray-100 text-gray-600 font-medium rounded-full hover:bg-gray-50"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.96, opacity: 0, y: 8 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-6"
                     >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => onConfirm(note)}
-                        disabled={loading || !note.trim()}
-                        className="flex-1 px-4 py-2 bg-rose-500 text-white font-medium rounded-full hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                        Confirm Reject
-                    </button>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Rejection Reason</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="Enter reason for rejection..."
+                            className="w-full h-32 p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none"
+                            autoFocus
+                        />
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 px-4 py-2 border border-gray-100 text-gray-600 font-medium rounded-full hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => onConfirm(note)}
+                                disabled={loading || !note.trim()}
+                                className="flex-1 px-4 py-2 bg-rose-500 text-white font-medium rounded-full hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                Confirm Reject
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </motion.div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 

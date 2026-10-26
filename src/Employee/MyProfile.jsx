@@ -7,6 +7,7 @@ import {
     Eye, EyeOff, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { getProfileApi, updateUserApi, getUserByIdApi, API_URL } from '../Action/api';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -24,6 +25,21 @@ export default function MyProfile() {
     useEffect(() => {
         fetchProfile();
     }, [userId]);
+
+    useEffect(() => {
+        if (!isImageModalOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setIsImageModalOpen(false);
+        };
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isImageModalOpen]);
 
     const fetchProfile = async () => {
         try {
@@ -175,71 +191,78 @@ export default function MyProfile() {
                 </div>
 
                 {/* Password Verification Modal */}
-                <AnimatePresence>
-                    {showPasswordModal && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-                            onClick={() => setShowPasswordModal(false)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="relative w-full max-w-md rounded-2xl overflow-hidden bg-white shadow-2xl p-6"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900">Verify Identity</h3>
-                                    <button
-                                        onClick={() => setShowPasswordModal(false)}
-                                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                                <p className="text-sm text-gray-500 mb-4">Please enter your password to view this sensitive information.</p>
-                                <form onSubmit={handleVerifyPassword}>
-                                    <div className="relative mb-4">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="Enter your password"
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                            autoFocus
-                                        />
+                {createPortal(
+                    <AnimatePresence>
+                        {showPasswordModal && (
+                            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                                {/* Backdrop */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                                    onClick={() => setShowPasswordModal(false)}
+                                />
+                                <motion.div
+                                    initial={{ scale: 0.95, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.95, opacity: 0 }}
+                                    transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+                                    className="relative z-10 w-full max-w-md rounded-2xl overflow-hidden bg-white shadow-2xl p-6 border border-gray-100"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-semibold text-gray-900">Verify Identity</h3>
                                         <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
-                                    <div className="flex justify-end gap-3">
-                                        <button
-                                            type="button"
                                             onClick={() => setShowPasswordModal(false)}
-                                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
                                         >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={verifying || !password}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            {verifying ? 'Verifying...' : 'Verify'}
+                                            <X size={16} />
                                         </button>
                                     </div>
-                                </form>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                    <p className="text-sm text-gray-500 mb-4">Please enter your password to view this sensitive information.</p>
+                                    <form onSubmit={handleVerifyPassword}>
+                                        <div className="relative mb-4">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="Enter your password"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                                autoFocus
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
+                                        <div className="flex justify-end gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswordModal(false)}
+                                                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={verifying || !password}
+                                                className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                {verifying ? 'Verifying...' : 'Verify'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>,
+                    document.body
+                )}
             </div>
         );
     };
@@ -248,7 +271,7 @@ export default function MyProfile() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-7xl mx-auto space-y-8 pb-12"
+            className="max-w-9xl mx-auto space-y-8 pb-12"
         >
             {/* Header Hero Section */}
             <div className="relative overflow-hidden bg-white rounded-[20px] border border-gray-200">
@@ -412,41 +435,54 @@ export default function MyProfile() {
             </div>
 
             {/* Image Popup Modal */}
-            <AnimatePresence>
-                {isImageModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-                        onClick={() => setIsImageModalOpen(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden bg-white shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <button
+            {createPortal(
+                <AnimatePresence>
+                    {isImageModalOpen && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 select-none">
+                            {/* Backdrop as pure sibling */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="fixed inset-0 bg-black/75 backdrop-blur-sm"
                                 onClick={() => setIsImageModalOpen(false)}
-                                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-10"
-                            >
-                                <X size={20} />
-                            </button>
-                            <img
-                                src={
-                                    profile.document_photo
-                                        ? `${import.meta.env.VITE_API_URL}/api/${profile.document_photo}`
-                                        : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=500`
-                                }
-                                alt="Profile Full Size"
-                                className="w-full h-full object-contain max-h-[85vh]"
                             />
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+                            {/* Modal Card */}
+                            <motion.div
+                                initial={{ scale: 0.94, opacity: 0, y: 10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.94, opacity: 0, y: 10 }}
+                                transition={{ type: "spring", duration: 0.35, bounce: 0 }}
+                                className="relative z-10 max-h-[90vh] max-w-[92vw] sm:max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col items-center justify-center border border-gray-100"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setIsImageModalOpen(false)}
+                                    aria-label="Close"
+                                    className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all duration-200 z-20 shadow-md active:scale-95"
+                                >
+                                    <X size={18} />
+                                </button>
+                                <div className="p-2 sm:p-3 bg-gray-50/50 flex items-center justify-center w-full h-full">
+                                    <img
+                                        src={
+                                            profile.document_photo
+                                                ? `${import.meta.env.VITE_API_URL}/api/${profile.document_photo}`
+                                                : `https://ui-avatars.com/api/?name=${profile.employee_name || profile.name}&background=f1f5f9&color=1d4ed8&bold=true&size=500`
+                                        }
+                                        alt="Profile Full Size"
+                                        className="max-h-[82vh] max-w-full w-auto h-auto object-contain rounded-xl shadow-xs"
+                                    />
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </motion.div>
     );
 }

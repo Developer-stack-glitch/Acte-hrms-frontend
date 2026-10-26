@@ -3,6 +3,7 @@ import TableSkeleton from './CommonSkeletonLoader/TableSkeleton';
 import { Edit2, Trash2, Eye } from 'lucide-react'
 import Tooltip from './Tooltip';
 import NoData from './NoData';
+import CommonSelect from './CommonSelect';
 /**
  * A reusable Data Table component with premium styling.
  * 
@@ -192,18 +193,20 @@ export default function DataTable({
                         </div>
 
                         {/* Show Rows */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             <span className="text-[13px] text-gray-400 font-medium whitespace-nowrap">Show Rows</span>
-                            <select
-                                className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-medium text-gray-600 outline-none focus:border-primary/30 transition-colors cursor-pointer"
+                            <CommonSelect
                                 value={pagination.pageSize}
                                 onChange={(e) => pagination.onPageSizeChange?.(parseInt(e.target.value))}
-                            >
-                                <option value={10}>10 / page</option>
-                                <option value={20}>20 / page</option>
-                                <option value={50}>50 / page</option>
-                                <option value={100}>100 / page</option>
-                            </select>
+                                options={[
+                                    { value: 10, label: '10 / page' },
+                                    { value: 20, label: '20 / page' },
+                                    { value: 50, label: '50 / page' },
+                                    { value: 100, label: '100 / page' }
+                                ]}
+                                searchable={false}
+                                className="!py-1.5 !px-3 !text-[12px]"
+                            />
                         </div>
                     </div>
                 </div>

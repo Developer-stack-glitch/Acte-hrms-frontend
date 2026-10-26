@@ -121,15 +121,25 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="bg-white rounded-[15px] shadow-2xl w-full max-w-xl overflow-hidden"
-            >
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative z-10 bg-white rounded-[15px] shadow-2xl w-full max-w-xl overflow-hidden"
+                    >
                 {/* Header */}
                 <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                     <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -310,6 +320,8 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }) {
                     )}
                 </div>
             </motion.div>
-        </div>
+                </div>
+            )}
+        </AnimatePresence>
     );
 }

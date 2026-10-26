@@ -159,7 +159,7 @@ export default function WeekOff() {
     };
 
     return (
-        <div className="min-h-screen bg-transparent md:p-4 p-3 max-w-7xl mx-auto pb-6">
+        <div className="min-h-screen bg-transparent md:p-4 p-3 max-w-9xl mx-auto pb-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between md:gap-4 gap-2 md:mb-8 mb-4">
                 <div className="flex items-start gap-4">

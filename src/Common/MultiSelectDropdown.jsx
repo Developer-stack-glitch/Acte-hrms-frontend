@@ -53,20 +53,22 @@ const MultiSelectDropdown = ({ label, items, selectedItems, onChange, placeholde
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute z-[100] top-full w-full bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden min-w-[280px] mt-1"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="absolute z-[100] top-full w-full bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/80 overflow-hidden min-w-[280px] mt-1.5 transform-gpu"
                     >
-                        <div className="p-3 border-b border-gray-50">
-                            <div className="relative">
-                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <div className="p-2.5 border-b border-gray-100 bg-gray-50/50">
+                            <div className="relative flex items-center">
+                                <Search size={14} className="absolute left-3 text-gray-400 pointer-events-none" />
                                 <input
                                     type="text"
                                     placeholder={placeholder}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-full focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all w-full text-[14px]"
+                                    className="w-full pl-8 pr-7 py-2 bg-white border border-gray-200 rounded-xl text-[12px] font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors text-gray-700"
+                                    onClick={(e) => e.stopPropagation()}
                                 />
                             </div>
                         </div>

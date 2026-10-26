@@ -42,6 +42,8 @@ import WebClockWidget from './WebClockWidget';
 import WebCalendar from './WebCalendar';
 import PayrollOverview from './PayrollOverview';
 import AssetOverview from './AssetOverview';
+import RecruitmentOverview from './RecruitmentOverview';
+import HelpdeskOverview from './HelpdeskOverview';
 import DashboardSkeleton from '../../Common/CommonSkeletonLoader/DashboardSkeleton';
 import FullPageLoader from '../../Common/FullPageLoader';
 import { getRegularisationCountsApi } from '../../Action/api';
@@ -51,8 +53,7 @@ const DASHBOARD_TABS = [
     { id: 'attendance', label: 'Attendance' },
     { id: 'payroll', label: 'Payroll' },
     { id: 'asset', label: 'Asset Management' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'employee', label: 'Employee' },
+    // { id: 'employee', label: 'Employee' },
     { id: 'recruitment', label: 'Recruitment' },
     { id: 'helpdesk', label: 'Helpdesk' }
 ];
@@ -1810,8 +1811,22 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* Recruitment Tab Content */}
+            {activeTab === 'recruitment' && (
+                <div className="animate-in slide-in-from-bottom-4 duration-500">
+                    <RecruitmentOverview />
+                </div>
+            )}
+
+            {/* Helpdesk Tab Content */}
+            {activeTab === 'helpdesk' && (
+                <div className="animate-in slide-in-from-bottom-4 duration-500">
+                    <HelpdeskOverview />
+                </div>
+            )}
+
             {/* Other Coming Soon Tabs */}
-            {['inventory', 'employee', 'recruitment', 'helpdesk'].includes(activeTab) && (
+            {['inventory', 'employee'].includes(activeTab) && (
                 <div className="min-h-[60vh] flex flex-col items-center justify-center p-12 bg-white rounded-[32px] border border-dashed border-gray-200 shadow-inner group">
                     <div className="w-20 h-20 rounded-3xl bg-blue-50 flex items-center justify-center text-blue-600 mb-6 group-hover:rotate-12 transition-transform duration-500">
                         <Sparkles size={40} />

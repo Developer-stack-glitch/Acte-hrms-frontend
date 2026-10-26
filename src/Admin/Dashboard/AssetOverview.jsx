@@ -91,18 +91,25 @@ export default function AssetOverview() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const params = {
-                startDate: fromDate,
-                endDate: toDate,
+
+            // Asset inventory cards, tables and composition charts reflect active assets
+            const assetParams = {
                 ...filters,
                 limit: 1000 // Get all for frontend stats
             };
 
+            // Historical events and requests are scoped to the selected date range
+            const analyticsParams = {
+                startDate: fromDate,
+                endDate: toDate,
+                ...filters
+            };
+
             const [assetsRes, categoriesRes, usersRes, analyticsRes] = await Promise.all([
-                getAssetsApi(params),
+                getAssetsApi(assetParams),
                 getAssetCategoriesApi(),
                 getUsersApi({ limit: 1000, ...filters }),
-                getAssetAnalyticsApi(params)
+                getAssetAnalyticsApi(analyticsParams)
             ]);
 
             setAssets(assetsRes.data.assets || []);
@@ -143,11 +150,21 @@ export default function AssetOverview() {
         const inWarranty = assets.filter(a => {
             if (!a.purchaseDate || !a.warrantyInMonth) return false;
             const pDate = new Date(a.purchaseDate);
-            const wDate = new Date(pDate.setMonth(pDate.getMonth() + parseInt(a.warrantyInMonth)));
+            const wDate = new Date(pDate.getTime());
+            wDate.setMonth(wDate.getMonth() + parseInt(a.warrantyInMonth));
             return wDate > new Date();
         }).length;
 
+        const expiredWarranty = assets.filter(a => {
+            if (!a.purchaseDate || !a.warrantyInMonth) return false;
+            const pDate = new Date(a.purchaseDate);
+            const wDate = new Date(pDate.getTime());
+            wDate.setMonth(wDate.getMonth() + parseInt(a.warrantyInMonth));
+            return wDate <= new Date();
+        }).length;
+
         const totalVendors = new Set(assets.filter(a => a.vendor).map(a => a.vendor)).size;
+        const newVendors = new Set(assets.filter(a => a.vendor && isNew(a.created_at || a.purchaseDate)).map(a => a.vendor)).size;
 
         const newAssets = assets.filter(a => isNew(a.created_at || a.purchaseDate)).length;
         const newUnassigned = assets.filter(a => a.status === 'Available' && isNew(a.updated_at)).length;
@@ -159,11 +176,13 @@ export default function AssetOverview() {
             repair,
             broken,
             inWarranty,
+            expiredWarranty,
             totalVendors,
+            newVendors,
             newAssets,
             newUnassigned,
             newRepair,
-            pendingRequests: analytics.requests.filter(r => r.status === 'Requested').length
+            pendingRequests: (analytics?.requests || []).filter(r => r.status === 'Requested').length
         };
     }, [assets, fromDate, toDate, analytics]);
 
@@ -174,7 +193,7 @@ export default function AssetOverview() {
             const cat = asset.category || 'Other';
             if (!data[cat]) data[cat] = { name: cat, Assigned: 0, Unassigned: 0 };
             if (asset.status === 'Assigned') data[cat].Assigned++;
-            else if (asset.status === 'Available') data[cat].Unassigned++;
+            else data[cat].Unassigned++;
         });
         return Object.values(data).sort((a, b) => (b.Assigned + b.Unassigned) - (a.Assigned + a.Unassigned)).slice(0, 7);
     }, [assets]);
@@ -182,8 +201,8 @@ export default function AssetOverview() {
     const deptAllocationData = useMemo(() => {
         const data = {};
         assets.forEach(asset => {
-            if (asset.status === 'Assigned' && asset.assignedTo?.department) {
-                const dept = asset.assignedTo.department;
+            if (asset.status === 'Assigned') {
+                const dept = asset.assignedTo?.department || 'Unassigned Dept';
                 if (!data[dept]) data[dept] = { name: dept, Assigned: 0 };
                 data[dept].Assigned++;
             }
@@ -194,7 +213,7 @@ export default function AssetOverview() {
     const vendorInsightData = useMemo(() => {
         const data = {};
         assets.forEach(asset => {
-            const vendor = asset.vendor || 'Unknown';
+            const vendor = asset.vendor || 'Direct Purchase';
             if (!data[vendor]) data[vendor] = { name: vendor, Total: 0, Repaired: 0, Lost: 0 };
             data[vendor].Total++;
             if (asset.status === 'Maintenance') data[vendor].Repaired++;
@@ -208,15 +227,16 @@ export default function AssetOverview() {
         const allocations = {};
         assets.forEach(asset => {
             if (asset.status === 'Assigned' && asset.assignedTo) {
-                const userName = asset.assignedTo.name;
-                if (!allocations[userName]) {
-                    allocations[userName] = {
+                const userName = asset.assignedTo.name || 'Unknown';
+                const userKey = asset.assignedTo.id || userName;
+                if (!allocations[userKey]) {
+                    allocations[userKey] = {
                         name: userName,
-                        emp_id: asset.assignedTo.emp_id,
+                        emp_id: asset.assignedTo.emp_id || 'N/A',
                         count: 0
                     };
                 }
-                allocations[userName].count += 1;
+                allocations[userKey].count += 1;
             }
         });
         return Object.values(allocations).sort((a, b) => b.count - a.count);
@@ -314,25 +334,12 @@ export default function AssetOverview() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Category:</span>
-                        <select
-                            className="bg-transparent text-[13px] font-semibold text-gray-700 outline-none border-none cursor-pointer focus:ring-0 p-0"
-                            onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value || undefined }))}
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar pb-1 md:pb-0">
                         <button
                             onClick={() => {
                                 const today = new Date();
-                                const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
-                                const to = new Date(today.getFullYear(), today.getMonth(), 25);
+                                const from = new Date(today.getFullYear(), today.getMonth(), 1);
+                                const to = today;
                                 setFromDate(from.toLocaleDateString('sv-SE'));
                                 setToDate(to.toLocaleDateString('sv-SE'));
                             }}
@@ -394,7 +401,7 @@ export default function AssetOverview() {
                     icon={Package}
                     color={{ bg: 'bg-gradient-to-br from-blue-500 to-blue-600' }}
                     delay={0.1}
-                    path="/assets"
+                    path="/asset-management"
                 />
                 <AssetStatCard
                     title="Assigned Assets"
@@ -404,7 +411,7 @@ export default function AssetOverview() {
                     icon={UserCheck}
                     color={{ bg: 'bg-gradient-to-br from-emerald-500 to-emerald-600' }}
                     delay={0.2}
-                    path="/assets"
+                    path="/asset-management"
                 />
                 <AssetStatCard
                     title="In Repair"
@@ -414,27 +421,27 @@ export default function AssetOverview() {
                     icon={Wrench}
                     color={{ bg: 'bg-gradient-to-br from-orange-500 to-orange-600' }}
                     delay={0.3}
-                    path="/assets"
+                    path="/asset-management"
                 />
                 <AssetStatCard
                     title="In Warranty"
                     value={stats.inWarranty}
                     subValueLabel="Expired (week)"
-                    subValue={0}
+                    subValue={stats.expiredWarranty}
                     icon={ShieldCheck}
                     color={{ bg: 'bg-gradient-to-br from-violet-500 to-violet-600' }}
                     delay={0.4}
-                    path="/assets"
+                    path="/asset-management"
                 />
                 <AssetStatCard
                     title="Total Vendors"
                     value={stats.totalVendors}
                     subValueLabel="New Vendor (week)"
-                    subValue={0}
+                    subValue={stats.newVendors}
                     icon={Truck}
                     color={{ bg: 'bg-gradient-to-br from-slate-600 to-slate-700' }}
                     delay={0.5}
-                    path="/assets"
+                    path="/asset-management"
                 />
                 <AssetStatCard
                     title="Pending Requests"
@@ -444,7 +451,7 @@ export default function AssetOverview() {
                     icon={Clock}
                     color={{ bg: 'bg-gradient-to-br from-amber-500 to-amber-600' }}
                     delay={0.7}
-                    path="/assets"
+                    path="/asset-management"
                 />
             </div>
 
@@ -457,7 +464,7 @@ export default function AssetOverview() {
                             Asset Allocation (Employee-wise)
                         </h3>
                         <p className="text-[11px] font-medium text-gray-400 mt-1 italic">
-                            Currently assigned assets per employee <span className="text-rose-400 font-mono">(user_assets.status = assigned)</span>.
+                            Currently assigned assets per employee.
                         </p>
                     </div>
 
@@ -506,7 +513,7 @@ export default function AssetOverview() {
                             Asset Summary (Totals & Status)
                         </h3>
                         <p className="text-[11px] font-medium text-gray-400 mt-1 italic">
-                            Company assets only <span className="text-rose-400 font-mono">(assets_category = 1, excludes variant parts)</span>: totals and status mix.
+                            Company assets overview: totals and current status breakdown.
                         </p>
                     </div>
 
@@ -519,12 +526,12 @@ export default function AssetOverview() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {statusSummary.filter(s => s.count > 0).length > 0 ? (
+                                {assets.length > 0 ? (
                                     statusSummary.map((item, idx) => (
                                         <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
                                             <td className="py-3 font-semibold text-gray-600 text-sm">{item.status}</td>
                                             <td className="py-3 text-right">
-                                                <span className="text-lg font-semibold text-gray-800 text-sm">{item.count}</span>
+                                                <span className="text-sm font-semibold text-gray-800">{item.count}</span>
                                             </td>
                                         </tr>
                                     ))

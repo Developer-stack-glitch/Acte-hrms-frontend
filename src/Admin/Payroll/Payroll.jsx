@@ -22,6 +22,7 @@ import AdvanceSalary from './AdvanceSalary';
 import SalaryComponents from './SalaryComponents';
 import SalaryFormulas from './SalaryFormulas';
 import StatutoryComplianceSettings from './StatutoryComplianceSettings';
+import TabsSlider from '../../Common/TabsSlider';
 
 const tabs = [
     { id: 'dashboard', label: 'Payroll Dashboard', icon: LayoutDashboard, permissionId: 'payroll_dashboard' },
@@ -99,10 +100,11 @@ export default function Payroll() {
         <div className="flex flex-col h-full bg-[#f8fafc]">
             {/* Horizontal Tabs Navigation */}
             <div className="bg-white rounded-lg border-b border-gray-100 md:px-3 px-3 pt-3 pb-0 sticky top-0 z-20">
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+                <TabsSlider activeKey={activeTab}>
                     {filteredTabs.map((tab) => (
                         <button
                             key={tab.id}
+                            data-tab-id={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2.5 px-4 py-3 border-b-2 transition-all duration-300 relative whitespace-nowrap group ${activeTab === tab.id
                                 ? 'border-primary text-primary'
@@ -135,7 +137,7 @@ export default function Payroll() {
                             )}
                         </button>
                     ))}
-                </div>
+                </TabsSlider>
             </div>
 
             {/* Content Area */}
@@ -147,7 +149,7 @@ export default function Payroll() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        className="h-full"
                     >
                         <div className="overflow-hidden min-h-[600px]">
                             {activeTab === 'dashboard' ? (

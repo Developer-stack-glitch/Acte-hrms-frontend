@@ -56,6 +56,7 @@ export const resetPasswordApi = (data) => api.post('/auth/reset-password', data)
 // User APIs
 export const getUsersApi = (params) => api.get('/users', { params });
 export const getUserAttendanceApi = (params) => api.get('/users/user-attendance', { params });
+export const checkUserDuplicateApi = (params) => api.get('/users/check-duplicate', { params });
 export const createUserApi = (data) => {
     if (data instanceof FormData) {
         return api.post('/users', data, {
@@ -277,6 +278,7 @@ export const createJobApi = (data) => api.post('/jobs', data);
 export const updateJobApi = (id, data) => api.put(`/jobs/${id}`, data);
 export const deleteJobApi = (id) => api.delete(`/jobs/${id}`);
 export const getApplicantsApi = () => api.get('/applicants');
+export const getInterviewsApi = () => api.get('/applicants/interviews/all');
 export const getApplicantsByJobApi = (jobId) => api.get(`/applicants/job/${jobId}`);
 export const createApplicantApi = (data) => {
     if (data instanceof FormData) {
@@ -369,6 +371,14 @@ export const deleteRoleApi = (role) => api.delete(`/role-permissions/${role}`);
 export const getMyNotificationsApi = () => api.get('/notifications/my');
 export const markNotificationReadApi = (id) => api.patch(`/notifications/${id}/read`);
 export const markAllNotificationsReadApi = () => api.patch('/notifications/read-all');
+
+// Helpdesk APIs
+export const getHelpdeskTicketsApi = (params) => api.get('/helpdesk', { params });
+export const getHelpdeskStatsApi = (params) => api.get('/helpdesk/stats', { params });
+export const createHelpdeskTicketApi = (data) => api.post('/helpdesk', data);
+export const updateHelpdeskStatusApi = (id, data) => api.put(`/helpdesk/${id}/status`, data);
+export const assignHelpdeskTicketApi = (id, data) => api.put(`/helpdesk/${id}/assign`, data);
+export const deleteHelpdeskTicketApi = (id) => api.delete(`/helpdesk/${id}`);
 
 export default api;
 

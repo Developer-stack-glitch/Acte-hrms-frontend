@@ -236,7 +236,7 @@ export default function AddLeave({ onSuccess, onCancel }) {
 
             {/* Form Body */}
             <div className="flex-1 overflow-y-auto p-4 bg-[#f8fafc]/50">
-                <form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-8">
+                <form onSubmit={handleSubmit} className="max-w-9xl mx-auto space-y-8">
                     {/* Section 1: Core Details */}
                     <div className="bg-white p-6 rounded-[15px] border border-gray-200 space-y-6">
                         <div className="flex items-center gap-2 mb-4">
@@ -444,7 +444,7 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                                                 let quality = 0.8;
                                                                 let maxWidth = undefined;
                                                                 const targetSize = 150 * 1024; // 150KB target
-                                                                
+
                                                                 while (currentFile.size > targetSize && quality > 0.1) {
                                                                     currentFile = await new Promise((resolve, reject) => {
                                                                         new Compressor(currentFile, {
@@ -466,13 +466,13 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                                                             },
                                                                         });
                                                                     });
-                                                                    
+
                                                                     quality -= 0.15;
                                                                     if (quality <= 0.5 && currentFile.size > targetSize) {
-                                                                        maxWidth = 1280; 
+                                                                        maxWidth = 1280;
                                                                     }
                                                                 }
-                                                                
+
                                                                 processedFiles.push(currentFile);
                                                             } catch (error) {
                                                                 console.error('Error compressing image:', error);

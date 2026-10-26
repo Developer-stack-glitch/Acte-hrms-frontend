@@ -4,11 +4,11 @@ import {
     Plus, Loader2, X, Eye, Calendar,
     Upload, Info
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import DataTable from '../../Common/DataTable';
 import ConfirmationModal from '../../Common/ConfirmationModal';
-import { FormInput, FormSelect, FormTextarea, FormDate } from '../../Common/Form';
+import { FormInput, FormSelect, FormTextarea, FormDate, CommonSelect } from '../../Common/Form';
 import {
     getReimbursementsApi,
     getReimbursementCategoriesApi,
@@ -247,7 +247,7 @@ export default function ReimbursementClaims() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] md:p-2 p-4 max-w-[1600px] mx-auto pb-10">
+        <div className="min-h-screen bg-[#F8FAFC] md:p-2 p-4 pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
@@ -298,9 +298,9 @@ export default function ReimbursementClaims() {
             </div>
 
             {/* Main Content */}
-            <div className="bg-white rounded-[15px] border border-gray-200 overflow-hidden min-h-[500px] flex flex-col">
+            <div className="bg-white rounded-[15px] border border-gray-200 min-h-[500px] flex flex-col">
                 {/* Toolbar */}
-                <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30">
+                <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/30 rounded-t-[15px]">
                     <div className="relative flex-1 max-w-md group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
                         <input
@@ -312,21 +312,22 @@ export default function ReimbursementClaims() {
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className="pl-8 pr-6 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-semibold text-gray-600 outline-none focus:border-primary/30 cursor-pointer appearance-none"
-                            >
-                                <option value="All">All Status</option>
-                                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                        </div>
+                        <CommonSelect
+                            icon={Filter}
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            options={[
+                                { value: 'All', label: 'All Status' },
+                                ...STATUS_OPTIONS.map(s => ({ value: s, label: s }))
+                            ]}
+                            placeholder="All Status"
+                            searchable={false}
+                            align="right"
+                        />
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden rounded-b-[15px]">
                     <DataTable
                         columns={columns}
                         data={filteredClaims}
@@ -345,251 +346,275 @@ export default function ReimbursementClaims() {
             </div>
 
             {/* New Claim Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-[15px] w-full max-w-xl overflow-hidden shadow-2xl"
-                    >
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-900">New Reimbursement Request</h3>
-                                <p className="text-sm text-gray-500 font-medium">Please provide accurate details of your expense.</p>
+            <AnimatePresence>
+                {isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            onClick={() => setIsAddModalOpen(false)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative z-10 bg-white rounded-[15px] w-full max-w-xl overflow-hidden shadow-2xl"
+                        >
+                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <div>
+                                    <h3 className="text-xl font-semibold text-gray-900">New Reimbursement Request</h3>
+                                    <p className="text-sm text-gray-500 font-medium">Please provide accurate details of your expense.</p>
+                                </div>
+                                <button onClick={() => setIsAddModalOpen(false)} className="p-2.5 bg-white text-gray-400 rounded-full hover:text-rose-500 hover:bg-rose-50 border border-gray-100 transition-all">
+                                    <X size={20} />
+                                </button>
                             </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="p-2.5 bg-white text-gray-400 rounded-full hover:text-rose-500 hover:bg-rose-50 border border-gray-100 transition-all">
-                                <X size={20} />
-                            </button>
-                        </div>
 
-                        <form onSubmit={handleFormSubmit} className="p-6 space-y-5">
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="col-span-2">
-                                    <FormInput
-                                        label="Claim Title"
-                                        placeholder="Briefly describe the claim (e.g. Client visit travel)"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <FormSelect
-                                        label="Expense Category"
-                                        options={[
-                                            ...categories.map(c => ({ value: c, label: c })),
-                                            { value: 'ADD_NEW', label: '+ Add New Category' }
-                                        ]}
-                                        value={isAddingNewCategory ? 'ADD_NEW' : formData.category}
-                                        onChange={(e) => {
-                                            if (e.target.value === 'ADD_NEW') {
-                                                setIsAddingNewCategory(true);
-                                                setFormData({ ...formData, category: '' });
-                                            } else {
-                                                setIsAddingNewCategory(false);
-                                                setFormData({ ...formData, category: e.target.value });
-                                            }
-                                        }}
-                                        required
-                                    />
-                                    {isAddingNewCategory && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="mt-2"
-                                        >
-                                            <FormInput
-                                                placeholder="Enter new category name"
-                                                value={newCategory}
-                                                onChange={(e) => setNewCategory(e.target.value)}
-                                                required
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setIsAddingNewCategory(false);
-                                                    setNewCategory('');
-                                                }}
-                                                className="text-[11px] text-primary font-bold mt-1 hover:underline ml-1"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </div>
-                                <FormDate
-                                    label="Expense Date"
-                                    name="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                                    required
-                                />
-                                <FormInput
-                                    label="Claim Amount (₹)"
-                                    isNumber={true}
-                                    placeholder="0.00"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                    required
-                                />
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[13px] font-bold text-gray-700 ml-1">Upload Receipt</label>
-                                    <label className="relative flex flex-col items-center justify-center w-full h-12 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-                                        <div className="flex items-center gap-2 text-gray-500">
-                                            <Upload size={16} />
-                                            <span className="text-[12px] font-bold truncate max-w-[150px]">
-                                                {receiptFile ? receiptFile.name : 'Choose file...'}
-                                            </span>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            onChange={(e) => setReceiptFile(e.target.files[0])}
-                                            accept="image/*,application/pdf"
+                            <form onSubmit={handleFormSubmit} className="p-6 space-y-5">
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div className="col-span-2">
+                                        <FormInput
+                                            label="Claim Title"
+                                            placeholder="Briefly describe the claim (e.g. Client visit travel)"
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            required
                                         />
-                                    </label>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <FormSelect
+                                            label="Expense Category"
+                                            options={[
+                                                ...categories.map(c => ({ value: c, label: c })),
+                                                { value: 'ADD_NEW', label: '+ Add New Category' }
+                                            ]}
+                                            value={isAddingNewCategory ? 'ADD_NEW' : formData.category}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'ADD_NEW') {
+                                                    setIsAddingNewCategory(true);
+                                                    setFormData({ ...formData, category: '' });
+                                                } else {
+                                                    setIsAddingNewCategory(false);
+                                                    setFormData({ ...formData, category: e.target.value });
+                                                }
+                                            }}
+                                            required
+                                        />
+                                        {isAddingNewCategory && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="mt-2"
+                                            >
+                                                <FormInput
+                                                    placeholder="Enter new category name"
+                                                    value={newCategory}
+                                                    onChange={(e) => setNewCategory(e.target.value)}
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsAddingNewCategory(false);
+                                                        setNewCategory('');
+                                                    }}
+                                                    className="text-[11px] text-primary font-bold mt-1 hover:underline ml-1"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                    <FormDate
+                                        label="Expense Date"
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+                                        required
+                                    />
+                                    <FormInput
+                                        label="Claim Amount (₹)"
+                                        isNumber={true}
+                                        placeholder="0.00"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                        required
+                                    />
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[13px] font-bold text-gray-700 ml-1">Upload Receipt</label>
+                                        <label className="relative flex flex-col items-center justify-center w-full h-12 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+                                            <div className="flex items-center gap-2 text-gray-500">
+                                                <Upload size={16} />
+                                                <span className="text-[12px] font-bold truncate max-w-[150px]">
+                                                    {receiptFile ? receiptFile.name : 'Choose file...'}
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                onChange={(e) => setReceiptFile(e.target.files[0])}
+                                                accept="image/*,application/pdf"
+                                            />
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                            <FormTextarea
-                                label="Additional Notes (Optional)"
-                                placeholder="Any extra information for the accounts team..."
-                                rows={3}
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            />
+                                <FormTextarea
+                                    label="Additional Notes (Optional)"
+                                    placeholder="Any extra information for the accounts team..."
+                                    rows={3}
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                />
 
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center gap-2 shadow-md shadow-primary/10 hover:shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-70 mt-4 active:scale-95"
-                            >
-                                {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
-                                {submitting ? 'Submitting Claim...' : 'Submit Claim Request'}
-                            </button>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="w-full py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center gap-2 shadow-md shadow-primary/10 hover:shadow-primary/20 hover:bg-primary-hover transition-all disabled:opacity-70 mt-4 active:scale-95"
+                                >
+                                    {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                                    {submitting ? 'Submitting Claim...' : 'Submit Claim Request'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* View/Edit Status Modal */}
-            {isViewModalOpen && selectedClaim && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-[15px] w-full max-w-2xl overflow-hidden shadow-2xl"
-                    >
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-900">Claim Details</h3>
-                                <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mt-0.5">Reference ID: #{selectedClaim.id}</p>
-                            </div>
-                            <button onClick={() => setIsViewModalOpen(false)} className="p-2.5 bg-gray-50 text-gray-400 rounded-full hover:text-rose-500 border border-gray-50 shadow-inner">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-8">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[14px] font-semibold text-gray-600">Title</span>
-                                        <h4 className="font-semibold text-gray-800 text-[15px]">{selectedClaim.title}</h4>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[14px] font-semibold text-gray-600">Category</span>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="px-3 py-1 bg-gray-100 rounded-full text-[14px] font-semibold text-gray-600">{selectedClaim.category}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[14px] font-semibold text-gray-600">Status Tracking</span>
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[14px] font-semibold border max-w-fit mt-1 ${getStatusStyle(selectedClaim.status)}`}>
-                                            <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                                            {selectedClaim.status}
-                                        </span>
-                                    </div>
+            <AnimatePresence>
+                {isViewModalOpen && selectedClaim && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            onClick={() => setIsViewModalOpen(false)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.96, opacity: 0, y: 8 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative z-10 bg-white rounded-[15px] w-full max-w-2xl overflow-hidden shadow-2xl"
+                        >
+                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-semibold text-gray-900">Claim Details</h3>
+                                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mt-0.5">Reference ID: #{selectedClaim.id}</p>
                                 </div>
-                                <div className="space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[14px] font-semibold text-gray-600">Claim Amount</span>
-                                        <h4 className="font-semibold text-primary text-[22px]">₹{parseFloat(selectedClaim.amount).toLocaleString('en-IN')}</h4>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[14px] font-semibold text-gray-600">Expense Date</span>
-                                        <div className="flex items-center gap-2 text-gray-600 font-semibold text-[14px] mt-1">
-                                            <Calendar size={16} className="text-gray-400" />
-                                            {new Date(selectedClaim.date).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                                        </div>
-                                    </div>
-                                    {selectedClaim.receipt_url && (
+                                <button onClick={() => setIsViewModalOpen(false)} className="p-2.5 bg-gray-50 text-gray-400 rounded-full hover:text-rose-500 border border-gray-50 shadow-inner">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-8">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-6">
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[14px] font-semibold text-gray-600">Documentation</span>
-                                            <a
-                                                href={`${import.meta.env.VITE_API_URL}${selectedClaim.receipt_url}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary border border-primary/10 rounded-xl font-semibold text-[12px] hover:bg-primary/10 transition-all w-fit mt-1"
-                                            >
-                                                <Eye size={14} /> View Receipt
-                                            </a>
+                                            <span className="text-[14px] font-semibold text-gray-600">Title</span>
+                                            <h4 className="font-semibold text-gray-800 text-[15px]">{selectedClaim.title}</h4>
                                         </div>
-                                    )}
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[14px] font-semibold text-gray-600">Category</span>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="px-3 py-1 bg-gray-100 rounded-full text-[14px] font-semibold text-gray-600">{selectedClaim.category}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[14px] font-semibold text-gray-600">Status Tracking</span>
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[14px] font-semibold border max-w-fit mt-1 ${getStatusStyle(selectedClaim.status)}`}>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                                                {selectedClaim.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-6">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[14px] font-semibold text-gray-600">Claim Amount</span>
+                                            <h4 className="font-semibold text-primary text-[22px]">₹{parseFloat(selectedClaim.amount).toLocaleString('en-IN')}</h4>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[14px] font-semibold text-gray-600">Expense Date</span>
+                                            <div className="flex items-center gap-2 text-gray-600 font-semibold text-[14px] mt-1">
+                                                <Calendar size={16} className="text-gray-400" />
+                                                {new Date(selectedClaim.date).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                                            </div>
+                                        </div>
+                                        {selectedClaim.receipt_url && (
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[14px] font-semibold text-gray-600">Documentation</span>
+                                                <a
+                                                    href={`${import.meta.env.VITE_API_URL}${selectedClaim.receipt_url}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary border border-primary/10 rounded-xl font-semibold text-[12px] hover:bg-primary/10 transition-all w-fit mt-1"
+                                                >
+                                                    <Eye size={14} /> View Receipt
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <span className="text-[14px] font-semibold text-gray-600">Description / Notes</span>
+                                        <p className="text-[13px] text-gray-600 leading-relaxed font-medium">
+                                            {selectedClaim.description || 'No additional description provided.'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <span className="text-[14px] font-semibold text-gray-600">Description / Notes</span>
-                                    <p className="text-[13px] text-gray-600 leading-relaxed font-medium">
-                                        {selectedClaim.description || 'No additional description provided.'}
-                                    </p>
-                                </div>
+
+                                {/* Admin Actions */}
+                                {(userRole === 'admin' || userRole === 'superadmin') && (
+                                    <div className="pt-4 border-t border-gray-100 space-y-5">
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <Info size={18} />
+                                            <h5 className="font-semibold text-[15px]">Admin Control Panel</h5>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-5">
+                                            <FormSelect
+                                                label="Update Status"
+                                                options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
+                                                value={statusUpdate.status}
+                                                onChange={(e) => setStatusUpdate({ ...statusUpdate, status: e.target.value })}
+                                            />
+                                            <FormInput
+                                                label="Admin Comment"
+                                                placeholder="Reason for approval/rejection..."
+                                                value={statusUpdate.comment}
+                                                onChange={(e) => setStatusUpdate({ ...statusUpdate, comment: e.target.value })}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleStatusUpdate}
+                                            className="w-full py-3 bg-primary text-white rounded-full font-medium shadow-md shadow-primary/10 hover:shadow-primary/10 hover:bg-primary-hover transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle size={18} />
+                                            Update Claim Status
+                                        </button>
+                                    </div>
+                                )}
+
+                                {selectedClaim.comment && !(userRole === 'admin' || userRole === 'superadmin') && (
+                                    <div className="pt-3 border-t border-gray-100">
+                                        <div className="flex items-center gap-2 text-amber-600 mb-3">
+                                            <Info size={16} />
+                                            <h5 className="font-semibold text-[13px]">Admin Feedback</h5>
+                                        </div>
+                                        <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                                            <p className="text-[13px] text-amber-800 font-medium italic">"{selectedClaim.comment}"</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-
-                            {/* Admin Actions */}
-                            {(userRole === 'admin' || userRole === 'superadmin') && (
-                                <div className="pt-4 border-t border-gray-100 space-y-5">
-                                    <div className="flex items-center gap-2 text-primary">
-                                        <Info size={18} />
-                                        <h5 className="font-semibold text-[15px]">Admin Control Panel</h5>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-5">
-                                        <FormSelect
-                                            label="Update Status"
-                                            options={STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
-                                            value={statusUpdate.status}
-                                            onChange={(e) => setStatusUpdate({ ...statusUpdate, status: e.target.value })}
-                                        />
-                                        <FormInput
-                                            label="Admin Comment"
-                                            placeholder="Reason for approval/rejection..."
-                                            value={statusUpdate.comment}
-                                            onChange={(e) => setStatusUpdate({ ...statusUpdate, comment: e.target.value })}
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={handleStatusUpdate}
-                                        className="w-full py-3 bg-primary text-white rounded-full font-medium shadow-md shadow-primary/10 hover:shadow-primary/10 hover:bg-primary-hover transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle size={18} />
-                                        Update Claim Status
-                                    </button>
-                                </div>
-                            )}
-
-                            {selectedClaim.comment && !(userRole === 'admin' || userRole === 'superadmin') && (
-                                <div className="pt-3 border-t border-gray-100">
-                                    <div className="flex items-center gap-2 text-amber-600 mb-3">
-                                        <Info size={16} />
-                                        <h5 className="font-semibold text-[13px]">Admin Feedback</h5>
-                                    </div>
-                                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
-                                        <p className="text-[13px] text-amber-800 font-medium italic">"{selectedClaim.comment}"</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                </div>
-            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}

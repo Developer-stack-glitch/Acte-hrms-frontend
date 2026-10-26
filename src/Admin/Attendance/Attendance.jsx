@@ -13,14 +13,13 @@ import WeekOff from './WeekOff.jsx';
 import HolidayCalendar from './HolidayCalendar.jsx';
 import CompanyPolicy from './CompanyPolicy.jsx';
 import DeviceManager from './DeviceManager.jsx';
-import Regularisations from './Regularisations.jsx';
+import TabsSlider from '../../Common/TabsSlider.jsx';
 
 const tabs = [
     { id: 'manage', label: 'Attendance & Shift', icon: UserCheck, component: ManageAttedance, permissionId: 'attendance_shift' },
     { id: 'manual', label: 'Biometric Attendance', icon: FileText, component: () => <BiometricManual />, permissionId: 'attendance_biometric' },
     { id: 'weekoff', label: 'Week Off', icon: ClipboardCheck, component: () => <WeekOff />, permissionId: 'attendance_weekoff' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, component: () => <HolidayCalendar />, permissionId: 'attendance_calendar' },
-    { id: 'regularisations', label: 'Regularisation', icon: ClipboardCheck, component: Regularisations },
     // { id: 'leave-rules', label: 'Attendance Rules', icon: FileText, component: LeaveRules, permissionId: 'attendance_rules' },
     { id: 'company-policy', label: 'Company Policy', icon: FileText, component: CompanyPolicy, permissionId: 'attendance_policy' },
     { id: 'devices', label: 'Biometric Devices', icon: Tablet, component: DeviceManager, permissionId: 'attendance_devices' },
@@ -70,10 +69,11 @@ export default function Attendance() {
         <div className="flex flex-col h-full bg-[#f8fafc]">
             {/* Horizontal Tabs Navigation */}
             <div className="bg-white rounded-lg border-b border-gray-100 md:px-3 px-3 pt-3 pb-0 sticky top-0 z-20">
-                <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar scroll-smooth">
+                <TabsSlider activeKey={activeTab}>
                     {filteredTabs.map((tab) => (
                         <button
                             key={tab.id}
+                            data-tab-id={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2.5 px-4 py-3 border-b-2 transition-all duration-300 relative whitespace-nowrap group ${activeTab === tab.id
                                 ? 'border-primary text-primary'
@@ -100,7 +100,7 @@ export default function Attendance() {
                             )}
                         </button>
                     ))}
-                </div>
+                </TabsSlider>
             </div>
 
             {/* Content Area */}
@@ -112,7 +112,7 @@ export default function Attendance() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        className="h-full"
                     >
                         <div className="bg-white rounded-[8px] overflow-hidden min-h-[600px]">
                             <ActiveComponent />

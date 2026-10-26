@@ -1,4 +1,5 @@
 import React from 'react';
+import CommonSelect from './CommonSelect';
 
 /**
  * A reusable Pagination component with premium styling.
@@ -49,17 +50,16 @@ const Pagination = ({
                 {onPageSizeChange && (
                     <div className="flex items-center gap-2">
                         <span className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Show:</span>
-                        <select
-                            className="bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-gray-700 outline-none focus:border-primary/50 transition-colors cursor-pointer shadow-xs"
+                        <CommonSelect
                             value={pageSize}
                             onChange={(e) => onPageSizeChange(parseInt(e.target.value))}
-                        >
-                            {pageSizeOptions.map((opt) => (
-                                <option key={opt} value={opt}>
-                                    {opt} / page
-                                </option>
-                            ))}
-                        </select>
+                            options={pageSizeOptions.map((opt) => ({
+                                value: opt,
+                                label: `${opt} / page`
+                            }))}
+                            searchable={false}
+                            className="!py-1 !px-3 !text-[12px]"
+                        />
                     </div>
                 )}
 

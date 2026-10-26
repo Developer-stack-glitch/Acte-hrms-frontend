@@ -224,8 +224,8 @@ const Settings = () => {
                                 <FormGroup label="Email Address" value={fullProfile?.email} readOnly />
                                 <FormGroup label="Office Contact" name="off_contact_no" value={formData.off_contact_no} onChange={handleInputChange} placeholder="+1 (555) 000-0000" />
                                 <FormGroup label="Personal Contact" name="per_contact_no" value={formData.per_contact_no} onChange={handleInputChange} placeholder="+1 (555) 000-0000" />
-                                <FormGroup label="Designation" value={fullProfile?.designation_name} readOnly />
-                                <FormGroup label="Department" value={fullProfile?.department_name} readOnly />
+                                <FormGroup label="Designation" placeholder="Enter Designation" value={fullProfile?.designation_name} readOnly />
+                                <FormGroup label="Department" placeholder="Enter Department" value={fullProfile?.department_name} readOnly />
                             </div>
                         </section>
                         <section className="bg-gray-50/50 p-4 rounded-[15px] border border-gray-200">

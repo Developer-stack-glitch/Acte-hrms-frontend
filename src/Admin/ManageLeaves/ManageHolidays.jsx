@@ -222,8 +222,14 @@ export default function ManageHolidays() {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Manage Holidays</h2>
-                    <p className="text-gray-500 font-medium text-[14px]">Set and manage your organizational holidays for {selectedYear}</p>
+                    <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+                        {userInfo.role === 'employee' ? 'Holiday Calendar' : 'Manage Holidays'}
+                    </h2>
+                    <p className="text-gray-500 font-medium text-[14px]">
+                        {userInfo.role === 'employee'
+                            ? `View organizational holidays for ${selectedYear}`
+                            : `Set and manage your organizational holidays for ${selectedYear}`}
+                    </p>
                 </div>
                 {userInfo.role !== 'employee' && (
                     <button
@@ -349,13 +355,15 @@ export default function ManageHolidays() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
                             onClick={() => setShowModal(false)}
                             className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                             className="bg-white w-full max-w-lg rounded-[12px] shadow-2xl relative overflow-hidden"
                         >
                             <div className="p-4 border-b border-gray-50 flex items-center justify-between">

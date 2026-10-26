@@ -26,7 +26,7 @@ import { LineChart, Line } from 'recharts';
 import { useNotifications } from '../../utils/NotificationContext';
 
 // Premium Stat Card Component
-const PayrollStatCard = ({ title, value, subValue, icon: Icon, color, delay, path }) => {
+const PayrollStatCard = ({ title, value, subValue, icon: Icon, color, delay, path, isCurrency = true, isSubCurrency = true }) => {
     const navigate = useNavigate();
     return (
         <motion.div
@@ -49,8 +49,8 @@ const PayrollStatCard = ({ title, value, subValue, icon: Icon, color, delay, pat
 
                 <div className="space-y-1">
                     <h3 className="text-2xl font-semibold text-white tracking-tight flex items-baseline gap-1">
-                        {typeof value === 'number' ? <span className="text-xl opacity-80">₹</span> : null}
-                        {typeof value === 'number' ? value.toLocaleString() : value}
+                        {isCurrency && typeof value === 'number' ? <span className="text-xl opacity-80">₹</span> : null}
+                        {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
                     </h3>
                 </div>
 
@@ -58,7 +58,7 @@ const PayrollStatCard = ({ title, value, subValue, icon: Icon, color, delay, pat
                     <div className="flex flex-col">
                         <span className="text-[10px] font-semibold text-white">{subValue.label}</span>
                         <span className="text-[14px] font-medium text-white">
-                            {typeof subValue.value === 'number' ? `₹${subValue.value.toLocaleString()}` : subValue.value}
+                            {isSubCurrency && typeof subValue.value === 'number' ? `₹${Math.round(subValue.value).toLocaleString()}` : subValue.value}
                         </span>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/90 backdrop-blur-md group-hover:bg-white group-hover:text-primary transition-colors">
@@ -76,6 +76,9 @@ export default function PayrollDashboard() {
     const [reimbursements, setReimbursements] = useState([]);
     const [advances, setAdvances] = useState([]);
     const [analytics, setAnalytics] = useState({
+        summary: null,
+        latestCycle: null,
+        monthlyBreakdown: [],
         topEarners: [],
         topDeductions: [],
         holds: [],
@@ -88,21 +91,34 @@ export default function PayrollDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const { refreshKey: contextRefreshKey } = useNotifications();
 
-    // Filters & Range
-    const [fromDate, setFromDate] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-dd'));
-    const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const userInfo = useMemo(() => {
+        try {
+            return JSON.parse(localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo') || '{}');
+        } catch {
+            return {};
+        }
+    }, []);
+    const companyId = userInfo?.company;
+
+    // Filters & Range - defaults to latest completed cycle
+    const [activePreset, setActivePreset] = useState('latest');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [filters, setFilters] = useState({});
+    const [initialLoaded, setInitialLoaded] = useState(false);
 
     useEffect(() => {
         fetchData();
-    }, [fromDate, toDate, filters, contextRefreshKey]);
+    }, [fromDate, toDate, filters, activePreset, contextRefreshKey]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const params = {
-                startDate: fromDate,
-                endDate: toDate,
+                company_id: companyId,
+                startDate: fromDate || undefined,
+                endDate: toDate || undefined,
+                period: activePreset === 'all' ? 'all' : undefined,
                 ...filters
             };
 
@@ -113,19 +129,19 @@ export default function PayrollDashboard() {
                 getPayrollAnalyticsApi(params)
             ]);
 
-            setPayrollRuns(runsRes.data?.data || []);
+            setPayrollRuns(runsRes.data?.data || runsRes.data || []);
             setReimbursements(reimRes.data || []);
-            setAdvances(advRes.data?.data || []);
-            setAnalytics(analyticsRes.data || {
-                topEarners: [],
-                topDeductions: [],
-                holds: [],
-                allItems: [],
-                pfEsiTrend: [],
-                reimbursementReport: [],
-                loanTracker: [],
-                payEquity: []
-            });
+            setAdvances(advRes.data?.data || advRes.data || []);
+
+            const analyticsData = analyticsRes.data || {};
+            setAnalytics(analyticsData);
+
+            // Auto-populate dates to latest cycle if currently on 'latest' preset and dates not set
+            if (!initialLoaded && analyticsData.latestCycle) {
+                setFromDate(analyticsData.latestCycle.period_start || '');
+                setToDate(analyticsData.latestCycle.period_end || '');
+                setInitialLoaded(true);
+            }
         } catch (error) {
             console.error('Error fetching payroll data:', error);
             if (error.response?.status !== 401) {
@@ -136,8 +152,50 @@ export default function PayrollDashboard() {
         }
     };
 
+    const handlePresetChange = (preset) => {
+        setActivePreset(preset);
+        if (preset === 'latest') {
+            if (analytics?.latestCycle) {
+                setFromDate(analytics.latestCycle.period_start || '');
+                setToDate(analytics.latestCycle.period_end || '');
+            } else {
+                setFromDate('');
+                setToDate('');
+            }
+        } else if (preset === 'thisMonth') {
+            const today = new Date();
+            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+            const to = new Date(today.getFullYear(), today.getMonth(), 25);
+            setFromDate(format(from, 'yyyy-MM-dd'));
+            setToDate(format(to, 'yyyy-MM-dd'));
+        } else if (preset === 'last3Months') {
+            setFromDate(format(subMonths(new Date(), 3), 'yyyy-MM-dd'));
+            setToDate(format(new Date(), 'yyyy-MM-dd'));
+        } else if (preset === 'all') {
+            setFromDate('');
+            setToDate('');
+        }
+    };
+
     // Aggregate statistics
     const stats = useMemo(() => {
+        if (analytics?.summary) {
+            return {
+                grossSalary: analytics.summary.grossSalary || 0,
+                netPaid: analytics.summary.netPaid || 0,
+                deductions: analytics.summary.deductions || 0,
+                avgGross: analytics.summary.avgGross || 0,
+                avgNet: analytics.summary.avgNet || 0,
+                avgDeduction: analytics.summary.avgDeduction || 0,
+                reimbursements: analytics.summary.reimbursements || 0,
+                reimbursementCount: analytics.summary.reimbursementCount || 0,
+                advances: analytics.summary.advances || 0,
+                activeAdvanceCount: analytics.summary.activeAdvanceCount || 0,
+                totalEmployees: analytics.summary.totalEmployees || 0,
+                onHold: analytics.summary.onHold || 0
+            };
+        }
+
         const startDate = fromDate ? new Date(fromDate) : null;
         const endDate = toDate ? new Date(toDate) : null;
 
@@ -160,21 +218,22 @@ export default function PayrollDashboard() {
 
         const approvedReimbursements = filteredReims
             .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-
         const reimbursementCount = filteredReims.length;
 
         const activeAdvances = filteredAdvances
             .reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0);
-
         const activeAdvanceCount = filteredAdvances.length;
 
-        const grossSalary = netPaid / 0.85;
-        const deductions = grossSalary - netPaid;
+        const grossSalary = netPaid;
+        const deductions = 0;
 
         return {
             grossSalary,
             netPaid,
             deductions,
+            avgGross: totalEmployees > 0 ? (grossSalary / totalEmployees) : 0,
+            avgNet: totalEmployees > 0 ? (netPaid / totalEmployees) : 0,
+            avgDeduction: 0,
             reimbursements: approvedReimbursements,
             reimbursementCount,
             advances: activeAdvances,
@@ -182,20 +241,13 @@ export default function PayrollDashboard() {
             totalEmployees: totalEmployees || 0,
             onHold
         };
-    }, [payrollRuns, reimbursements, advances, fromDate, toDate]);
+    }, [analytics?.summary, payrollRuns, reimbursements, advances, fromDate, toDate]);
 
-    // Monthly breakdown data for last 6 months
+    // Monthly breakdown data for 6-month trend overview
     const monthlyData = useMemo(() => {
-        const startDate = fromDate ? new Date(fromDate) : null;
-        const endDate = toDate ? new Date(toDate) : null;
-
-        const isWithinGlobalRange = (dateStr) => {
-            if (!dateStr || !startDate || !endDate) return true;
-            const d = new Date(dateStr);
-            const startOfDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-            const endOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
-            return d >= startOfDay && d <= endOfDay;
-        };
+        if (analytics?.monthlyBreakdown && analytics.monthlyBreakdown.length > 0) {
+            return analytics.monthlyBreakdown;
+        }
 
         const months = eachMonthOfInterval({
             start: subMonths(new Date(), 6),
@@ -207,35 +259,27 @@ export default function PayrollDashboard() {
             const mEnd = endOfMonth(month);
             const monthStr = format(month, 'MMM yyyy');
 
-            // Filter runs within this month
             const monthRuns = payrollRuns.filter(r => {
-                const runDate = parseISO(r.period_start);
+                if (!r.period_end && !r.period_start) return false;
+                const runDate = parseISO(r.period_end || r.period_start);
                 return runDate >= mStart && runDate <= mEnd;
             });
 
             const net = monthRuns.reduce((sum, r) => sum + (parseFloat(r.total_amount) || 0), 0);
-            const reim = reimbursements
-                .filter(r => {
-                    if (!r.created_at) return false;
-                    const d = parseISO(r.created_at);
-                    return r.status === 'Approved' && d >= mStart && d <= mEnd;
-                })
-                .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-
             return {
                 name: monthStr,
                 'Net Salary': net,
-                'Deductions': net * 0.15,
-                'Reimbursements': reim
+                'Deductions': 0,
+                'Reimbursements': 0
             };
         });
-    }, [payrollRuns, reimbursements]);
+    }, [analytics?.monthlyBreakdown, payrollRuns]);
 
-    const compositionData = [
+    const compositionData = useMemo(() => [
         { name: 'Net Salary', value: stats.netPaid, color: '#10b981' },
         { name: 'Deductions', value: stats.deductions, color: '#8b5cf6' },
         { name: 'Reimbursements', value: stats.reimbursements, color: '#ec4899' }
-    ];
+    ], [stats.netPaid, stats.deductions, stats.reimbursements]);
 
     const filteredItems = useMemo(() => {
         return (analytics.allItems || []).filter(item =>
@@ -244,7 +288,7 @@ export default function PayrollDashboard() {
         );
     }, [analytics.allItems, searchTerm]);
 
-    if (loading && !payrollRuns.length) return <DashboardSkeleton />;
+    if (loading && !analytics.summary && !payrollRuns.length) return <DashboardSkeleton />;
 
     return (
         <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700">
@@ -260,30 +304,71 @@ export default function PayrollDashboard() {
                     </p>
                 </div>
 
-                <div className="flex items-center md:justify-end justify-center gap-2 sm:gap-4 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                <div className="flex items-center md:justify-end justify-center gap-2 sm:gap-3 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                    {/* Latest Cycle Preset */}
                     <button
-                        onClick={() => {
-                            const today = new Date();
-                            const from = new Date(today.getFullYear(), today.getMonth() - 1, 26);
-                            const to = new Date(today.getFullYear(), today.getMonth(), 25);
-                            setFromDate(format(from, 'yyyy-MM-dd'));
-                            setToDate(format(to, 'yyyy-MM-dd'));
-                        }}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors whitespace-nowrap shrink-0"
+                        onClick={() => handlePresetChange('latest')}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold rounded-full transition-all whitespace-nowrap shrink-0 ${
+                            activePreset === 'latest'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'bg-primary/10 text-primary hover:bg-primary/20'
+                        }`}
+                    >
+                        {analytics.latestCycle?.payroll_month ? `Latest (${analytics.latestCycle.payroll_month})` : 'Latest Cycle'}
+                    </button>
+
+                    {/* This Month Preset */}
+                    <button
+                        onClick={() => handlePresetChange('thisMonth')}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold rounded-full transition-all whitespace-nowrap shrink-0 ${
+                            activePreset === 'thisMonth'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                         This Month
                     </button>
-                    <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20">
+
+                    {/* Last 3 Months Preset */}
+                    <button
+                        onClick={() => handlePresetChange('last3Months')}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold rounded-full transition-all whitespace-nowrap shrink-0 ${
+                            activePreset === 'last3Months'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        Last 3 Months
+                    </button>
+
+                    {/* All Time Preset */}
+                    <button
+                        onClick={() => handlePresetChange('all')}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-[12px] font-semibold rounded-full transition-all whitespace-nowrap shrink-0 ${
+                            activePreset === 'all'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        All Time
+                    </button>
+
+                    {/* Date Pickers */}
+                    <div className="w-full sm:w-auto flex items-center justify-center gap-0 bg-white p-1.5 rounded-[20px] border border-gray-200 transition-all focus-within:border-primary/20 shadow-sm">
                         <div className="flex items-center gap-1 sm:gap-2 px-1 sm:px-3 group">
                             <span className="text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider">From</span>
                             <div className="relative flex items-center gap-0">
                                 <DatePicker
                                     selected={fromDate ? new Date(fromDate) : null}
-                                    onChange={(date) => setFromDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                                    onChange={(date) => {
+                                        setFromDate(date ? format(date, 'yyyy-MM-dd') : '');
+                                        setActivePreset('custom');
+                                    }}
                                     dateFormat="yyyy-MM-dd"
                                     showYearDropdown
                                     showMonthDropdown
                                     dropdownMode="select"
+                                    placeholderText="YYYY-MM-DD"
                                     className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
                                     popperPlacement="bottom-end"
                                     portalId="root"
@@ -291,17 +376,21 @@ export default function PayrollDashboard() {
                                 <Calendar className="text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
                             </div>
                         </div>
-                        <div className="w-[1px] h-4 bg-gray-100 mx-1"></div>
+                        <div className="w-[1px] h-4 bg-gray-200 mx-1"></div>
                         <div className="flex items-center gap-1 sm:gap-2 px-1 sm:px-3 group">
                             <span className="text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider">To</span>
                             <div className="relative flex items-center gap-2">
                                 <DatePicker
                                     selected={toDate ? new Date(toDate) : null}
-                                    onChange={(date) => setToDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                                    onChange={(date) => {
+                                        setToDate(date ? format(date, 'yyyy-MM-dd') : '');
+                                        setActivePreset('custom');
+                                    }}
                                     dateFormat="yyyy-MM-dd"
                                     showYearDropdown
                                     showMonthDropdown
                                     dropdownMode="select"
+                                    placeholderText="YYYY-MM-DD"
                                     className="bg-transparent border-none text-[11px] sm:text-[13px] font-semibold outline-none focus:ring-0 text-gray-700 cursor-pointer p-0 w-[80px] sm:w-[100px]"
                                     popperPlacement="bottom-end"
                                     portalId="root"
@@ -313,41 +402,66 @@ export default function PayrollDashboard() {
 
                     <button
                         onClick={fetchData}
-                        className="p-3 bg-white border border-gray-100 text-gray-400 rounded-full hover:bg-gray-50 transition-all shadow-sm group"
+                        title="Refresh Data"
+                        className="p-3 bg-white border border-gray-200 text-gray-500 rounded-full hover:bg-gray-50 hover:text-primary transition-all shadow-sm group"
                     >
                         <RefreshCcw size={18} className="group-active:rotate-180 transition-transform duration-500" />
                     </button>
                 </div>
             </div>
 
+            {/* Informative notice if current filter has 0 records */}
+            {!loading && stats.totalEmployees === 0 && (
+                <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 flex items-center justify-between text-amber-800 text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={16} className="text-amber-600 shrink-0" />
+                        <span>No finalized payroll records found for the selected period ({fromDate || 'Start'} to {toDate || 'End'}).</span>
+                    </div>
+                    {analytics.latestCycle && (
+                        <button
+                            onClick={() => handlePresetChange('latest')}
+                            className="underline font-semibold hover:text-amber-950 ml-4 shrink-0"
+                        >
+                            Switch to Latest Cycle ({analytics.latestCycle.payroll_month || 'Latest'})
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Stat Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 <PayrollStatCard
                     title="Gross Salary"
                     value={stats.grossSalary}
-                    subValue={{ label: "Avg Gross", value: stats.grossSalary / (stats.totalEmployees || 1) }}
+                    subValue={{ label: "Avg Gross", value: stats.avgGross }}
                     icon={Banknote}
                     color={{ bg: 'bg-gradient-to-br from-blue-500 to-blue-600' }}
                     delay={0.1}
                     path="/payroll/salary-structure"
+                    isCurrency={true}
+                    isSubCurrency={true}
                 />
                 <PayrollStatCard
                     title="Net Salary Paid"
                     value={stats.netPaid}
-                    subValue={{ label: "Avg Net", value: stats.netPaid / (stats.totalEmployees || 1) }}
+                    subValue={{ label: "Avg Net", value: stats.avgNet }}
                     icon={Wallet}
                     color={{ bg: 'bg-gradient-to-br from-emerald-500 to-emerald-600' }}
                     delay={0.2}
                     path="/payroll/dashboard"
+                    isCurrency={true}
+                    isSubCurrency={true}
                 />
                 <PayrollStatCard
                     title="Deductions"
                     value={stats.deductions}
-                    subValue={{ label: "Avg Deduction", value: stats.deductions / (stats.totalEmployees || 1) }}
+                    subValue={{ label: "Avg Deduction", value: stats.avgDeduction }}
                     icon={MinusCircle}
                     color={{ bg: 'bg-gradient-to-br from-violet-500 to-violet-600' }}
                     delay={0.3}
                     path="/payroll/salary-components"
+                    isCurrency={true}
+                    isSubCurrency={true}
                 />
                 <PayrollStatCard
                     title="Reimbursements"
@@ -357,6 +471,8 @@ export default function PayrollDashboard() {
                     color={{ bg: 'bg-gradient-to-br from-pink-500 to-pink-600' }}
                     delay={0.4}
                     path="/reimbursements"
+                    isCurrency={true}
+                    isSubCurrency={false}
                 />
                 <PayrollStatCard
                     title="Advances & Loans"
@@ -366,6 +482,8 @@ export default function PayrollDashboard() {
                     color={{ bg: 'bg-gradient-to-br from-orange-500 to-orange-600' }}
                     delay={0.5}
                     path="/payroll/advance-salary"
+                    isCurrency={true}
+                    isSubCurrency={false}
                 />
                 <PayrollStatCard
                     title="Employees Paid"
@@ -375,6 +493,8 @@ export default function PayrollDashboard() {
                     color={{ bg: 'bg-gradient-to-br from-slate-600 to-slate-700' }}
                     delay={0.6}
                     path="/users"
+                    isCurrency={false}
+                    isSubCurrency={false}
                 />
             </div>
 
@@ -472,25 +592,31 @@ export default function PayrollDashboard() {
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Aggregate</span>
-                            <span className="text-2xl font-semibold text-gray-900">₹{(stats.grossSalary / 1000).toFixed(1)}k</span>
+                            <span className="text-2xl font-semibold text-gray-900">
+                                ₹{(((stats.netPaid || 0) + (stats.deductions || 0) + (stats.reimbursements || 0)) / 1000).toFixed(1)}k
+                            </span>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        {compositionData.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between px-3 py-2 rounded-[13px] bg-gray-100/50 hover:bg-gray-50 transition-colors mb-3">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-4 h-4 rounded-full ring-4 ring-white shadow-sm" style={{ backgroundColor: item.color }} />
-                                    <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                        {compositionData.map((item, idx) => {
+                            const aggregateTotal = (stats.netPaid || 0) + (stats.deductions || 0) + (stats.reimbursements || 0);
+                            const percentage = aggregateTotal > 0 ? ((item.value / aggregateTotal) * 100).toFixed(1) : '0.0';
+                            return (
+                                <div key={idx} className="flex items-center justify-between px-3 py-2 rounded-[13px] bg-gray-100/50 hover:bg-gray-50 transition-colors mb-3">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-4 h-4 rounded-full ring-4 ring-white shadow-sm" style={{ backgroundColor: item.color }} />
+                                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{item.name}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[13px] font-semibold text-gray-900">₹{Math.round(item.value).toLocaleString()}</span>
+                                        <span className="text-[10px] font-semibold text-gray-400">
+                                            {percentage}%
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[13px] font-semibold text-gray-900">₹{Math.round(item.value).toLocaleString()}</span>
-                                    <span className="text-[10px] font-semibold text-gray-400">
-                                        {((item.value / (stats.grossSalary || 1)) * 100).toFixed(1)}%
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

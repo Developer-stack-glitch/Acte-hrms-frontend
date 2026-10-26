@@ -91,7 +91,7 @@ export default function JobRecruitment() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        className="h-full"
                     >
                         <div className="bg-white rounded-[15px] border border-gray-100 shadow-xl shadow-gray-200/50 min-h-[700px] overflow-hidden">
                             <ActiveComponent />

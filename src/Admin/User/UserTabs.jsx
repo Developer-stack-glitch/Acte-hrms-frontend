@@ -14,33 +14,33 @@ import Permissions from './Permissions';
 
 
 const tabs = [
-    { 
-        id: 'database', 
-        label: 'Employees List', 
+    {
+        id: 'database',
+        label: 'Employees List',
         icon: Users,
         permissionId: 'employees_list'
     },
-    { 
-        id: 'add', 
-        label: 'Add Employee', 
+    {
+        id: 'add',
+        label: 'Add Employee',
         icon: UserPlus,
         permissionId: 'employees_add'
     },
-    { 
-        id: 'config', 
-        label: 'Employee ID Card', 
+    {
+        id: 'config',
+        label: 'Employee ID Card',
         icon: UserCog,
         permissionId: 'employees_id_card'
     },
-    { 
-        id: 'permissions', 
-        label: 'Permissions', 
+    {
+        id: 'permissions',
+        label: 'Permissions',
         icon: ShieldCheck,
         permissionId: 'employees_permissions'
     },
-    { 
-        id: 'credentials', 
-        label: 'Employee Credentials', 
+    {
+        id: 'credentials',
+        label: 'Employee Credentials',
         icon: KeyRound,
         permissionId: 'employees_credentials'
     },
@@ -53,7 +53,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 export default function UserTabs() {
     const { tabId } = useParams();
     const navigate = useNavigate();
-    
+
     const userInfo = React.useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
     const userRole = userInfo.role;
     const userPermissions = userInfo.permissions || [];
@@ -120,11 +120,11 @@ export default function UserTabs() {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="max-w-[1600px] mx-auto h-full"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="w-full"
                     >
                         {activeTab === 'database' ? (
                             <div className="bg-white rounded-[8px] overflow-hidden min-h-[600px]">
@@ -148,7 +148,7 @@ export default function UserTabs() {
                                 <EmployeeCredentials />
                             </div>
                         ) : activeTab === 'config' ? (
-                            <div className="bg-[#f8fafc] rounded-[8px] shadow-sm border border-gray-100 overflow-hidden min-h-[600px]">
+                            <div className="w-full">
                                 <EmployeeIdCard
                                     initialUser={selectedUserForIdCard}
                                     onBack={() => setActiveTab('database')}

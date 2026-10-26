@@ -13,6 +13,7 @@ const FormInput = ({
     className = "",
     icon: Icon,
     isNumber = false,
+    error,
     ...props
 }) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +48,7 @@ const FormInput = ({
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : (isNumber ? 'text' : type);
 
     return (
-        <div className={`space-y-2 ${className}`}>
+        <div className={`space-y-1.5 ${className}`}>
             <FormLabel label={label} icon={Icon} required={required} />
             <div className="relative group/input">
                 {Icon && !label && (
@@ -62,7 +63,7 @@ const FormInput = ({
                     placeholder={placeholder}
                     required={required}
                     disabled={disabled}
-                    className={`w-full h-11 ${Icon && !label ? 'pl-10 pr-4' : (isPassword ? 'pr-11 px-4' : 'px-4')} bg-[#fff] border border-gray-200 rounded-[12px] outline-none focus:border-primary/50 focus:bg-white transition-all font-medium text-gray-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full h-11 ${Icon && !label ? 'pl-10 pr-4' : (isPassword ? 'pr-11 px-4' : 'px-4')} bg-[#fff] border ${error ? 'border-red-500 bg-red-50/20 focus:border-red-500' : 'border-gray-200 focus:border-primary/50 focus:bg-white'} rounded-[12px] outline-none transition-all font-medium text-gray-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                     {...props}
                 />
 
@@ -76,6 +77,12 @@ const FormInput = ({
                     </button>
                 )}
             </div>
+            {error && (
+                <p className="text-[12px] text-red-500 font-medium flex items-center gap-1.5 mt-1 leading-tight">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                    <span>{error}</span>
+                </p>
+            )}
         </div>
     );
 };

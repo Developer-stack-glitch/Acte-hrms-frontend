@@ -37,6 +37,16 @@ button {
     background: #1d4ed8;
   }
 
+  /* GPU Acceleration & Compositor smoothing for Modals & Backdrops */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
