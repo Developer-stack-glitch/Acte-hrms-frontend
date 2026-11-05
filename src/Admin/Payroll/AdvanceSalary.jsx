@@ -63,7 +63,8 @@ export default function AdvanceSalary() {
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
     const navigate = useNavigate();
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin';
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
 
     // Mock stats for demo purposes
     const stats = useMemo(() => {

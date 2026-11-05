@@ -24,7 +24,7 @@ export default function JobRecruitment() {
     const userPermissions = userInfo.permissions || [];
 
     const filteredTabs = useMemo(() => {
-        if (userRole === 'superadmin') return tabs;
+        if (userRole === 'superadmin' || userRole?.toLowerCase() === 'hr executive') return tabs;
         if (userRole === 'employee') return []; // Employees use the Career Portal page
         return tabs.filter(tab => userPermissions.includes(tab.permissionId));
     }, [userRole, userPermissions]);

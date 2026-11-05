@@ -109,7 +109,7 @@ const NotificationBell = () => {
                                                     const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
                                                     const userRole = userInfo.role;
 
-                                                    if (userRole === 'admin' || userRole === 'superadmin') {
+                                                    if (userRole === 'admin' || userRole === 'superadmin' || userRole?.toLowerCase() === 'hr executive') {
                                                         if (data.type === 'leave_request' || notification.type === 'leave') {
                                                             navigate('/leaves/manage-leaves');
                                                         } else if (data.type === 'reimbursement_request' || notification.type === 'reimbursement') {

@@ -37,6 +37,11 @@ export default function Attendance() {
     const filteredTabs = useMemo(() => {
         if (userRole === 'superadmin') return tabs;
 
+        // HR Executive gets full access to all attendance tabs EXCEPT Biometric Attendance ('manual')
+        if (userRole?.toLowerCase() === 'hr executive' || userRole?.toLowerCase() === 'hr') {
+            return tabs.filter(tab => tab.id !== 'manual');
+        }
+
         // Filter by permissions
         const baseTabs = tabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
 

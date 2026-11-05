@@ -31,7 +31,7 @@ export default function Reports() {
     const permissions = userInfo.permissions || [];
 
     const reportTabs = useMemo(() => {
-        if (userRole === 'superadmin') return reportTabsAll;
+        if (userRole === 'superadmin' || userRole?.toLowerCase() === 'hr executive') return reportTabsAll;
         return reportTabsAll.filter(tab => permissions.includes(`reports_${tab.id}`));
     }, [userRole, permissions]);
 

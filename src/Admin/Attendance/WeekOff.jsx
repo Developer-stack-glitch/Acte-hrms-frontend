@@ -209,7 +209,7 @@ export default function WeekOff() {
                                 <p className="text-[12px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">Global organization settings</p>
                             </div>
                         </div>
-                        {(userRole === 'admin' || userRole === 'superadmin') && (
+                        {(userRole === 'admin' || userRole === 'superadmin' || userRole?.toLowerCase() === 'hr executive') && (
                             <button
                                 onClick={handleSaveCompanyWeekOff}
                                 disabled={savingCompany || fetching}

@@ -14,6 +14,16 @@ import ListSkeleton from '../../Common/CommonSkeletonLoader/ListSkeleton';
 export default function BiometricManual() {
     const { tabId, subId } = useParams();
     const navigate = useNavigate();
+
+    const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
+    const userRole = (userInfo.role || '').toLowerCase();
+
+    useEffect(() => {
+        if (userRole === 'hr executive' || userRole === 'hr' || userRole === 'employee') {
+            navigate('/attendance/manage', { replace: true });
+        }
+    }, [userRole, navigate]);
+
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [employees, setEmployees] = useState([]);

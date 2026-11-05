@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, DollarSign, Clock, Eye, X, ChevronRight, User, Users, Globe, Building2, Send, Sparkles } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { getOpenPositionsApi } from '../Action/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -69,7 +70,7 @@ const JobDetailsModal = ({ job, onClose }) => {
                                 </h3>
                                 <div
                                     className="text-[15px] text-gray-600 leading-relaxed rich-text-preview"
-                                    dangerouslySetInnerHTML={{ __html: job.description }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(job.description || '') }}
                                 />
                             </section>
 
@@ -82,7 +83,7 @@ const JobDetailsModal = ({ job, onClose }) => {
                                     </h3>
                                     <div
                                         className="text-[15px] text-gray-600 leading-relaxed rich-text-preview"
-                                        dangerouslySetInnerHTML={{ __html: job.requirements }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(job.requirements || '') }}
                                     />
                                 </section>
                             )}

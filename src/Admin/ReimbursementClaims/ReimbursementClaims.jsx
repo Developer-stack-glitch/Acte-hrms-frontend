@@ -33,7 +33,8 @@ const STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected', 'Paid'];
 
 export default function ReimbursementClaims() {
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const { refreshKey: contextRefreshKey } = useNotifications();
 
     // State
@@ -337,7 +338,7 @@ export default function ReimbursementClaims() {
                             setStatusUpdate({ status: row.status, comment: row.comment || '' });
                             setIsViewModalOpen(true);
                         }}
-                        onDelete={(userRole === 'admin' || userRole === 'superadmin') ? (row) => {
+                        onDelete={isAdmin ? (row) => {
                             setDeleteId(row.id);
                             setIsDeleteModalOpen(true);
                         } : null}
@@ -569,7 +570,7 @@ export default function ReimbursementClaims() {
                                 </div>
 
                                 {/* Admin Actions */}
-                                {(userRole === 'admin' || userRole === 'superadmin') && (
+                                {isAdmin && (
                                     <div className="pt-4 border-t border-gray-100 space-y-5">
                                         <div className="flex items-center gap-2 text-primary">
                                             <Info size={18} />
@@ -599,7 +600,7 @@ export default function ReimbursementClaims() {
                                     </div>
                                 )}
 
-                                {selectedClaim.comment && !(userRole === 'admin' || userRole === 'superadmin') && (
+                                {selectedClaim.comment && !isAdmin && (
                                     <div className="pt-3 border-t border-gray-100">
                                         <div className="flex items-center gap-2 text-amber-600 mb-3">
                                             <Info size={16} />

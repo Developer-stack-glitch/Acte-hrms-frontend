@@ -29,6 +29,9 @@ import Settings from './Common/Settings/Settings';
 
 import { NotificationProvider } from './utils/NotificationContext';
 
+const ADMIN_ROLES = ['admin', 'superadmin', 'hr executive'];
+const MANAGEMENT_ROLES = ['admin', 'superadmin'];
+
 createRoot(document.getElementById('root')).render(
   <NotificationProvider>
     <Router>
@@ -60,24 +63,24 @@ createRoot(document.getElementById('root')).render(
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard/:tabId?" element={<Dashboard />} />
-          <Route path="users/:tabId?/:subId?" element={<UserTabs />} />
-          <Route path="organization/:tabId?/:subId?" element={<Organization />} />
+          <Route path="users/:tabId?/:subId?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><UserTabs /></ProtectedRoute>} />
+          <Route path="organization/:tabId?/:subId?" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><Organization /></ProtectedRoute>} />
           <Route path="attendance/:tabId?/:subId?" element={<Attendance />} />
           <Route path="regularisations/:tabId?" element={<RegularisationPage />} />
           <Route path="shift-roster" element={<ShiftRoster />} />
-          <Route path="biometric-manual/:tabId?" element={<BiometricManual />} />
+          <Route path="biometric-manual/:tabId?" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><BiometricManual /></ProtectedRoute>} />
           <Route path="leaves/:tabId?/:subId?" element={<Leaves />} />
-          <Route path="payroll/:tabId?" element={<Payroll />} />
+          <Route path="payroll/:tabId?" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><Payroll /></ProtectedRoute>} />
           <Route path="asset-management/:tabId?" element={<AssetManagement />} />
           <Route path="reimbursements" element={<ReimbursementClaims />} />
           <Route path="profile/:userId?" element={<MyProfile />} />
           <Route path="my-assets" element={<MyAssets />} />
           <Route path="career" element={<OpenJobs />} />
-          <Route path="job-recruitment/:tabId?" element={<JobRecruitment />} />
-          <Route path="job-recruitment/create/:id?" element={<CreateJob />} />
+          <Route path="job-recruitment/:tabId?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><JobRecruitment /></ProtectedRoute>} />
+          <Route path="job-recruitment/create/:id?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><CreateJob /></ProtectedRoute>} />
           <Route path="policies" element={<Policies />} />
-          <Route path="reports/:tabId?" element={<Reports />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="reports/:tabId?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><Reports /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><Settings /></ProtectedRoute>} />
           <Route path="employees" element={<div className="p-10 text-2xl font-bold">Employee Management coming soon...</div>} />
         </Route>
         {/* Fallback for any other route */}

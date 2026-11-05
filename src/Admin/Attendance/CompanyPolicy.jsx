@@ -21,7 +21,7 @@ export default function CompanyPolicy() {
     const [saving, setSaving] = useState(false);
     const [companyId, setCompanyId] = useState(null);
     const userInfoData = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
-    const isAdmin = userInfoData.role === 'admin' || userInfoData.role === 'superadmin';
+    const isAdmin = userInfoData.role === 'admin' || userInfoData.role === 'superadmin' || userInfoData.role?.toLowerCase() === 'hr executive';
 
     useEffect(() => {
         const userInfo = (localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo'));

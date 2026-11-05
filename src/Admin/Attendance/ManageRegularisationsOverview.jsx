@@ -200,13 +200,14 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
     const [requestToReject, setRequestToReject] = useState(null);
 
     const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const userId = userInfo._id || userInfo.id;
 
     const isManagerRole = useMemo(() =>
-        userRole === 'admin' || userRole === 'superadmin' ||
+        isAdmin ||
         recentRequests.some(r => String(r.user_id) !== String(userId))
-        , [userRole, recentRequests, userId]);
+        , [isAdmin, recentRequests, userId]);
 
     useEffect(() => {
         fetchOverviewData();
@@ -219,7 +220,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                 getRegularisationCountsApi(),
                 getRegularisationsApi({
                     limit: 10,
-                    ...(userRole !== 'admin' && userRole !== 'superadmin' ? {
+                    ...(!isAdmin ? {
                         reporting_manager: userId,
                         personal_user_id: userId
                     } : {})
@@ -393,7 +394,7 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                                 </button>
                                             </Tooltip>
 
-                                            {(userRole === 'admin' || userRole === 'superadmin' || String(req.reporting_manager) === String(userId)) && req.status === 'Pending' && String(req.user_id) !== String(userId) && (
+                                            {(isAdmin || String(req.reporting_manager) === String(userId)) && req.status === 'Pending' && String(req.user_id) !== String(userId) && (
                                                 <div className="flex items-center gap-2 border-l pl-3 ml-1 border-gray-100">
                                                     <Tooltip text="Approve">
                                                         <button

@@ -16,7 +16,7 @@ export default function DeviceManager() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
-    const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin';
+    const isAdmin = userInfo.role === 'admin' || userInfo.role === 'superadmin' || userInfo.role?.toLowerCase() === 'hr executive';
 
     const [formData, setFormData] = useState({
         name: '',

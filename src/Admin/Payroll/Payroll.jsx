@@ -51,12 +51,13 @@ export default function Payroll() {
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [pendingAdvanceCount, setPendingAdvanceCount] = useState(0);
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const userPermissions = userInfo.permissions || [];
 
     const filteredTabs = useMemo(() => {
         const baseTabs = userRole === 'employee' ? employeeTabs : tabs;
-        if (userRole === 'superadmin') return baseTabs;
+        if (userRole === 'superadmin' || userRole === 'hr executive') return baseTabs;
 
         return baseTabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
     }, [userRole, userPermissions]);
@@ -79,7 +80,7 @@ export default function Payroll() {
     React.useEffect(() => {
         const fetchPendingAdvanceCount = async () => {
             try {
-                const apiCall = (userRole === 'admin' || userRole === 'superadmin') ? getAdvanceSalariesApi : getMyAdvanceSalariesApi;
+                const apiCall = isAdmin ? getAdvanceSalariesApi : getMyAdvanceSalariesApi;
                 const res = await apiCall({ status: 'Pending', limit: 1 });
                 if (res.data) {
                     const count = res.data.total || (res.data.data ? res.data.data.length : res.data.length) || 0;

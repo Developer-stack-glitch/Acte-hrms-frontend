@@ -84,7 +84,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const isMobile = width < 1024;
 
     const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
-    const userRole = userInfo.role || 'employee';
+    const userRole = (userInfo.role || 'employee').toLowerCase();
+    const isAdmin = ['admin', 'superadmin', 'hr executive'].includes(userRole) || userRole.includes('hr');
 
     const sidebarItems = [
         {
@@ -99,20 +100,20 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
         {
             title: 'Payroll',
             items: [
-                { id: 'payroll', icon: Banknote, label: userRole === 'admin' || userRole === 'superadmin' ? 'Payroll' : 'My Payroll', to: '/payroll' },
+                { id: 'payroll', icon: Banknote, label: isAdmin ? 'Payroll' : 'My Payroll', to: '/payroll' },
                 { id: 'reimbursements', icon: Wallet, label: 'Reimbursements', to: '/reimbursements' },
             ]
         },
         {
             title: 'Resources',
             items: [
-                { id: 'attendance', icon: Clock, label: userRole === 'admin' || userRole === 'superadmin' ? 'Attendance' : 'My Attendance', to: '/attendance' },
-                { id: 'leaves', icon: CalendarDays, label: userRole === 'admin' || userRole === 'superadmin' ? 'Leaves' : 'My Leaves', to: '/leaves' },
-                { id: 'regularisations', icon: ClipboardCheck, label: userRole === 'admin' || userRole === 'superadmin' ? 'Regularisations' : 'My Regularisations', to: '/regularisations' },
-                { id: 'shift_roster', icon: CalendarDays, label: 'Shift Roster', to: '/shift-roster', show: userRole === 'admin' || userRole === 'superadmin' },
+                { id: 'attendance', icon: Clock, label: isAdmin ? 'Attendance' : 'My Attendance', to: '/attendance' },
+                { id: 'leaves', icon: CalendarDays, label: isAdmin ? 'Leaves' : 'My Leaves', to: '/leaves' },
+                { id: 'regularisations', icon: ClipboardCheck, label: isAdmin ? 'Regularisations' : 'My Regularisations', to: '/regularisations' },
+                { id: 'shift_roster', icon: CalendarDays, label: 'Shift Roster', to: '/shift-roster', show: isAdmin },
                 { id: 'company_policies', icon: ShieldCheck, label: 'Company Policies', to: '/policies' },
-                { id: 'asset_management', icon: ToolCase, label: userRole === 'admin' || userRole === 'superadmin' ? 'Asset Management' : 'My Assets', to: userRole === 'admin' || userRole === 'superadmin' ? '/asset-management' : '/my-assets' },
-                { id: 'jobs_recruitment', icon: UserPlus, label: userRole === 'admin' || userRole === 'superadmin' ? 'Jobs & Recruitment' : 'Career Portal', to: userRole === 'admin' || userRole === 'superadmin' ? '/job-recruitment' : '/career' },
+                { id: 'asset_management', icon: ToolCase, label: isAdmin ? 'Asset Management' : 'My Assets', to: isAdmin ? '/asset-management' : '/my-assets' },
+                { id: 'jobs_recruitment', icon: UserPlus, label: isAdmin ? 'Jobs & Recruitment' : 'Career Portal', to: isAdmin ? '/job-recruitment' : '/career' },
             ]
         },
         {
@@ -128,7 +129,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const menuSections = sidebarItems.map(section => ({
         ...section,
         items: section.items.filter(item => {
-            if (userRole === 'superadmin') return true;
+            if (userRole === 'superadmin' || userRole === 'hr executive') return true;
             if (item.show === false) return false;
             if (item.show === true) return true;
             if (item.id === 'regularisations' || item.id === 'settings') return true;

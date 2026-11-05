@@ -103,7 +103,8 @@ const StatCard = ({ title, value, icon: Icon, color, delay = 0 }) => (
 
 export default function ManageLeavesContent({ onViewAll }) {
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const userId = userInfo._id || userInfo.id;
 
     const [leaves, setLeaves] = useState([]);
@@ -123,7 +124,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                 limit: 1000,
                 startDate,
                 endDate,
-                ...((userRole === 'admin' || userRole === 'superadmin') ? {} :
+                ...(isAdmin ? {} :
                     {
                         reporting_manager: userId,
                         personal_user_id: userId,
@@ -134,7 +135,7 @@ export default function ManageLeavesContent({ onViewAll }) {
             setLeaves(response.data.leaves || []);
 
             // Fetch employee count
-            if (userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') {
+            if (isAdmin || userInfo.team_lead === 'yes') {
                 const userParams = {
                     limit: 1,
                     ...(userInfo.team_lead === 'yes' ? { department: userInfo.department } : {})
@@ -151,9 +152,9 @@ export default function ManageLeavesContent({ onViewAll }) {
     };
 
     const isManagerRole = useMemo(() => {
-        return userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' ||
+        return isAdmin || userInfo.team_lead === 'yes' ||
             leaves.some(l => String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId));
-    }, [userRole, userInfo.team_lead, leaves, userId]);
+    }, [isAdmin, userInfo.team_lead, leaves, userId]);
 
     useEffect(() => {
         fetchLeaves();
@@ -215,7 +216,7 @@ export default function ManageLeavesContent({ onViewAll }) {
         return leaves.filter(l => {
             const isMyRequest = String(l.employee_id) === String(userId);
             const isManagedRequest = String(l.reporting_manager) === String(userId) || String(l.team_lead_id) === String(userId);
-            const canAction = userRole === 'superadmin' || userRole === 'admin' || isManagedRequest;
+            const canAction = isAdmin || isManagedRequest;
 
             // On dashboard, if manager, show pending requests from reportees. 
             // If normal employee, show all my requests.
@@ -229,7 +230,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                 l.leave_type?.toLowerCase().includes(searchTerm.toLowerCase());
             return matchesStatus && matchesSearch;
         }).slice(0, 5);
-    }, [leaves, searchTerm, userRole, userId, isManagerRole]);
+    }, [leaves, searchTerm, isAdmin, userId, isManagerRole]);
 
     if (loading) return <ManageLeavesSkeleton />;
 
@@ -240,10 +241,10 @@ export default function ManageLeavesContent({ onViewAll }) {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
-                        {(userRole === 'admin' || userRole === 'superadmin') ? 'Leave Workspace' : isManagerRole ? 'Team Leave Workspace' : 'My Leave Workspace'}
+                        {isAdmin ? 'Leave Workspace' : isManagerRole ? 'Team Leave Workspace' : 'My Leave Workspace'}
                     </h2>
                     <p className="text-[13px] text-gray-500 font-medium">
-                        {(userRole === 'admin' || userRole === 'superadmin') ? 'Approval dashboard and leave distribution analytics' :
+                        {isAdmin ? 'Approval dashboard and leave distribution analytics' :
                             isManagerRole ? 'Comprehensive overview of team leaves and pending approvals' :
                                 'Overview of your leave applications and personal analytics'}
                     </p>
@@ -360,8 +361,8 @@ export default function ManageLeavesContent({ onViewAll }) {
                 <div className="lg:col-span-2 bg-white rounded-[15px] border border-gray-200 overflow-hidden flex flex-col justify-between">
                     <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl ${(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'bg-orange-50 text-orange-600' : 'bg-primary/10 text-primary'} flex items-center justify-center`}>
-                                {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? <Clock size={20} /> : <Calendar size={20} />}
+                            <div className={`w-10 h-10 rounded-xl ${(isAdmin || userInfo.team_lead === 'yes') ? 'bg-orange-50 text-orange-600' : 'bg-primary/10 text-primary'} flex items-center justify-center`}>
+                                {(isAdmin || userInfo.team_lead === 'yes') ? <Clock size={20} /> : <Calendar size={20} />}
                             </div>
                             <h3 className="font-semibold text-gray-900">
                                 {isManagerRole ? 'Team Approvals' : 'Recent Applications'}
@@ -409,7 +410,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                {(userRole === 'superadmin' || userRole === 'admin' || String(leave.team_lead_id) === String(userId) || String(leave.reporting_manager) === String(userId)) && String(leave.employee_id) !== String(userId) ? (
+                                                {(isAdmin || String(leave.team_lead_id) === String(userId) || String(leave.reporting_manager) === String(userId)) && String(leave.employee_id) !== String(userId) ? (
                                                     <>
                                                         <button
                                                             onClick={() => handleAction(leave, 'Approved')}
@@ -446,7 +447,7 @@ export default function ManageLeavesContent({ onViewAll }) {
                                     <CheckCircle2 size={32} className="text-emerald-500" />
                                 </div>
                                 <p className="font-semibold">
-                                    {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') ? 'No pending requests to manage!' : 'No applications found!'}
+                                    {(isAdmin || userInfo.team_lead === 'yes') ? 'No pending requests to manage!' : 'No applications found!'}
                                 </p>
                             </div>
                         )}

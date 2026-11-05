@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import NotificationBell from './NotificationBell';
 import ConfirmationModal from './ConfirmationModal';
-import { getProfileApi } from '../Action/api';
+import { getProfileApi, logoutApi } from '../Action/api';
 
 
 const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
@@ -35,8 +35,14 @@ const TopHeader = ({ isMobileOpen, setIsMobileOpen }) => {
         fetchProfile();
     }, []);
 
-    const handleLogout = () => {
-        (localStorage.removeItem('userInfo'), sessionStorage.removeItem('userInfo'));
+    const handleLogout = async () => {
+        try {
+            await logoutApi();
+        } catch (e) {
+            // Silently proceed with local storage removal
+        }
+        localStorage.removeItem('userInfo');
+        sessionStorage.removeItem('userInfo');
         toast.success('Signed out successfully');
         navigate('/login');
     };

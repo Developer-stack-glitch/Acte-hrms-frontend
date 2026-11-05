@@ -209,9 +209,9 @@ const Regularisations = () => {
     const { refreshKey: contextRefreshKey } = useNotifications();
 
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
     const userId = userInfo._id || userInfo.id;
-    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const isReportingManager = useMemo(() => requests.some(r => String(r.reporting_manager) === String(userId) && String(r.user_id) !== String(userId)), [requests, userId]);
 
     useEffect(() => {
@@ -239,7 +239,7 @@ const Regularisations = () => {
                 ...(statusFilter !== 'All' ? { status: statusFilter } : {}),
                 ...(startDate ? { startDate } : {}),
                 ...(endDate ? { endDate } : {}),
-                ...(userRole !== 'admin' && userRole !== 'superadmin' ? { reporting_manager: userId, personal_user_id: userId } : {})
+                ...(!isAdmin ? { reporting_manager: userId, personal_user_id: userId } : {})
             };
             const countParams = {
                 ...(startDate ? { startDate } : {}),

@@ -28,7 +28,7 @@ export default function Leaves() {
     const userPermissions = userInfo.permissions || [];
 
     const filteredTabs = useMemo(() => {
-        if (userRole === 'superadmin') return tabs;
+        if (userRole === 'superadmin' || userRole?.toLowerCase() === 'hr executive') return tabs;
         return tabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
     }, [userRole, userPermissions]);
 

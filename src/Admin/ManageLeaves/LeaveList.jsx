@@ -319,7 +319,8 @@ export default function LeaveList() {
     const { refreshKey: contextRefreshKey } = useNotifications();
 
     const userInfo = React.useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = userInfo.role;
+    const userRole = (userInfo.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const userId = userInfo._id || userInfo.id;
 
     const isManagerForSome = useMemo(() => leaves && leaves.length > 0 && leaves.some(l => 
@@ -362,7 +363,7 @@ export default function LeaveList() {
                 status: statusFilter,
                 startDate,
                 endDate,
-                ...((userRole === 'admin' || userRole === 'superadmin') ? {} :
+                ...(isAdmin ? {} :
                     { 
                         reporting_manager: userId, 
                         personal_user_id: userId,
@@ -647,15 +648,14 @@ export default function LeaveList() {
             }
         ];
 
-        if (userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes' || isManagerForSome) {
+        if (isAdmin || userInfo.team_lead === 'yes' || isManagerForSome) {
             cols.push({
                 header: 'Actions',
                 key: 'actions',
                 render: (val, row) => (
                     <div className="flex items-center gap-2">
                         {row.status === 'Pending' && String(row.employee_id) !== String(userId) && (
-                            userRole === 'superadmin' || 
-                            userRole === 'admin' || 
+                            isAdmin || 
                             String(row.team_lead_id) === String(userId) || 
                             String(row.reporting_manager) === String(userId)
                         ) && (
@@ -682,7 +682,7 @@ export default function LeaveList() {
         }
 
         return cols;
-    }, [page, pageSize, userRole, userInfo.team_lead, leaves, userId, isManagerForSome]);
+    }, [page, pageSize, isAdmin, userInfo.team_lead, leaves, userId, isManagerForSome]);
 
     if (loading) return <LeaveListSkeleton />;
 
@@ -693,10 +693,10 @@ export default function LeaveList() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-800">
-                            {(userRole === 'admin' || userRole === 'superadmin') ? "Leave Management" : (userInfo.team_lead === 'yes' || isManagerForSome) ? "Team Leave Approval" : "My Leave Requests"}
+                            {isAdmin ? "Leave Management" : (userInfo.team_lead === 'yes' || isManagerForSome) ? "Team Leave Approval" : "My Leave Requests"}
                         </h2>
                         <p className="text-[13px] text-gray-500 font-medium mt-1">
-                            {(userRole === 'admin' || userRole === 'superadmin') ? "Review and manage employee leave requests" :
+                            {isAdmin ? "Review and manage employee leave requests" :
                                 (userInfo.team_lead === 'yes' || isManagerForSome) ? "Review and manage leave requests for your team" :
                                     "Track and manage your leave applications"}
                         </p>
@@ -755,7 +755,7 @@ export default function LeaveList() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            {(userRole === 'admin' || userRole === 'superadmin' || userInfo.team_lead === 'yes') && (
+                            {(isAdmin || userInfo.team_lead === 'yes') && (
                                 <div className="relative group">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
                                     <input

@@ -75,7 +75,7 @@ const Settings = () => {
             }));
 
             // If Admin, fetch Org Data
-            if (userInfo.role === 'admin' || userInfo.role === 'superadmin') {
+            if (userInfo.role === 'admin' || userInfo.role === 'superadmin' || userInfo.role?.toLowerCase() === 'hr executive') {
                 const companiesRes = await getCompaniesApi();
                 if (companiesRes.data && companiesRes.data.length > 0) {
                     const company = companiesRes.data[0];
@@ -188,7 +188,7 @@ const Settings = () => {
         }
     };
 
-    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || user?.role?.toLowerCase() === 'hr executive';
 
     const tabs = [
         { id: 'profile', label: 'My Profile', icon: User, show: true },
