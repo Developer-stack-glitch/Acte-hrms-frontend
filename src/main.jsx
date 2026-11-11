@@ -70,7 +70,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="shift-roster" element={<ShiftRoster />} />
           <Route path="biometric-manual/:tabId?" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><BiometricManual /></ProtectedRoute>} />
           <Route path="leaves/:tabId?/:subId?" element={<Leaves />} />
-          <Route path="payroll/:tabId?" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><Payroll /></ProtectedRoute>} />
+          <Route path="payroll/:tabId?" element={<Payroll />} />
           <Route path="asset-management/:tabId?" element={<AssetManagement />} />
           <Route path="reimbursements" element={<ReimbursementClaims />} />
           <Route path="profile/:userId?" element={<MyProfile />} />
@@ -80,7 +80,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="job-recruitment/create/:id?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><CreateJob /></ProtectedRoute>} />
           <Route path="policies" element={<Policies />} />
           <Route path="reports/:tabId?" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><Reports /></ProtectedRoute>} />
-          <Route path="settings" element={<ProtectedRoute allowedRoles={MANAGEMENT_ROLES}><Settings /></ProtectedRoute>} />
+          <Route path="settings" element={<Settings />} />
           <Route path="employees" element={<div className="p-10 text-2xl font-bold">Employee Management coming soon...</div>} />
         </Route>
         {/* Fallback for any other route */}

@@ -306,11 +306,22 @@ export default function Dashboard() {
     const usersOnLeave = useMemo(() => {
         return attendanceData
             .filter(a => a.status === 'On Leave')
-            .map(a => ({
-                ...employees.find(e => e.id === a.user_id),
-                attendanceDate: a.date
-            }))
-            .filter(e => e && e.id);
+            .map(a => {
+                const emp = employees.find(e => String(e.id) === String(a.user_id));
+                return {
+                    ...(emp || {}),
+                    id: a.user_id,
+                    employee_name: emp?.employee_name || a.employee_name,
+                    department_name: emp?.department_name || a.department,
+                    branch_name: emp?.branch_name || a.branch,
+                    attendanceDate: a.date,
+                    leave_type: a.leave_type || 'Approved',
+                    reason: a.reason,
+                    is_half_day: a.is_half_day,
+                    status: a.status
+                };
+            })
+            .filter(e => e && e.id && e.employee_name);
     }, [employees, attendanceData]);
 
     // Upcoming Birthdays and Anniversaries
@@ -1093,23 +1104,31 @@ export default function Dashboard() {
                             <div className="flex-1 overflow-auto custom-scrollbar p-0">
                                 {usersOnLeave.length > 0 ? (
                                     <div className="divide-y divide-gray-50">
-                                        {usersOnLeave.map(user => (
-                                            <div key={user.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50">
+                                        {usersOnLeave.map((user, idx) => (
+                                            <div key={`${user.id}_${user.attendanceDate || idx}`} className="p-4 flex items-center justify-between hover:bg-gray-50/50">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex flex-col">
                                                         <span className="text-sm font-semibold text-gray-700">{user.employee_name}</span>
                                                         <span className="text-[10px] font-semibold text-gray-500 uppercase">
                                                             {user.department_name} • {user.branch_name}
+                                                            {user.leave_type && ` • ${user.leave_type}`}
                                                             {!stats?.isSingleDay && user.attendanceDate && ` • ${format(parseISO(user.attendanceDate), 'MMM dd')}`}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-semibold uppercase">APPROVED</span>
+                                                <span className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-semibold uppercase">{user.leave_type || 'APPROVED'}</span>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="h-full flex items-center justify-center text-gray-400 text-sm font-medium">No one is on leave today!</div>
+                                    <div className="h-full flex items-center justify-center p-6">
+                                        <NoData
+                                            title={stats?.isSingleDay ? "No Leaves Today" : "No Leaves in this Period"}
+                                            description={stats?.isSingleDay ? "Everyone seems to be working hard today!" : "No approved leaves found for this period."}
+                                            icon={Users}
+                                            variant="mini"
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </motion.div>
