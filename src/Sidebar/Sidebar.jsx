@@ -83,7 +83,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     const { width } = useWindowSize();
     const isMobile = width < 1024;
 
-    const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
+    const [userInfo, setUserInfo] = useState(() => {
+        try {
+            return JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
+        } catch {
+            return {};
+        }
+    });
     const userRole = (userInfo.role || 'employee').toLowerCase();
     const isAdmin = ['admin', 'superadmin', 'hr executive'].includes(userRole) || userRole.includes('hr');
 
@@ -168,9 +174,14 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobileOpen, set
     };
 
     React.useEffect(() => {
-        const handleStorageChange = () => {
-            // This forces a re-render by triggering any state that Sidebar depends on
-            window.location.reload(); // Quickest way for a sidebar to sync permissions
+        const handleStorageChange = (e) => {
+            if (!e.key || e.key === 'userInfo') {
+                try {
+                    setUserInfo(JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'));
+                } catch (err) {
+                    console.error('Failed to parse updated userInfo from storage', err);
+                }
+            }
         };
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);

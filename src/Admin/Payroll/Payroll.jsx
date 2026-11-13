@@ -56,11 +56,11 @@ export default function Payroll() {
     const userPermissions = userInfo.permissions || [];
 
     const filteredTabs = useMemo(() => {
-        const baseTabs = userRole === 'employee' ? employeeTabs : tabs;
-        if (userRole === 'superadmin' || userRole === 'hr executive') return baseTabs;
+        const baseTabs = isAdmin ? tabs : employeeTabs;
+        if (userRole === 'superadmin' || userRole === 'admin' || userRole === 'hr executive') return baseTabs;
 
         return baseTabs.filter(tab => !tab.permissionId || userPermissions.includes(tab.permissionId));
-    }, [userRole, userPermissions]);
+    }, [isAdmin, userRole, userPermissions]);
 
     const activeTab = tabId || (filteredTabs.length > 0 ? filteredTabs[0].id : null);
 

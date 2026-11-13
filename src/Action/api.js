@@ -165,6 +165,7 @@ export const deleteHolidayApi = (id, params) => api.delete(`/holidays/${id}`, { 
 
 // Leave APIs
 export const getLeavesApi = (params) => api.get('/leaves', { params });
+export const getLeaveBalanceApi = (employeeId) => api.get(`/leaves/balance${employeeId ? `/${employeeId}` : ''}`);
 export const generateLeaveReportApi = (params) => api.get('/leaves/generate-report', { params, responseType: 'blob' });
 export const createLeaveApi = (data) => api.post('/leaves', data);
 export const updateLeaveApi = (id, data) => api.put(`/leaves/${id}`, data);

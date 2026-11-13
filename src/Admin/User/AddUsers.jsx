@@ -53,7 +53,7 @@ const sections = [
             { name: 'doj', label: 'DOJ (Date of Joining)', type: 'date' },
             { name: 'dor', label: 'DOR (Date of Relieving)', type: 'date' },
             { name: 'duration', label: 'Duration', type: 'text' },
-            { name: 'reporting_manager', label: 'Reporting Manager *', type: 'select', options: [], required: true },
+            { name: 'reporting_manager', label: 'Reporting Manager *', type: 'select', options: [], required: true, multiple: true },
             { name: 'is_experienced', label: 'Has Work Experience?', type: 'checkbox' },
             { name: 'team_lead', label: 'Team Lead', type: 'checkbox' },
             { name: 'web_clock_in_allowed', label: 'Allow Web Clock-In', type: 'checkbox' },
@@ -152,7 +152,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
     const [formData, setFormData] = useState({
         is_experienced: false,
         web_clock_in_allowed: true,
-        reporting_manager: ''
+        reporting_manager: []
     });
     const [activeSection, setActiveSection] = useState('professional');
     const [loading, setLoading] = useState(false);
@@ -343,8 +343,18 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
             if (mappedData.web_clock_in_allowed !== undefined) {
                 mappedData.web_clock_in_allowed = !!mappedData.web_clock_in_allowed;
             }
-            if (mappedData.reporting_manager !== undefined) {
-                mappedData.reporting_manager = mappedData.reporting_manager;
+            if (mappedData.reporting_manager !== undefined && mappedData.reporting_manager !== null) {
+                if (Array.isArray(mappedData.reporting_manager)) {
+                    mappedData.reporting_manager = mappedData.reporting_manager.map(String).filter(Boolean);
+                } else if (typeof mappedData.reporting_manager === 'string') {
+                    mappedData.reporting_manager = mappedData.reporting_manager
+                        ? mappedData.reporting_manager.split(',').map(s => s.trim()).filter(Boolean)
+                        : [];
+                } else {
+                    mappedData.reporting_manager = [String(mappedData.reporting_manager)];
+                }
+            } else {
+                mappedData.reporting_manager = [];
             }
 
             // Sync role name to ID if needed (for dropdown match)
@@ -471,10 +481,14 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
         for (const section of sections) {
             for (const field of section.fields) {
                 if (field.condition && !formData[field.condition]) continue;
-                if (field.required && !formData[field.name]) {
-                    setActiveSection(section.id);
-                    toast.error(`${field.label} is mandatory`);
-                    return;
+                if (field.required) {
+                    const val = formData[field.name];
+                    const isEmpty = val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
+                    if (isEmpty) {
+                        setActiveSection(section.id);
+                        toast.error(`${field.label} is mandatory`);
+                        return;
+                    }
                 }
             }
         }
@@ -499,7 +513,10 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
 
                 const value = formData[key];
                 if (value !== undefined && value !== null) {
-                    if (Array.isArray(value)) {
+                    if (key === 'reporting_manager') {
+                        const mgrVal = Array.isArray(value) ? value.filter(Boolean).join(',') : String(value || '');
+                        data.append(key, mgrVal);
+                    } else if (Array.isArray(value)) {
                         // Handle multiple files (like payslips)
                         value.forEach(item => {
                             if (item instanceof File) {
@@ -696,10 +713,11 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         <SearchableSelect
                                                             label={field.label}
                                                             name={field.name}
-                                                            value={formData[field.name] || ''}
+                                                            value={formData[field.name] || (field.multiple ? [] : '')}
                                                             onChange={handleChange}
                                                             disabled={isView}
                                                             required={field.required}
+                                                            multiple={field.multiple || false}
                                                             extra={renderAddOption(field.name, field.label)}
                                                             options={(field.name === 'designation'
                                                                 ? getFilteredDesignations().map(d => ({ value: d.id, label: d.name }))
@@ -714,7 +732,7 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                                                         {field.name === 'reporting_manager' && (
                                                             <p className="text-[11px] text-primary/70 font-medium px-1 mt-1.5 flex items-center gap-1.5 animate-in slide-in-from-top-1 duration-200">
                                                                 <span className="w-1 h-1 rounded-full bg-primary/50" />
-                                                                Attendance and Leave requests will be sent to this manager for approval.
+                                                                Attendance and Leave requests will be sent to the selected manager(s) for approval.
                                                             </p>
                                                         )}
                                                     </div>

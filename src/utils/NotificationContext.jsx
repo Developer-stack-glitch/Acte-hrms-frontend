@@ -11,7 +11,6 @@ export const useNotifications = () => useContext(NotificationContext);
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [socket, setSocket] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
 
     const fetchNotifications = useCallback(async () => {
@@ -58,7 +57,6 @@ export const NotificationProvider = ({ children }) => {
             setRefreshKey(prev => prev + 1);
         });
 
-        setSocket(newSocket);
         fetchNotifications();
 
         return () => newSocket.close();
@@ -66,9 +64,11 @@ export const NotificationProvider = ({ children }) => {
 
     // FCM foreground message listener
     useEffect(() => {
+        let isMounted = true;
         const listenForMessages = () => {
             onMessageListener()
                 .then((payload) => {
+                    if (!isMounted) return;
                     if (payload && payload.notification) {
                         toast.success(payload.notification.title, {
                             description: payload.notification.body,
@@ -79,11 +79,18 @@ export const NotificationProvider = ({ children }) => {
                         setRefreshKey(prev => prev + 1);
                     }
                     // Re-register the listener for the next message
-                    listenForMessages();
+                    if (isMounted) {
+                        listenForMessages();
+                    }
                 })
-                .catch((err) => console.error('FCM foreground listener error:', err));
+                .catch((err) => {
+                    if (isMounted) console.error('FCM foreground listener error:', err);
+                });
         };
         listenForMessages();
+        return () => {
+            isMounted = false;
+        };
     }, [fetchNotifications]);
 
     const markAsRead = async (id) => {

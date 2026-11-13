@@ -42,8 +42,6 @@ export default function AssetManagement() {
         }
     }, [userRole, navigate]);
 
-    if (userRole === 'employee') return null;
-
     // State
     const [assets, setAssets] = useState([]);
     const [requests, setRequests] = useState([]);
@@ -590,6 +588,8 @@ export default function AssetManagement() {
         hidden: { opacity: 0, y: 10 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
     };
+
+    if (userRole === 'employee') return null;
 
     return (
         <div className="min-h-screen bg-transparent md:p-4 p-3 pb-6 font-sans">

@@ -153,7 +153,11 @@ export default function ManageLeavesContent({ onViewAll }) {
 
     const isManagerRole = useMemo(() => {
         return isAdmin || userInfo.team_lead === 'yes' ||
-            leaves.some(l => String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId));
+            leaves.some(l => {
+                if (!l.reporting_manager) return false;
+                const managers = String(l.reporting_manager).split(',').map(m => m.trim());
+                return managers.includes(String(userId)) && String(l.employee_id) !== String(userId);
+            });
     }, [isAdmin, userInfo.team_lead, leaves, userId]);
 
     useEffect(() => {
@@ -215,7 +219,8 @@ export default function ManageLeavesContent({ onViewAll }) {
     const displayLeaves = useMemo(() => {
         return leaves.filter(l => {
             const isMyRequest = String(l.employee_id) === String(userId);
-            const isManagedRequest = String(l.reporting_manager) === String(userId) || String(l.team_lead_id) === String(userId);
+            const isReportingMgr = l.reporting_manager && String(l.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+            const isManagedRequest = isReportingMgr || String(l.team_lead_id) === String(userId);
             const canAction = isAdmin || isManagedRequest;
 
             // On dashboard, if manager, show pending requests from reportees. 
@@ -410,7 +415,10 @@ export default function ManageLeavesContent({ onViewAll }) {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                {(isAdmin || String(leave.team_lead_id) === String(userId) || String(leave.reporting_manager) === String(userId)) && String(leave.employee_id) !== String(userId) ? (
+                                                {(() => {
+                                                    const isRowManager = leave.reporting_manager && String(leave.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+                                                    return (isAdmin || String(leave.team_lead_id) === String(userId) || isRowManager) && String(leave.employee_id) !== String(userId);
+                                                })() ? (
                                                     <>
                                                         <button
                                                             onClick={() => handleAction(leave, 'Approved')}

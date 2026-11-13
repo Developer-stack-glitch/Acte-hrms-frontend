@@ -10,7 +10,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createLeaveApi, getUsersApi } from '../../Action/api';
+import { createLeaveApi, getUsersApi, getLeaveBalanceApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import Compressor from 'compressorjs';
 import { FormInput, FormSelect, FormDate, FormTextarea, FormTime, SearchableSelect } from '../../Common/Form';
@@ -48,6 +48,21 @@ export default function AddLeave({ onSuccess, onCancel }) {
     const [calculatedDays, setCalculatedDays] = useState(0);
     const [documents, setDocuments] = useState([]);
     const [isCompressing, setIsCompressing] = useState(false);
+    const [leaveBalance, setLeaveBalance] = useState(null);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            const targetId = formData.employee_id || (userRole === 'employee' ? userId : null);
+            if (!targetId) return;
+            try {
+                const res = await getLeaveBalanceApi(targetId);
+                if (res.data) setLeaveBalance(res.data);
+            } catch (e) {
+                // Non-fatal fallback
+            }
+        };
+        fetchBalance();
+    }, [formData.employee_id, userRole, userId]);
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -114,6 +129,15 @@ export default function AddLeave({ onSuccess, onCancel }) {
         if (!formData.employee_id) return toast.error('Please select an employee');
         if (!formData.leave_type) return toast.error('Please select a leave type');
         if (!formData.start_date) return toast.error('Please select a start date');
+
+        if (formData.start_date && formData.end_date && formData.start_date > formData.end_date) {
+            return toast.error('Start date cannot be after end date');
+        }
+
+        // Casual Leave balance validation for employees
+        if (formData.leave_type === 'Casual Leave' && userRole === 'employee' && leaveBalance && calculatedDays > leaveBalance.remaining.annual_casual_leave) {
+            return toast.error(`Insufficient Casual Leave balance (${leaveBalance.remaining.annual_casual_leave} days remaining). Please apply for Loss of Pay(LOP).`);
+        }
 
         if (formData.leave_type === 'Permission') {
             if (!formData.start_time || !formData.end_time) {
@@ -274,6 +298,12 @@ export default function AddLeave({ onSuccess, onCancel }) {
                                     placeholder="Select leave type..."
                                     required
                                 />
+                                {leaveBalance && formData.leave_type === 'Casual Leave' && (
+                                    <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-[12px] text-emerald-800 font-medium">
+                                        <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                                        <span>Remaining Casual Leave: <strong>{leaveBalance.remaining.annual_casual_leave} days</strong> ({leaveBalance.year_to_date.casual_leave_taken} days used this year)</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

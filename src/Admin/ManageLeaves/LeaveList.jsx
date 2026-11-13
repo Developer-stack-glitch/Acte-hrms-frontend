@@ -323,9 +323,11 @@ export default function LeaveList() {
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
     const userId = userInfo._id || userInfo.id;
 
-    const isManagerForSome = useMemo(() => leaves && leaves.length > 0 && leaves.some(l => 
-        l.reporting_manager && String(l.reporting_manager) === String(userId) && String(l.employee_id) !== String(userId)
-    ), [leaves, userId]);
+    const isManagerForSome = useMemo(() => leaves && leaves.length > 0 && leaves.some(l => {
+        if (!l.reporting_manager) return false;
+        const managers = String(l.reporting_manager).split(',').map(m => m.trim());
+        return managers.includes(String(userId)) && String(l.employee_id) !== String(userId);
+    }), [leaves, userId]);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [leaveToDelete, setLeaveToDelete] = useState(null);
@@ -652,13 +654,15 @@ export default function LeaveList() {
             cols.push({
                 header: 'Actions',
                 key: 'actions',
-                render: (val, row) => (
-                    <div className="flex items-center gap-2">
-                        {row.status === 'Pending' && String(row.employee_id) !== String(userId) && (
-                            isAdmin || 
-                            String(row.team_lead_id) === String(userId) || 
-                            String(row.reporting_manager) === String(userId)
-                        ) && (
+                render: (val, row) => {
+                    const isRowManager = row.reporting_manager && String(row.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+                    return (
+                        <div className="flex items-center gap-2">
+                            {row.status === 'Pending' && String(row.employee_id) !== String(userId) && (
+                                isAdmin || 
+                                String(row.team_lead_id) === String(userId) || 
+                                isRowManager
+                            ) && (
                                 <>
                                     <button
                                         onClick={() => handleStatusUpdate(row, 'Approved')}
@@ -676,8 +680,9 @@ export default function LeaveList() {
                                     </button>
                                 </>
                             )}
-                    </div>
-                )
+                        </div>
+                    );
+                }
             });
         }
 

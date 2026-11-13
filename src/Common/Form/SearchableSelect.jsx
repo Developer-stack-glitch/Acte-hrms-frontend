@@ -17,8 +17,11 @@ const SearchableSelect = ({
     extra,
     name,
     isClearable = true,
+    multiple = false,
+    isMulti = false,
     ...props
 }) => {
+    const isMultiple = multiple || isMulti;
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const dropdownRef = useRef(null);
@@ -34,9 +37,25 @@ const SearchableSelect = ({
         );
     }, [options, searchTerm]);
 
+    const selectedValues = useMemo(() => {
+        if (!isMultiple) return [];
+        if (Array.isArray(value)) return value.map(String).filter(Boolean);
+        if (value === null || value === undefined || value === '') return [];
+        if (typeof value === 'string' && value.includes(',')) {
+            return value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return [String(value)].filter(Boolean);
+    }, [value, isMultiple]);
+
+    const selectedOptions = useMemo(() => {
+        if (!isMultiple) return [];
+        return (options || []).filter(opt => selectedValues.includes(String(opt.value)));
+    }, [options, selectedValues, isMultiple]);
+
     const selectedOption = useMemo(() => {
+        if (isMultiple) return null;
         return (options || []).find(opt => String(opt.value) === String(value));
-    }, [options, value]);
+    }, [options, value, isMultiple]);
 
     // Handle click outside to close cleanly
     useEffect(() => {
@@ -81,19 +100,52 @@ const SearchableSelect = ({
     }, [isOpen]);
 
     const handleSelect = (optionValue) => {
-        onChange({
-            target: {
-                name,
-                value: optionValue
-            }
-        });
-        setIsOpen(false);
-        setSearchTerm('');
+        if (isMultiple) {
+            const valStr = String(optionValue);
+            const exists = selectedValues.includes(valStr);
+            const next = exists
+                ? selectedValues.filter(v => v !== valStr)
+                : [...selectedValues, valStr];
+            onChange({
+                target: {
+                    name,
+                    value: next
+                }
+            });
+        } else {
+            onChange({
+                target: {
+                    name,
+                    value: optionValue
+                }
+            });
+            setIsOpen(false);
+            setSearchTerm('');
+        }
     };
 
     const handleClear = (e) => {
         e.stopPropagation();
-        handleSelect('');
+        onChange({
+            target: {
+                name,
+                value: isMultiple ? [] : ''
+            }
+        });
+        if (!isMultiple) {
+            setIsOpen(false);
+            setSearchTerm('');
+        }
+    };
+
+    const handleRemoveSingle = (valToRemove) => {
+        const next = selectedValues.filter(v => v !== String(valToRemove));
+        onChange({
+            target: {
+                name,
+                value: next
+            }
+        });
     };
 
     return (
@@ -110,7 +162,7 @@ const SearchableSelect = ({
                     type="button"
                     onClick={() => !disabled && setIsOpen(!isOpen)}
                     disabled={disabled}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border rounded-[12px] outline-none text-[14px] font-medium transition-colors select-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${
+                    className={`w-full min-h-[44px] flex items-center justify-between px-4 py-2 bg-white border rounded-[12px] outline-none text-[14px] font-medium transition-colors select-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${
                         isOpen
                             ? 'border-primary ring-3 ring-primary/10'
                             : 'border-gray-200 hover:border-gray-300'
@@ -118,22 +170,52 @@ const SearchableSelect = ({
                     aria-haspopup="listbox"
                     aria-expanded={isOpen}
                 >
-                    <div className="flex items-center gap-2.5 truncate">
+                    <div className="flex items-center gap-2 truncate flex-1 min-w-0">
                         {Icon && !label && (
                             <Icon
                                 size={18}
                                 className={`shrink-0 transition-colors ${
-                                    isOpen || selectedOption ? 'text-primary' : 'text-gray-400'
+                                    isOpen || (isMultiple ? selectedValues.length > 0 : selectedOption) ? 'text-primary' : 'text-gray-400'
                                 }`}
                             />
                         )}
-                        <span className={`truncate ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-800'}`}>
-                            {selectedOption ? selectedOption.label : placeholder}
-                        </span>
+                        {isMultiple ? (
+                            selectedValues.length === 0 ? (
+                                <span className="truncate text-gray-400 font-normal">{placeholder}</span>
+                            ) : (
+                                <div className="flex flex-wrap items-center gap-1.5 py-0.5 max-w-full">
+                                    {selectedOptions.map(opt => (
+                                        <span
+                                            key={opt.value}
+                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary text-[12px] font-semibold animate-in fade-in-50 duration-150"
+                                        >
+                                            <span className="truncate max-w-[140px]">{opt.label}</span>
+                                            {!disabled && (
+                                                <span
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveSingle(opt.value);
+                                                    }}
+                                                    className="hover:bg-primary/20 rounded p-0.5 transition-colors cursor-pointer"
+                                                >
+                                                    <X size={11} />
+                                                </span>
+                                            )}
+                                        </span>
+                                    ))}
+                                </div>
+                            )
+                        ) : (
+                            <span className={`truncate ${!selectedOption ? 'text-gray-400 font-normal' : 'text-gray-800'}`}>
+                                {selectedOption ? selectedOption.label : placeholder}
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        {isClearable && selectedOption && !disabled && (
+                        {isClearable && (isMultiple ? selectedValues.length > 0 : selectedOption) && !disabled && (
                             <X
                                 size={15}
                                 className="text-gray-400 hover:text-rose-500 transition-colors cursor-pointer"
@@ -193,20 +275,22 @@ const SearchableSelect = ({
 
                             {/* Options list */}
                             <div className="max-h-[260px] overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
-                                {isClearable && value && (
+                                {isClearable && (isMultiple ? selectedValues.length > 0 : value) && (
                                     <button
                                         type="button"
-                                        onClick={() => handleSelect('')}
+                                        onClick={handleClear}
                                         className="w-full flex items-center px-3 py-1.5 rounded-lg hover:bg-rose-50 text-rose-500 transition-colors text-[12px] font-semibold mb-1 group/clear cursor-pointer"
                                     >
                                         <X size={13} className="mr-2 group-hover/clear:scale-110 transition-transform" />
-                                        Clear Selection
+                                        Clear Selection {isMultiple && selectedValues.length > 0 ? `(${selectedValues.length})` : ''}
                                     </button>
                                 )}
 
                                 {filteredOptions.length > 0 ? (
                                     filteredOptions.map((opt) => {
-                                        const isSelected = String(opt.value) === String(value);
+                                        const isSelected = isMultiple
+                                            ? selectedValues.includes(String(opt.value))
+                                            : String(opt.value) === String(value);
                                         return (
                                             <button
                                                 key={opt.value}

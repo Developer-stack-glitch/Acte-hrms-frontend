@@ -394,7 +394,10 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
                                                 </button>
                                             </Tooltip>
 
-                                            {(isAdmin || String(req.reporting_manager) === String(userId)) && req.status === 'Pending' && String(req.user_id) !== String(userId) && (
+                                            {(() => {
+                                                const isRowMgr = req.reporting_manager && String(req.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+                                                return (isAdmin || isRowMgr) && req.status === 'Pending' && String(req.user_id) !== String(userId);
+                                            })() && (
                                                 <div className="flex items-center gap-2 border-l pl-3 ml-1 border-gray-100">
                                                     <Tooltip text="Approve">
                                                         <button

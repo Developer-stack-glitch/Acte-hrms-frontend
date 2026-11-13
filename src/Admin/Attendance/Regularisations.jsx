@@ -212,7 +212,11 @@ const Regularisations = () => {
     const userRole = (userInfo.role || '').toLowerCase();
     const userId = userInfo._id || userInfo.id;
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
-    const isReportingManager = useMemo(() => requests.some(r => String(r.reporting_manager) === String(userId) && String(r.user_id) !== String(userId)), [requests, userId]);
+    const isReportingManager = useMemo(() => requests.some(r => {
+        if (!r.reporting_manager) return false;
+        const managers = String(r.reporting_manager).split(',').map(m => m.trim());
+        return managers.includes(String(userId)) && String(r.user_id) !== String(userId);
+    }), [requests, userId]);
 
     useEffect(() => {
         localStorage.setItem('regularisations_searchTerm', searchTerm);
@@ -429,42 +433,45 @@ const Regularisations = () => {
             }
         ];
 
-        const isManagerForAny = requests.some(r =>
-            (isAdmin || String(r.reporting_manager) === String(userId)) &&
-            r.status === 'Pending' && String(r.user_id) !== String(userId)
-        );
+        const isManagerForAny = requests.some(r => {
+            const isRowMgr = r.reporting_manager && String(r.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+            return (isAdmin || isRowMgr) && r.status === 'Pending' && String(r.user_id) !== String(userId);
+        });
 
         if (isAdmin || isManagerForAny) {
             cols.push({
                 header: 'Actions',
                 key: 'actions',
-                render: (val, row) => (
-                    <div className="flex items-center gap-2">
-                        {row.status === 'Pending' && String(row.user_id) !== String(userId) && (isAdmin || String(row.reporting_manager) === String(userId)) && (
-                            <>
-                                <Tooltip text="Approve" position="bottom">
-                                    <button
-                                        onClick={() => handleStatusUpdate(row.id, 'Approved')}
-                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
-                                    >
-                                        <CheckCircle2 size={16} />
-                                    </button>
-                                </Tooltip>
-                                <Tooltip text="Reject" position="bottom">
-                                    <button
-                                        onClick={() => {
-                                            setRequestToReject(row);
-                                            setIsRejectionModalOpen(true);
-                                        }}
-                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </Tooltip>
-                            </>
-                        )}
-                    </div>
-                )
+                render: (val, row) => {
+                    const isRowManager = row.reporting_manager && String(row.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+                    return (
+                        <div className="flex items-center gap-2">
+                            {row.status === 'Pending' && String(row.user_id) !== String(userId) && (isAdmin || isRowManager) && (
+                                <>
+                                    <Tooltip text="Approve" position="bottom">
+                                        <button
+                                            onClick={() => handleStatusUpdate(row.id, 'Approved')}
+                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
+                                        >
+                                            <CheckCircle2 size={16} />
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip text="Reject" position="bottom">
+                                        <button
+                                            onClick={() => {
+                                                setRequestToReject(row);
+                                                setIsRejectionModalOpen(true);
+                                            }}
+                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </Tooltip>
+                                </>
+                            )}
+                        </div>
+                    );
+                }
             });
         }
 
