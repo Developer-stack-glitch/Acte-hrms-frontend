@@ -16,7 +16,7 @@ import {
     Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getUsersApi, updateUserApi, getAllRolePermissionsApi, resendOnboardingEmailApi } from '../../Action/api';
+import { getUsersApi, updateUserApi, getAllRolePermissionsApi, resendOnboardingEmailApi, testSmtpApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput } from '../../Common/Form';
 import CommonSelect from '../../Common/CommonSelect';
@@ -31,6 +31,7 @@ export default function EmployeeCredentials() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [resendingEmail, setResendingEmail] = useState(false);
+    const [testingSmtp, setTestingSmtp] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -163,6 +164,20 @@ export default function EmployeeCredentials() {
         }
     };
 
+    const handleTestSmtp = async () => {
+        setTestingSmtp(true);
+        try {
+            const res = await testSmtpApi();
+            toast.success(res.data?.message || 'SMTP verified successfully!');
+        } catch (error) {
+            console.error('SMTP test error:', error);
+            const msg = error.response?.data?.diagnostic?.troubleshooting || error.response?.data?.message || 'SMTP connection failed';
+            toast.error(msg, { duration: 7000 });
+        } finally {
+            setTestingSmtp(false);
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-[#f8fafc]">
             {/* Header */}
@@ -189,6 +204,19 @@ export default function EmployeeCredentials() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <button
+                            onClick={handleTestSmtp}
+                            disabled={testingSmtp}
+                            title="Test SMTP Email Configuration"
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-primary hover:bg-primary/5 rounded-xl transition-all border border-slate-200 bg-white shadow-sm disabled:opacity-50"
+                        >
+                            {testingSmtp ? (
+                                <Loader2 size={16} className="animate-spin text-primary" />
+                            ) : (
+                                <Mail size={16} className="text-primary" />
+                            )}
+                            <span className="hidden sm:inline">Test Email SMTP</span>
+                        </button>
                         <button
                             onClick={() => fetchUsers(1, false)}
                             className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all border border-slate-200 bg-white"

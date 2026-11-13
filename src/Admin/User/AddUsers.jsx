@@ -554,8 +554,13 @@ export default function AddUsers({ initialData, mode = 'add', onCancel, onSucces
                 toast.success('Employee updated successfully!');
             } else {
                 if (!formData.role) data.append('role', 'employee');
-                await createUserApi(data);
-                toast.success('Employee onboarded & welcome email sent!');
+                const response = await createUserApi(data);
+                const emailWarning = response.data?.emailWarning;
+                if (emailWarning) {
+                    toast.error(`Employee created, but email delivery issue: ${emailWarning}`, { duration: 6000 });
+                } else {
+                    toast.success('Employee onboarded & welcome email sent!');
+                }
             }
 
             if (onSuccess) onSuccess();
