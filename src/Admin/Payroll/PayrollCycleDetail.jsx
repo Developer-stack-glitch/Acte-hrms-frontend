@@ -10,14 +10,18 @@ import {
     CheckCircle2,
     FileText,
     Pause,
-    Lock
+    Lock,
+    Download,
+    Loader2,
+    X
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { getPayrollEmployeesApi, getCompanyByIdApi, togglePayrollHoldApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import { PayslipView } from './PayslipTemplate';
-import { X } from 'lucide-react';
 import DataTable from '../../Common/DataTable';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
@@ -47,6 +51,7 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
     const [logo, setLogo] = useState(null);
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const printRefCount = React.useRef();
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         const fetchCompany = async () => {
@@ -117,6 +122,121 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                 { label: 'WEEKLY OFF', opening: 0, closing: 0 },
             ]
         };
+    };
+
+    const handleDownloadPdf = async () => {
+        const printElement = document.getElementById('print-area');
+        if (!printElement) {
+            toast.error('Payslip element not found');
+            return;
+        }
+
+        setDownloading(true);
+        const toastId = toast.loading('Downloading Payslip PDF...');
+
+        // 1. If payroll run is finalized, attempt official server-rendered PDF download
+        if (batchData?.status === 'Completed' && selectedEmployee?.id) {
+            try {
+                const { default: api } = await import('../../Action/api');
+                const response = await api.get(`/payroll-run/payslip/${selectedEmployee.id}/download`, {
+                    responseType: 'blob'
+                });
+                if (response.data && response.data.size > 1000) {
+                    const blob = new Blob([response.data], { type: 'application/pdf' });
+                    const empCode = selectedEmployee?.emp_id || selectedEmployee?.code || 'EMP';
+                    const empName = (selectedEmployee?.name || selectedEmployee?.employee_name || 'Staff').replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const monthText = (batchData?.month_year || batchData?.payroll_month || selectedEmployee?.month || 'Payslip').replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const fileName = `Payslip_${empCode}_${empName}_${monthText}.pdf`;
+
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(link.href);
+
+                    toast.success('Payslip downloaded successfully!', { id: toastId });
+                    setDownloading(false);
+                    return;
+                }
+            } catch (apiErr) {
+                console.warn('Server PDF download unavailable, generating client-side PDF:', apiErr.message);
+            }
+        }
+
+        // 2. Direct client-side PDF generation (isolated offscreen clone to eliminate CSS scaling and truncation)
+        try {
+            const offscreenContainer = document.createElement('div');
+            offscreenContainer.style.position = 'fixed';
+            offscreenContainer.style.left = '-10000px';
+            offscreenContainer.style.top = '0';
+            offscreenContainer.style.width = '794px';
+            offscreenContainer.style.background = '#ffffff';
+            offscreenContainer.style.zIndex = '-9999';
+
+            const clone = printElement.cloneNode(true);
+            clone.id = 'print-area-clone';
+            clone.style.width = '794px';
+            clone.style.minWidth = '794px';
+            clone.style.maxWidth = '794px';
+            clone.style.boxSizing = 'border-box';
+            clone.style.margin = '0';
+            clone.style.padding = '38px';
+            clone.style.boxShadow = 'none';
+            clone.style.transform = 'none';
+
+            offscreenContainer.appendChild(clone);
+            document.body.appendChild(offscreenContainer);
+
+            // Allow DOM and fonts to settle in the clone
+            await new Promise(resolve => setTimeout(resolve, 80));
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                width: 794
+            });
+
+            document.body.removeChild(offscreenContainer);
+
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pdfWidth = 210;
+            const pdfPageHeight = 297;
+            const contentHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            if (contentHeight > pdfPageHeight) {
+                const scale = pdfPageHeight / contentHeight;
+                const finalWidth = pdfWidth * scale;
+                const finalHeight = pdfPageHeight;
+                const xOffset = (pdfWidth - finalWidth) / 2;
+                pdf.addImage(imgData, 'PNG', xOffset, 0, finalWidth, finalHeight);
+            } else {
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, contentHeight);
+            }
+
+            const empCode = selectedEmployee?.emp_id || selectedEmployee?.code || 'EMP';
+            const empName = (selectedEmployee?.name || selectedEmployee?.employee_name || 'Staff').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const monthText = (batchData?.month_year || batchData?.payroll_month || selectedEmployee?.month || 'Payslip').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const fileName = `Payslip_${empCode}_${empName}_${monthText}.pdf`;
+
+            pdf.save(fileName);
+            toast.success('Payslip downloaded successfully!', { id: toastId });
+        } catch (err) {
+            console.error('Payslip PDF download error:', err);
+            toast.error('Failed to download PDF', { id: toastId });
+        } finally {
+            setDownloading(false);
+        }
     };
 
     useEffect(() => {
@@ -569,10 +689,30 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-[1px] h-8 bg-gray-100 mx-1" />
+                                    <button
+                                        type="button"
+                                        onClick={handleDownloadPdf}
+                                        disabled={downloading}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-full shadow-md shadow-primary/20 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+                                        title="Download Payslip as PDF"
+                                    >
+                                        {downloading ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                <span>Downloading...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download size={16} />
+                                                <span>Download PDF</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <div className="w-[1px] h-7 bg-gray-200 mx-1" />
                                     <button
                                         onClick={() => setSelectedEmployee(null)}
-                                        className="p-2.5 hover:bg-rose-50 rounded-xl transition-all text-gray-400 hover:text-rose-500 group"
+                                        className="p-2 hover:bg-rose-50 rounded-xl transition-all text-gray-400 hover:text-rose-500 group"
+                                        title="Close Preview"
                                     >
                                         <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                                     </button>
@@ -591,11 +731,29 @@ export default function PayrollCycleDetail({ onBack, batchData }) {
                                 </div>
                             </div>
 
-                            {/* Modal Footer (Helper) */}
-                            <div className="px-6 py-3 bg-white border-t border-gray-50 text-center shrink-0">
-                                <p className="text-[10px] font-bold text-gray-700 uppercase tracking-[0.2em]">
+                            {/* Modal Footer (Helper & Quick Action) */}
+                            <div className="px-6 py-3 bg-white border-t border-gray-100 flex items-center justify-between shrink-0">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
                                     A4 Document Format • Standard Layout 2.0
                                 </p>
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadPdf}
+                                    disabled={downloading}
+                                    className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-full shadow-sm shadow-primary/10 transition-all disabled:opacity-60 cursor-pointer"
+                                >
+                                    {downloading ? (
+                                        <>
+                                            <Loader2 size={15} className="animate-spin" />
+                                            <span>Downloading...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download size={15} />
+                                            <span>Download PDF</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </motion.div>
                     </div>

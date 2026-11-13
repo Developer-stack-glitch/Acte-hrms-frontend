@@ -36,7 +36,7 @@ export default function DataTable({
                             {columns.map((col, idx) => (
                                 <th
                                     key={idx}
-                                    className={`px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
+                                    className={`px-5 py-4 text-[12px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.headerClassName || col.className || ''}`}
                                 >
                                     <div className={`flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : ''}`}>
                                         {col.header}
@@ -78,7 +78,7 @@ export default function DataTable({
                                     className={`group hover:bg-gray-50/50 transition-colors cursor-default ${rowClassName ? (typeof rowClassName === 'function' ? rowClassName(row, rowIdx) : rowClassName) : ''}`}
                                 >
                                     {columns.map((col, colIdx) => (
-                                        <td key={colIdx} className={`px-5 py-4 whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}>
+                                        <td key={colIdx} className={`px-5 py-4 ${col.className?.includes('whitespace-') ? '' : 'whitespace-nowrap'} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.className || ''}`}>
                                             {col.render ? col.render(row[col.key], row, rowIdx) : (
                                                 <span className="text-[13px] font-medium text-gray-600">
                                                     {row[col.key]}

@@ -79,6 +79,7 @@ export const updateUserApi = (id, data) => {
     return api.put(`/users/${id}`, data);
 };
 export const deleteUserApi = (id) => api.delete(`/users/${id}`);
+export const resendOnboardingEmailApi = (id) => api.post(`/users/${id}/resend-onboarding`);
 export const bulkUploadUsersApi = (data) => api.post('/users/bulk-upload', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const downloadUserBulkTemplateApi = (id) => api.get(`/users/bulk-template?salary_structure_id=${id}`, { responseType: 'blob' });
 export const downloadUserReferenceIdsApi = () => api.get('/users/reference-ids', { responseType: 'blob' });

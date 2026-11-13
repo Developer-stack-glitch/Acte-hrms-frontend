@@ -12,10 +12,11 @@ import {
     ArrowRight,
     Loader2,
     Sparkles,
-    X
+    X,
+    Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getUsersApi, updateUserApi, getAllRolePermissionsApi } from '../../Action/api';
+import { getUsersApi, updateUserApi, getAllRolePermissionsApi, resendOnboardingEmailApi } from '../../Action/api';
 import toast from 'react-hot-toast';
 import { FormInput } from '../../Common/Form';
 import CommonSelect from '../../Common/CommonSelect';
@@ -29,6 +30,7 @@ export default function EmployeeCredentials() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [resendingEmail, setResendingEmail] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -143,6 +145,22 @@ export default function EmployeeCredentials() {
         setFormData({ ...formData, password, confirmPassword: password });
         setShowPassword(true);
         toast.success('Secure password generated');
+    };
+
+    const handleResendOnboardingEmail = async () => {
+        if (!selectedUser?.id) return;
+        setResendingEmail(true);
+        try {
+            await resendOnboardingEmailApi(selectedUser.id);
+            toast.success(`Onboarding email sent with new credentials to ${selectedUser.employee_name}!`);
+            setIsModalOpen(false);
+            fetchUsers(page, false);
+        } catch (error) {
+            console.error('Error resending onboarding email:', error);
+            toast.error(error.response?.data?.message || 'Failed to send onboarding email');
+        } finally {
+            setResendingEmail(false);
+        }
     };
 
     return (
@@ -416,6 +434,25 @@ export default function EmployeeCredentials() {
                                 </div>
 
                                 <div className="mt-7 flex flex-col gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOnboardingEmail}
+                                        disabled={resendingEmail || saving}
+                                        className="w-full py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium hover:bg-emerald-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        {resendingEmail ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                Sending Onboarding Email...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Mail size={16} />
+                                                Send Onboarding Email (With New Password)
+                                            </>
+                                        )}
+                                    </button>
+
                                     <button
                                         onClick={handleUpdateCredentials}
                                         disabled={saving}

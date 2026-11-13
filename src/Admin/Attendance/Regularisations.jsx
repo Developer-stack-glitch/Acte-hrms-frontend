@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     Search, RefreshCcw, Clock, Calendar,
-    CheckCircle2, X
+    CheckCircle2, X, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
@@ -83,9 +83,9 @@ const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
 
 const getStatusColor = (status) => {
     switch (status) {
-        case 'Approved': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-        case 'Rejected': return 'bg-rose-50 text-rose-600 border-rose-100';
-        default: return 'bg-orange-50 text-orange-600 border-orange-100';
+        case 'Approved': return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+        case 'Rejected': return 'bg-rose-50 text-rose-700 border-rose-200/80';
+        default: return 'bg-amber-50 text-amber-700 border-amber-200/80';
     }
 };
 
@@ -376,13 +376,14 @@ const Regularisations = () => {
             {
                 header: 'Reason',
                 key: 'reason',
+                className: 'min-w-[180px] max-w-[220px]',
                 render: (val, row) => {
-                    const limit = 30;
+                    const limit = 32;
                     const isLong = val && val.length > limit;
                     return (
-                        <div className="flex flex-col max-w-[200px]">
-                            <span className="text-[13px] text-gray-600 truncate font-medium">
-                                {isLong ? `${val.substring(0, limit)}...` : (val || 'N/A')}
+                        <div className="flex flex-col max-w-[210px] whitespace-normal">
+                            <span className="text-[12.5px] text-gray-700 font-medium line-clamp-2 leading-relaxed" title={val}>
+                                {val || 'N/A'}
                             </span>
                             {isLong && (
                                 <button
@@ -390,7 +391,7 @@ const Regularisations = () => {
                                         setSelectedRequestForReason(row);
                                         setReasonModalOpen(true);
                                     }}
-                                    className="text-[11px] text-primary font-bold hover:underline w-fit mt-1"
+                                    className="text-[11px] text-primary hover:text-primary/80 font-bold hover:underline w-fit mt-1 inline-flex items-center gap-0.5"
                                 >
                                     View More
                                 </button>
@@ -402,31 +403,58 @@ const Regularisations = () => {
             {
                 header: 'Status',
                 key: 'status',
+                className: 'min-w-[190px] max-w-[240px]',
                 render: (val, row) => (
-                    <div className="flex flex-col">
-                        <span className={`px-3 py-1 rounded-full text-[12px] font-semibold border w-fit ${getStatusColor(val)}`}>
+                    <div className="flex flex-col items-start gap-1 max-w-[220px] whitespace-normal">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11.5px] font-bold border tracking-wide inline-flex items-center gap-1.5 w-fit shadow-2xs ${getStatusColor(val)}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                                val === 'Approved' ? 'bg-emerald-500' : val === 'Rejected' ? 'bg-rose-500' : 'bg-amber-500'
+                            }`} />
                             {val}
                         </span>
                         {row.rejection_reason && (
-                            <span className="text-[10px] text-rose-500 font-medium italic mt-1 max-w-[150px] break-words">
-                                Note: {row.rejection_reason}
-                            </span>
+                            <div
+                                onClick={() => {
+                                    setSelectedRequestForReason(row);
+                                    setReasonModalOpen(true);
+                                }}
+                                className="mt-1 flex flex-col p-1.5 px-2 rounded-lg bg-rose-50/90 hover:bg-rose-100 border border-rose-200/70 cursor-pointer transition-all w-full text-left group shadow-2xs"
+                                title="Click to view full rejection note"
+                            >
+                                <div className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider">
+                                    <AlertCircle size={10} className="shrink-0 text-rose-500" />
+                                    <span>Rejection Note</span>
+                                </div>
+                                <p className="text-[11px] text-rose-800 font-medium leading-snug line-clamp-2 mt-0.5 break-words">
+                                    "{row.rejection_reason}"
+                                </p>
+                            </div>
                         )}
                     </div>
                 )
             },
             {
-                header: 'Approved By',
+                header: 'Reviewed By',
                 key: 'approved_by_name',
+                className: 'min-w-[140px]',
                 render: (val, row) => (
-                    <div className="flex flex-col">
-                        <span className="text-[13px] font-medium text-gray-700">
-                            {val || (row.status === 'Pending' ? '-' : (row.approved_by ? `User #${row.approved_by}` : 'Admin'))}
-                        </span>
-                        {row.status !== 'Pending' && (
-                            <span className="text-[10px] text-gray-400">
-                                {row.status === 'Approved' ? 'Approver' : 'Rejecter'}
-                            </span>
+                    <div className="flex flex-col justify-center">
+                        {row.status === 'Pending' ? (
+                            <span className="text-gray-300 font-medium text-[13px]">—</span>
+                        ) : (
+                            <>
+                                <span className="text-[13px] font-semibold text-gray-800 leading-tight">
+                                    {val || (row.approved_by ? `User #${row.approved_by}` : 'Admin')}
+                                </span>
+                                <span className={`text-[10.5px] font-semibold flex items-center gap-1.5 mt-1 ${
+                                    row.status === 'Approved' ? 'text-emerald-600' : 'text-rose-600'
+                                }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                        row.status === 'Approved' ? 'bg-emerald-500' : 'bg-rose-500'
+                                    }`} />
+                                    {row.status === 'Approved' ? 'Approved' : 'Rejected'}
+                                </span>
+                            </>
                         )}
                     </div>
                 )
@@ -442,33 +470,37 @@ const Regularisations = () => {
             cols.push({
                 header: 'Actions',
                 key: 'actions',
+                align: 'center',
+                className: 'min-w-[100px]',
                 render: (val, row) => {
                     const isRowManager = row.reporting_manager && String(row.reporting_manager).split(',').map(m => m.trim()).includes(String(userId));
+                    const canAct = row.status === 'Pending' && String(row.user_id) !== String(userId) && (isAdmin || isRowManager);
+
+                    if (!canAct) {
+                        return <span className="text-gray-300 font-medium text-[13px]">—</span>;
+                    }
+
                     return (
-                        <div className="flex items-center gap-2">
-                            {row.status === 'Pending' && String(row.user_id) !== String(userId) && (isAdmin || isRowManager) && (
-                                <>
-                                    <Tooltip text="Approve" position="bottom">
-                                        <button
-                                            onClick={() => handleStatusUpdate(row.id, 'Approved')}
-                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
-                                        >
-                                            <CheckCircle2 size={16} />
-                                        </button>
-                                    </Tooltip>
-                                    <Tooltip text="Reject" position="bottom">
-                                        <button
-                                            onClick={() => {
-                                                setRequestToReject(row);
-                                                setIsRejectionModalOpen(true);
-                                            }}
-                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </Tooltip>
-                                </>
-                            )}
+                        <div className="flex items-center justify-center gap-2">
+                            <Tooltip text="Approve Request" position="bottom">
+                                <button
+                                    onClick={() => handleStatusUpdate(row.id, 'Approved')}
+                                    className="p-1.5 text-emerald-600 hover:text-emerald-700 bg-emerald-50/80 hover:bg-emerald-100 rounded-lg transition-all border border-emerald-200/60 shadow-2xs hover:scale-105 active:scale-95"
+                                >
+                                    <CheckCircle2 size={16} />
+                                </button>
+                            </Tooltip>
+                            <Tooltip text="Reject Request" position="bottom">
+                                <button
+                                    onClick={() => {
+                                        setRequestToReject(row);
+                                        setIsRejectionModalOpen(true);
+                                    }}
+                                    className="p-1.5 text-rose-600 hover:text-rose-700 bg-rose-50/80 hover:bg-rose-100 rounded-lg transition-all border border-rose-200/60 shadow-2xs hover:scale-105 active:scale-95"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </Tooltip>
                         </div>
                     );
                 }
