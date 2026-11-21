@@ -209,9 +209,9 @@ const Regularisations = () => {
     const { refreshKey: contextRefreshKey } = useNotifications();
 
     const userInfo = useMemo(() => JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}'), []);
-    const userRole = (userInfo.role || '').toLowerCase();
+    const userRole = (userInfo.role || '').toLowerCase().trim();
     const userId = userInfo._id || userInfo.id;
-    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive' || userRole.includes('admin') || userRole.includes('hr');
     const isReportingManager = useMemo(() => requests.some(r => {
         if (!r.reporting_manager) return false;
         const managers = String(r.reporting_manager).split(',').map(m => m.trim());

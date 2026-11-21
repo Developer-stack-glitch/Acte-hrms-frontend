@@ -200,8 +200,8 @@ const ManageRegularisationsOverview = ({ onApplyQuickly, onViewAll }) => {
     const [requestToReject, setRequestToReject] = useState(null);
 
     const userInfo = JSON.parse((localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo')) || '{}');
-    const userRole = (userInfo.role || '').toLowerCase();
-    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive';
+    const userRole = (userInfo.role || '').toLowerCase().trim();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole === 'hr executive' || userRole.includes('admin') || userRole.includes('hr');
     const userId = userInfo._id || userInfo.id;
 
     const isManagerRole = useMemo(() =>
