@@ -7,6 +7,7 @@ import MyAssetsSkeleton from '../Common/CommonSkeletonLoader/MyAssetsSkeleton';
 import { FormInput, FormSelect, FormTextarea } from '../Common/Form';
 
 import DataTable from '../Common/DataTable';
+import { formatISTDate } from '../utils/dateUtils';
 
 const getCategoryIcon = (category) => {
     switch (category?.toLowerCase()) {
@@ -218,7 +219,7 @@ export default function MyAssets() {
                                 key: 'created_at',
                                 render: (val) => (
                                     <div className="text-sm font-semibold text-gray-600">
-                                        {new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        {formatISTDate(val, { month: 'short', day: 'numeric', year: 'numeric' }, '—')}
                                     </div>
                                 )
                             },

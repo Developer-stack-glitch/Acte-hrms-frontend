@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../../Common/ConfirmationModal';
 import DataTable from '../../Common/DataTable';
 import CommonSelect from '../../Common/CommonSelect';
+import { formatISTDate, formatISTTime } from '../../utils/dateUtils';
 import { FormInput, FormSelect, FormDate, FormTextarea } from '../../Common/Form';
 import {
     getUsersApi,
@@ -248,11 +249,11 @@ export default function AssetManagement() {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
                         <Calendar size={13} className="text-gray-400" />
-                        {row.created_at ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        {formatISTDate(row.created_at, { month: 'short', day: 'numeric', year: 'numeric' }, '—')}
                     </div>
                     {row.created_at && (
                         <div className="text-[10px] text-gray-400 font-medium ml-4">
-                            {new Date(row.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            {formatISTTime(row.created_at)}
                         </div>
                     )}
                 </div>
@@ -336,7 +337,7 @@ export default function AssetManagement() {
             key: 'created_at',
             render: (val, row) => (
                 <div className="text-xs font-semibold text-gray-600">
-                    {new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {formatISTDate(row.created_at, { month: 'short', day: 'numeric', year: 'numeric' }, '—')}
                 </div>
             )
         },

@@ -10,6 +10,7 @@ import { getRegularisationsApi, updateRegularisationStatusApi, getRegularisation
 import DataTable from '../../Common/DataTable';
 import Tooltip from '../../Common/Tooltip';
 import { useNotifications } from '../../utils/NotificationContext';
+import { formatISTDate, formatISTTime } from '../../utils/dateUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -338,10 +339,10 @@ const Regularisations = () => {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 text-[13px] font-medium text-gray-600">
                             <Calendar size={14} className="text-orange-400" />
-                            {val ? format(new Date(val), 'MMM dd, yyyy') : 'N/A'}
+                            {formatISTDate(val)}
                         </div>
                         <span className="text-[11px] text-gray-400 font-medium ml-[22px]">
-                            {val ? format(new Date(val), 'hh:mm a') : ''}
+                            {formatISTTime(val)}
                         </span>
                     </div>
                 )

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Bell, Check, Clock, Info, AlertTriangle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '../utils/NotificationContext';
+import { parseTimestamp } from '../utils/dateUtils';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
@@ -148,7 +149,10 @@ const NotificationBell = () => {
                                                             {notification.title}
                                                         </h4>
                                                         <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap ml-2">
-                                                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                                            {(() => {
+                                                                const createdDate = parseTimestamp(notification.created_at);
+                                                                return createdDate ? formatDistanceToNow(createdDate, { addSuffix: true }) : '';
+                                                            })()}
                                                         </span>
                                                     </div>
                                                     <p className={`text-[12px] leading-relaxed line-clamp-2 ${!notification.is_read ? 'text-gray-600 font-medium' : 'text-gray-400'}`}>

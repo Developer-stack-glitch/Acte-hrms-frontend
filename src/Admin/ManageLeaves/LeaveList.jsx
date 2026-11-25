@@ -21,6 +21,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import FullPageLoader from '../../Common/FullPageLoader';
 import { useNotifications } from '../../utils/NotificationContext';
+import { formatISTDate, formatISTTime } from '../../utils/dateUtils';
 
 const RejectionModal = ({ isOpen, onClose, onConfirm, loading }) => {
     const [note, setNote] = useState('');
@@ -553,10 +554,10 @@ export default function LeaveList() {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 text-[13px] font-medium text-gray-600">
                             <Calendar size={14} className="text-orange-400" />
-                            {val ? format(new Date(val), 'MMM dd, yyyy') : 'N/A'}
+                            {formatISTDate(val)}
                         </div>
                         <span className="text-[11px] text-gray-400 font-medium ml-[22px]">
-                            {val ? format(new Date(val), 'hh:mm a') : ''}
+                            {formatISTTime(val)}
                         </span>
                     </div>
                 )
