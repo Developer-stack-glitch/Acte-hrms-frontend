@@ -396,10 +396,19 @@ export default function ManageAttedance() {
         return null;
     };
 
-    const getStatusStyles = (record) => {
+    const getStatusStyles = (record, day) => {
         if (!record) return 'bg-white text-gray-300 border-gray-50 hover:border-gray-100';
 
         const { status, is_half_day, is_week_off } = record;
+        const hasIn = !!record.punch_in && record.punch_in !== '--:--' && !/^00:00(:00)?$/.test(record.punch_in) && record.punch_in !== 'undefined';
+        const hasOut = !!record.punch_out && record.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record.punch_out) && record.punch_out !== 'undefined';
+        const isPast = day ? (!isToday(day) && isBefore(day, startOfDay(new Date()))) : false;
+        const isIncomplete = status === 'Incomplete' || (hasIn && !hasOut && isPast);
+
+        if (isIncomplete) {
+            return 'bg-orange-50 text-orange-500 border-orange-200 hover:bg-orange-100';
+        }
+
         if (is_half_day && status === 'On Leave') {
             return 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100 shadow-sm';
         }
@@ -998,11 +1007,16 @@ export default function ManageAttedance() {
                                                 </td>
                                                 {daysInRange.map((day) => {
                                                     const record = getStatusForDay(emp.id, day);
+                                                    const hasIn = !!record?.punch_in && record?.punch_in !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_in) && record?.punch_in !== 'undefined';
+                                                    const hasOut = !!record?.punch_out && record?.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_out) && record?.punch_out !== 'undefined';
+                                                    const isPast = !isToday(day) && isBefore(day, startOfDay(new Date()));
+                                                    const isIncomplete = record?.status === 'Incomplete' || (hasIn && !hasOut && isPast);
                                                     const isHalfDay = record?.status === 'On Leave' && record?.is_half_day;
                                                     let cellStatus = null;
                                                     let isFirstAbsentCell = false;
                                                     if (record) {
-                                                        if (record.status === 'Present') cellStatus = 'P';
+                                                        if (isIncomplete) cellStatus = '!';
+                                                        else if (record.status === 'Present') cellStatus = 'P';
                                                         else if (record.status === 'Absent' || record.status === 'On Leave') {
                                                             const isFullDay = record.status === 'Absent' || !isHalfDay;
                                                             if (record.status === 'On Leave') {
@@ -1017,10 +1031,11 @@ export default function ManageAttedance() {
 
                                                     const isLate = record?.late_punch_in && !/^00:00(:00)?$/.test(record.late_punch_in) && record.late_punch_in !== 'undefined';
                                                     const isEarly = record?.early_punch_out && !/^00:00(:00)?$/.test(record.early_punch_out) && record.early_punch_out !== 'undefined';
-                                                    const isIncomplete = record?.status === 'Incomplete';
 
-                                                    let cellStyles = getStatusStyles(record);
-                                                    if (record?.status === 'On Leave') {
+                                                    let cellStyles = getStatusStyles(record, day);
+                                                    if (isIncomplete) {
+                                                        cellStyles = 'bg-orange-50 text-orange-500 border-orange-200 hover:bg-orange-100';
+                                                    } else if (record?.status === 'On Leave') {
                                                         cellStyles = isHalfDay ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-sky-50 text-sky-600 border-sky-100';
                                                     } else if (record?.status === 'Absent') {
                                                         cellStyles = 'bg-rose-50 text-rose-600 border-rose-100';
@@ -1030,9 +1045,9 @@ export default function ManageAttedance() {
                                                             <div
                                                                 className={`mx-auto md:w-10 w-8 md:h-10 h-8 rounded-full flex items-center justify-center md:text-[12px] text-[10px] font-bold border transition-all duration-300 hover:scale-110 relative cursor-pointer ${cellStyles}`}
                                                                 title={isHalfDay ? `Half Day Leave (${record.half_day_period})` : (isIncomplete ? 'Missing Punch Out' : `${record?.status || ''}${isLate ? ` | Late: ${record.late_punch_in}` : ''}${isEarly ? ` | Early Out: ${record.early_punch_out}` : ''}`)}
-                                                                onClick={() => record && setSelectedDetail({ record, day, employee: emp })}
+                                                                onClick={() => record && setSelectedDetail({ record: { ...record, status: isIncomplete ? 'Incomplete' : record.status }, day, employee: emp })}
                                                             >
-                                                                <span className={isHalfDay ? 'text-[10px]' : ''}>{isIncomplete ? 'P' : (cellStatus || <span className="text-gray-100 font-normal">-</span>)}</span>
+                                                                <span className={isHalfDay ? 'text-[10px]' : ''}>{cellStatus || <span className="text-gray-100 font-normal">-</span>}</span>
                                                                 {record?.is_week_off && record?.status === 'Present' && (
                                                                     <div className="absolute -bottom-1 -left-1 px-1 bg-gray-900 text-white text-[7px] font-black rounded-sm leading-tight border border-white z-3" title="Worked on Week Off">WO</div>
                                                                 )}
@@ -1213,7 +1228,13 @@ export default function ManageAttedance() {
         daysInRange.forEach(day => {
             const record = getStatusForDay(userId, day);
             if (record) {
-                if (record.status === 'Present') {
+                const hasIn = !!record?.punch_in && record?.punch_in !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_in) && record?.punch_in !== 'undefined';
+                const hasOut = !!record?.punch_out && record?.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_out) && record?.punch_out !== 'undefined';
+                const isPast = !isToday(day) && isBefore(day, startOfDay(new Date()));
+                const isIncomplete = record?.status === 'Incomplete' || (hasIn && !hasOut && isPast);
+                const currentStatus = isIncomplete ? 'Incomplete' : record.status;
+
+                if (currentStatus === 'Present') {
                     const [hPart, mPart] = (record.total_hours || "00:00").split(':').map(Number);
                     if (!isNaN(hPart) && !isNaN(mPart)) {
                         hrs += (hPart + mPart / 60);
@@ -1227,27 +1248,27 @@ export default function ManageAttedance() {
                     if (record.early_punch_out && !/^00:00(:00)?$/.test(record.early_punch_out) && record.early_punch_out !== 'undefined') {
                         e++;
                     }
-                } else if (record.status === 'Absent' || record.status === 'On Leave') {
-                    const isFullDay = record.status === 'Absent' || !record.is_half_day;
+                } else if (currentStatus === 'Absent' || currentStatus === 'On Leave') {
+                    const isFullDay = currentStatus === 'Absent' || !record.is_half_day;
                     const val = isFullDay ? 1.0 : 0.5;
 
-                    if (record.status === 'On Leave') {
+                    if (currentStatus === 'On Leave') {
                         lv += val;
                     } else {
                         a += val;
                     }
                     d += val;
-                } else if (record.status === 'Incomplete') {
+                } else if (currentStatus === 'Incomplete') {
                     const wdv = record.working_day_value !== undefined ? parseFloat(record.working_day_value) : 1;
                     p += wdv;
                     d += (1.0 - wdv);
-                } else if (record.status === 'Holiday') {
+                } else if (currentStatus === 'Holiday') {
                     h++;
-                } else if (record.status === 'Permission') {
+                } else if (currentStatus === 'Permission') {
                     const wdv = record.working_day_value !== undefined ? parseFloat(record.working_day_value) : 1;
                     p += wdv;
                     d += (1.0 - wdv);
-                } else if (record.status === 'Week Off') {
+                } else if (currentStatus === 'Week Off') {
                     wo++;
                 }
             }
@@ -1289,6 +1310,12 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
     const dateStr = currentDay ? format(currentDay, 'EEE, MMM dd, yyyy') : '';
     const record = currentRecord || detail.record;
 
+    const hasIn = !!record?.punch_in && record?.punch_in !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_in) && record?.punch_in !== 'undefined';
+    const hasOut = !!record?.punch_out && record?.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record?.punch_out) && record?.punch_out !== 'undefined';
+    const isPast = currentDay ? (!isToday(currentDay) && isBefore(currentDay, startOfDay(new Date()))) : false;
+    const isMissingPunchOut = record?.status === 'Incomplete' || (hasIn && !hasOut && isPast);
+    const effectiveStatus = isMissingPunchOut ? 'Incomplete' : record?.status;
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Present': return { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' };
@@ -1302,13 +1329,13 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
         }
     };
 
-    const statusColors = getStatusColor(record?.status);
+    const statusColors = getStatusColor(effectiveStatus);
 
     // Dynamic running time calculation
     const [runningTime, setRunningTime] = useState('00:00:00');
 
     useEffect(() => {
-        if (!record?.punch_in || (record?.status !== 'Present' && record?.status !== 'Incomplete')) {
+        if (!record?.punch_in || (record?.status !== 'Present' && record?.status !== 'Incomplete' && !isMissingPunchOut)) {
             setRunningTime('00:00:00');
             return;
         }
@@ -1323,14 +1350,17 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                 punchInDate.setHours(parseInt(punchInParts[0]), parseInt(punchInParts[1]), punchInParts[2] ? parseInt(punchInParts[2]) : 0, 0);
 
                 let endTime;
-                if (record.punch_out && record.punch_out !== '--:--') {
+                if (record.punch_out && record.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record.punch_out)) {
                     // Already clocked out - calculate static duration
                     const punchOutParts = record.punch_out.split(':');
                     endTime = currentDay ? new Date(currentDay) : new Date();
                     endTime.setHours(parseInt(punchOutParts[0]), parseInt(punchOutParts[1]), punchOutParts[2] ? parseInt(punchOutParts[2]) : 0, 0);
-                } else {
-                    // Still clocked in - use current time for live count
+                } else if (isToday(currentDay)) {
+                    // Still clocked in today - use current time for live count
                     endTime = now;
+                } else {
+                    // Past day with missing punch out - not currently running
+                    return '00:00:00';
                 }
 
                 const diffMs = endTime.getTime() - punchInDate.getTime();
@@ -1349,15 +1379,15 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
 
         setRunningTime(calculateElapsed());
 
-        // Only set interval if employee is still clocked in (no punch_out)
-        const isStillClockedIn = !record.punch_out || record.punch_out === '--:--';
+        // Only set interval if today and employee is still clocked in (no punch_out)
+        const isStillClockedIn = isToday(currentDay) && (!record.punch_out || record.punch_out === '--:--');
         if (isStillClockedIn) {
             const interval = setInterval(() => {
                 setRunningTime(calculateElapsed());
             }, 1000);
             return () => clearInterval(interval);
         }
-    }, [record?.punch_in, record?.punch_out, record?.status, currentDay]);
+    }, [record?.punch_in, record?.punch_out, record?.status, currentDay, isMissingPunchOut]);
 
     // Format total hours to HH:MM:SS
     const formatWorkingHours = (totalHours) => {
@@ -1494,7 +1524,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                                         <span className="text-[12px] font-semibold text-rose-600 uppercase tracking-wider">Clocked Out</span>
                                     </div>
                                     <p className="text-[20px] font-semibold text-gray-900 tabular-nums">
-                                        {record.punch_out ? (() => {
+                                        {record.punch_out && record.punch_out !== '--:--' && !/^00:00(:00)?$/.test(record.punch_out) ? (() => {
                                             const parts = record.punch_out.split(':');
                                             if (parts.length >= 2) {
                                                 let h = parseInt(parts[0]);
@@ -1506,6 +1536,11 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                                             return record.punch_out;
                                         })() : '--:--'}
                                     </p>
+                                    {isMissingPunchOut && (
+                                        <span className="inline-block mt-2 text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                                            Missing Punch Out
+                                        </span>
+                                    )}
                                     {record.early_punch_out && !/^00:00(:00)?$/.test(record.early_punch_out) && record.early_punch_out !== 'undefined' && (
                                         <span className="inline-block mt-2 text-[10px] font-semibold text-fuchsia-600 bg-fuchsia-50 px-2 py-0.5 rounded-full border border-fuchsia-200">
                                             Early by {record.early_punch_out}
@@ -1519,12 +1554,12 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                         <div className={`flex items-center mb-3 justify-between p-3 rounded-[10px] border ${statusColors.border} ${statusColors.bg}`}>
                             <span className="text-[13px] font-semibold text-gray-600">Status</span>
                             <span className={`text-[13px] font-semibold uppercase tracking-wider ${statusColors.text}`}>
-                                {record?.status === 'Incomplete' ? 'Missing Punch Out' : (record?.status || '---')}
+                                {effectiveStatus === 'Incomplete' ? 'Missing Punch Out' : (effectiveStatus || '---')}
                             </span>
                         </div>
 
                         {/* Late & Early Penalties */}
-                        {(record?.status === 'Present' || record?.status === 'Incomplete') && (
+                        {(effectiveStatus === 'Present' || effectiveStatus === 'Incomplete') && (
                             <>
                                 {record.late_penalty && record.late_penalty !== '00:00' && (
                                     <div className="flex items-center mb-3 justify-between p-3 rounded-[10px] border border-amber-200 bg-amber-50">
@@ -1635,7 +1670,7 @@ function AttendanceDetailModal({ detail, onClose, getStatusForDay, userRole }) {
                                             emp_id: employee?.emp_id,
                                             punch_in: record?.punch_in,
                                             punch_out: record?.punch_out,
-                                            status: record?.status
+                                            status: effectiveStatus || record?.status
                                         }
                                     }
                                 });
